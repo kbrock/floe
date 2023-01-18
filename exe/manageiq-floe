@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "manageiq-floe"
+require "optimist"
+
+opts = Optimist.options do
+  version "v#{ManageIQ::Floe::VERSION}\n"
+  opt :workflow, "Path to your workflow json", :type => :string, :required => true
+end
+
+workflow_json = File.read(opts[:workflow])
+workflow = ManageIQ::Floe::Workflow.new(workflow_json)
+
+state = workflow.first_state
+state, _outputs = state.run! until state.nil?
