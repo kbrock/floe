@@ -15,7 +15,8 @@ module ManageIQ
       attr_reader :first_state, :payload, :states, :states_by_name, :start_at
 
       def initialize(payload)
-        @payload        = JSON.parse(payload)
+        payload         = JSON.parse(payload) if payload.kind_of?(String)
+        @payload        = payload
         @states         = parse_states
         @states_by_name = states.each_with_object({}) { |state, result| result[state.name] = state }
         @start_at       = @payload["StartAt"]

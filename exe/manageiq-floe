@@ -9,8 +9,7 @@ opts = Optimist.options do
   opt :workflow, "Path to your workflow json", :type => :string, :required => true
 end
 
-workflow_json = File.read(opts[:workflow])
-workflow = ManageIQ::Floe::Workflow.new(workflow_json)
+workflow = ManageIQ::Floe::Workflow.load(opts[:workflow])
 
 state = workflow.first_state
 state, _outputs = state.run! until state.nil?
