@@ -5,11 +5,13 @@ module ManageIQ
     class Workflow
       module States
         class Wait < ManageIQ::Floe::Workflow::State
-          attr_reader :seconds
+          attr_reader :end, :next, :seconds
 
           def initialize(workflow, name, payload)
             super
 
+            @end     = payload["End"]
+            @next    = payload["Next"]
             @seconds = payload["Seconds"]
           end
 

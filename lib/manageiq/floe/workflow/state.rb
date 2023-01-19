@@ -18,13 +18,14 @@ module ManageIQ
           end
         end
 
-        attr_reader :workflow, :name, :payload, :resource, :parameters,
-                    :credentials, :timeout_seconds, :heartbeat_seconds
+        attr_reader :workflow, :comment, :name, :type, :payload
 
         def initialize(workflow, name, payload)
           @workflow = workflow
           @name     = name
           @payload  = payload
+          @type     = payload["Type"]
+          @comment  = payload["Comment"]
         end
 
         def run!
