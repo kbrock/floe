@@ -9,7 +9,7 @@ module ManageIQ
             state_type = payload["Type"]
 
             begin
-              klass = ManageIQ::Floe::Workflow.const_get(state_type)
+              klass = ManageIQ::Floe::Workflow::States.const_get(state_type)
             rescue NameError
               raise ManageIQ::Floe::InvalidWorkflowError, "Invalid state type: [#{state_type}]"
             end

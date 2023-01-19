@@ -3,7 +3,9 @@
 module ManageIQ
   module Floe
     class Workflow
-      class Succeed < ManageIQ::Floe::Workflow::State
+      module States
+        class Fail < ManageIQ::Floe::Workflow::State
+        end
       end
     end
   end
