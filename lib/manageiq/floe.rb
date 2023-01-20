@@ -2,6 +2,10 @@
 
 require_relative "floe/version"
 require_relative "floe/workflow"
+require_relative "floe/workflow/runner"
+require_relative "floe/workflow/runner/docker"
+require_relative "floe/workflow/runner/kubernetes"
+require_relative "floe/workflow/runner/podman"
 require_relative "floe/workflow/state"
 require_relative "floe/workflow/states/choice"
 require_relative "floe/workflow/states/fail"

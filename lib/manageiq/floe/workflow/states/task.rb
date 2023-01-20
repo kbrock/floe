@@ -19,6 +19,17 @@ module ManageIQ
             @resource          = payload["Resource"]
             @timeout_seconds   = payload["TimeoutSeconds"]
           end
+
+          def run!
+            puts name
+
+            runner = ManageIQ::Floe::Workflow::Runner.for_resource(resource)
+            _exit_status, outputs = runner.run!(resource)
+
+            next_state = workflow.states_by_name[@next] unless end?
+
+            [next_state, outputs]
+          end
         end
       end
     end
