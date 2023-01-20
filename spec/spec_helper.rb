@@ -96,3 +96,8 @@ RSpec.configure do |config|
   Kernel.srand config.seed
 =end
 end
+
+require "manageiq-floe"
+
+require "pathname"
+GEM_ROOT = Pathname.new(__dir__).join("..").expand_path
