@@ -20,7 +20,6 @@ module ManageIQ
         @states         = parse_states
         @states_by_name = states.each_with_object({}) { |state, result| result[state.name] = state }
         @start_at       = @payload["StartAt"]
-        @end            = @payload["End"]
         @first_state    = @states_by_name[@start_at]
       rescue JSON::ParserError => err
         raise ManageIQ::Floe::InvalidWorkflowError, err.message
