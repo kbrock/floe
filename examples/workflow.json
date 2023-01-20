@@ -19,9 +19,14 @@
           "Variable": "$.foo",
           "NumericEquals": 2,
           "Next": "SecondMatchState"
+        },
+        {
+          "Variable": "$.foo",
+          "NumericEquals": 3,
+          "Next": "SuccessState"
         }
       ],
-      "Default": "DefaultState"
+      "Default": "FailState"
     },
 
     "FirstMatchState": {
@@ -36,10 +41,14 @@
       "Next": "NextState"
     },
 
-    "DefaultState": {
+    "FailState": {
       "Type": "Fail",
-      "Error": "DefaultStateError",
+      "Error": "FailStateError",
       "Cause": "No Matches!"
+    },
+
+    "SuccessState": {
+      "Type": "Succeed"
     },
 
     "NextState": {

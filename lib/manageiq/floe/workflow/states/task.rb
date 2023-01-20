@@ -12,7 +12,6 @@ module ManageIQ
             super
 
             @credentials       = payload["Credentials"]
-            @end               = payload["End"]
             @heartbeat_seconds = payload["HeartbeatSeconds"]
             @next              = payload["Next"]
             @parameters        = payload["Parameters"]

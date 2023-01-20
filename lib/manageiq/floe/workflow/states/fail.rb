@@ -13,6 +13,14 @@ module ManageIQ
             @cause = payload["Cause"]
             @error = payload["Error"]
           end
+
+          def end?
+            true
+          end
+
+          private def to_dot_attributes
+            super.merge(:color => "red")
+          end
         end
       end
     end
