@@ -10,7 +10,6 @@ module ManageIQ
           def initialize(workflow, name, payload)
             super
 
-            @end         = payload["End"]
             @next        = payload["Next"]
             @result      = payload["Result"]
             @result_path = payload["ResultPath"]

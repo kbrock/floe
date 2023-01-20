@@ -23,6 +23,27 @@ module ManageIQ
 
             [next_state, results]
           end
+
+          private def to_dot_attributes
+            super.merge(:shape => "diamond")
+          end
+
+          def to_dot_transitions
+            [].tap do |a|
+              choices.each do |choice|
+                choice_label =
+                  if choice["NumericEquals"]
+                    "#{choice["Variable"]} == #{choice["NumericEquals"]}"
+                  else
+                    "Unknown" # TODO
+                  end
+
+                a << "  #{name} -> #{choice["Next"]} [ label=#{choice_label.inspect} ]"
+              end
+
+              a << "  #{name} -> #{default} [ label=\"Default\" ]" if default
+            end
+          end
         end
       end
     end

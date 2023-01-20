@@ -20,9 +20,37 @@ module ManageIQ
         @states         = parse_states
         @states_by_name = states.each_with_object({}) { |state, result| result[state.name] = state }
         @start_at       = @payload["StartAt"]
+        @end            = @payload["End"]
         @first_state    = @states_by_name[@start_at]
       rescue JSON::ParserError => err
         raise ManageIQ::Floe::InvalidWorkflowError, err.message
+      end
+
+      def to_dot
+        String.new.tap do |s|
+          s << "digraph {\n"
+          states.each do |state|
+            s << state.to_dot << "\n"
+          end
+          s << "\n"
+          states.each do |state|
+            Array(state.to_dot_transitions).each do |transition|
+              s << transition << "\n"
+            end
+          end
+          s << "}\n"
+        end
+      end
+
+      def to_svg(path: nil)
+        require "open3"
+        out, err, _status = Open3.capture3("dot -Tsvg", :stdin_data => to_dot)
+
+        raise "Error from graphviz:\n#{err}" if err && !err.empty?
+
+        File.write(path, out) if path
+
+        out
       end
 
       private
