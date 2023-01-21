@@ -21,7 +21,7 @@ module ManageIQ
           end
 
           def run!
-            puts name
+            logger.info("Running state: [#{name}]")
 
             runner = ManageIQ::Floe::Workflow::Runner.for_resource(resource)
             _exit_status, outputs = runner.run!(resource)

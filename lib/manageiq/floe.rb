@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 require_relative "floe/version"
+
+require_relative "floe/null_logger"
+require_relative "floe/logging"
+
 require_relative "floe/workflow"
 require_relative "floe/workflow/runner"
 require_relative "floe/workflow/runner/docker"
@@ -18,5 +22,13 @@ module ManageIQ
   module Floe
     class Error < StandardError; end
     class InvalidWorkflowError < Error; end
+
+    def self.logger
+      @logger ||= NullLogger.new
+    end
+
+    def self.logger=(logger)
+      @logger = logger
+    end
   end
 end
