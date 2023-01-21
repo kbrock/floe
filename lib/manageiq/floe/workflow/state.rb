@@ -4,6 +4,8 @@ module ManageIQ
   module Floe
     class Workflow
       class State
+        include Logging
+
         class << self
           def build!(workflow, name, payload)
             state_type = payload["Type"]
@@ -34,7 +36,7 @@ module ManageIQ
         end
 
         def run!
-          puts name
+          logger.info("Running state: [#{name}]")
 
           next_state = workflow.states_by_name[payload["Next"]] unless end?
           outputs = {}

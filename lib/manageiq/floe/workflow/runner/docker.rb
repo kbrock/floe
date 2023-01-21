@@ -8,11 +8,12 @@ module ManageIQ
 
             image = resource.gsub("docker://", "")
 
-            params = ["run", ["--rm"]]
+            params = ["run", "--rm"]
             params += env.map { |k, v| [:e, "#{k}=#{v}"] } unless env.empty?
             params << image
 
             require "awesome_spawn"
+            logger.debug("Running docker: #{AwesomeSpawn.build_command_line("docker", params)}")
             result = AwesomeSpawn.run!("docker", :params => params)
 
             [result.exit_status, result.output]

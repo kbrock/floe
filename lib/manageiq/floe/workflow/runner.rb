@@ -2,6 +2,8 @@ module ManageIQ
   module Floe
     class Workflow
       class Runner
+        include Logging
+
         class << self
           def for_resource(resource)
             raise ArgumentError, "resource cannot be nil" if resource.nil?

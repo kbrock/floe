@@ -15,7 +15,7 @@ module ManageIQ
           end
 
           def run!
-            puts name
+            logger.info("Running state: [#{name}]")
 
             # TODO evaluate the choice, for now just pick the first
             next_state = workflow.states_by_name[payload["Choices"][0]["Next"]]
