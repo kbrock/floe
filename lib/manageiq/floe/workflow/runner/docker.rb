@@ -8,7 +8,7 @@ module ManageIQ
 
             image = resource.gsub("docker://", "")
 
-            params = ["run", "--rm"]
+            params = ["run", :rm]
             params += env.map { |k, v| [:e, "#{k}=#{v}"] } unless env.empty?
             params << image
 

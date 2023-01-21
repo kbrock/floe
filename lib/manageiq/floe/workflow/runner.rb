@@ -8,7 +8,8 @@ module ManageIQ
           def for_resource(resource)
             raise ArgumentError, "resource cannot be nil" if resource.nil?
 
-            scheme = resource.split("://").first
+            require "uri"
+            scheme = URI.parse(resource).scheme
 
             case scheme
             when "docker"
