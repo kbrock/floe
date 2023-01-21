@@ -6,6 +6,7 @@ require_relative "floe/null_logger"
 require_relative "floe/logging"
 
 require_relative "floe/workflow"
+require_relative "floe/workflow/choice_rule"
 require_relative "floe/workflow/runner"
 require_relative "floe/workflow/runner/docker"
 require_relative "floe/workflow/runner/kubernetes"
