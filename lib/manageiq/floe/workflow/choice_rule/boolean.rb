@@ -7,11 +7,11 @@ module ManageIQ
         class Boolean < ManageIQ::Floe::Workflow::ChoiceRule
           def true?
             if payload.key?("Not")
-              !ChoiceRule.build(payload["Not"], context).true?
+              !ChoiceRule.true?(payload["Not"], context)
             elsif payload.key?("And")
-              payload["And"].all? { |choice| ChoiceRule.build(choice, context).true? }
+              payload["And"].all? { |choice| ChoiceRule.true?(choice, context) }
             else
-              payload["Or"].any? { |choice| ChoiceRule.build(choice, context).true? }
+              payload["Or"].any? { |choice| ChoiceRule.true?(choice, context) }
             end
           end
         end

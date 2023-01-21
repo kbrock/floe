@@ -1,6 +1,6 @@
 RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
   describe "#true?" do
-    let(:subject) { described_class.build(payload, context).true? }
+    let(:subject) { described_class.true?(payload, context) }
 
     context "Boolean Expression" do
       context "Not" do

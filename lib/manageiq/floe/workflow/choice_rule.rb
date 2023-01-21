@@ -7,6 +7,10 @@ module ManageIQ
         require "jsonpath"
 
         class << self
+          def true?(payload, context)
+            build(payload, context).true?
+          end
+
           def build(payload, context)
             data_expression = (payload.keys & %w[And Not Or]).empty?
             if data_expression
