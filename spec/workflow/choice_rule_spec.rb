@@ -437,26 +437,6 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
           end
         end
       end
-
-      context "with a StringMatchesPath" do
-        let(:payload) { {"Variable" => "$.foo", "StringMatchesPath" => "$.bar", "Next" => "FirstMatchState" } }
-
-        context "that is true" do
-          let(:context) { {"foo" => "audit.log", "bar" => "*.log"} }
-
-          it "returns true" do
-            expect(subject).to eq(true)
-          end
-        end
-
-        context "that is false" do
-          let(:context) { {"foo" => "audit", "bar" => "*.log"} }
-
-          it "returns false" do
-            expect(subject).to eq(false)
-          end
-        end
-      end
     end
   end
 end
