@@ -8,9 +8,7 @@ module ManageIQ
           def for_resource(resource)
             raise ArgumentError, "resource cannot be nil" if resource.nil?
 
-            require "uri"
-            scheme = URI.parse(resource).scheme
-
+            scheme = resource.split("://").first
             case scheme
             when "docker"
               # TODO detect if we should use Docker, Podman, or Kubernetes
