@@ -17,8 +17,10 @@ module ManageIQ
           def run!
             logger.info("Running state: [#{name}]")
 
+            next_state_name = choices.map { |choice| ChoiceRule.build(choice, workflow.context) }.detect(&:true?)&.next || default
+
             # TODO evaluate the choice, for now just pick the first
-            next_state = workflow.states_by_name[payload["Choices"][0]["Next"]]
+            next_state = workflow.states_by_name[next_state_name]
             results = {}
 
             [next_state, results]
