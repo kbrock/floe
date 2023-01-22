@@ -5,6 +5,9 @@
     "FirstState": {
       "Type": "Task",
       "Resource": "docker://hello-world:latest",
+      "Credentials": {
+        "mysecret": "dont tell anyone"
+      },
       "Next": "ChoiceState"
     },
     "ChoiceState": {
