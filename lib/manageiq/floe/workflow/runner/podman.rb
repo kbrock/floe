@@ -22,7 +22,7 @@ module ManageIQ
             params << image
 
             require "awesome_spawn"
-            logger.debug("Running podman: #{AwesomeSpawn.build_command_line("docker", params)}")
+            logger.debug("Running podman: #{AwesomeSpawn.build_command_line("podman", params)}")
             result = AwesomeSpawn.run!("podman", :params => params)
 
             [result.exit_status, result.output]
