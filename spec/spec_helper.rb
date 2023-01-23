@@ -95,6 +95,14 @@ RSpec.configure do |config|
   # as the one that triggered the failure.
   Kernel.srand config.seed
 =end
+
+  require "awesome_spawn/spec_helper"
+  config.define_derived_metadata(file_path: %r{/spec/workflow/runner/}) do |metadata|
+    metadata[:uses_awesome_spawn] = true
+  end
+  config.include AwesomeSpawn::SpecHelper, :uses_awesome_spawn => true
+  config.before(:each, :uses_awesome_spawn) { disable_spawning }
+  config.after(:each, :uses_awesome_spawn) { enable_spawning }
 end
 
 require "manageiq-floe"

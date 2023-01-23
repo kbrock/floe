@@ -27,7 +27,7 @@ module ManageIQ
 
             [result.exit_status, result.output]
           ensure
-            AwesomeSpawn.run("podman secret rm #{secret_guid}") if secret_guid
+            AwesomeSpawn.run("podman", :params => ["secret", "rm", secret_guid]) if secret_guid
           end
         end
       end
