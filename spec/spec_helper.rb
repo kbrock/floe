@@ -102,7 +102,6 @@ RSpec.configure do |config|
   end
   config.include AwesomeSpawn::SpecHelper, :uses_awesome_spawn => true
   config.before(:each, :uses_awesome_spawn) { disable_spawning }
-  config.after(:each, :uses_awesome_spawn) { enable_spawning }
 end
 
 require "manageiq-floe"
