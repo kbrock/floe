@@ -18,7 +18,7 @@ Optimist.die(:docker_runner, "must be one of #{Floe::Workflow::Runner::TYPES.joi
 require "logger"
 Floe.logger = Logger.new(STDOUT)
 
-workflow = Floe::Workflow.load(opts[:workflow], opts[:inputs], opts[:credentials])
+workflow = Floe::Workflow.load(opts[:workflow], {"global" => opts[:inputs]}, opts[:credentials])
 
 runner_klass = case opts[:docker_runner]
                when "docker"
