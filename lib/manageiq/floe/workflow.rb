@@ -7,8 +7,8 @@ module ManageIQ
     class Workflow
       class << self
         def load(path_or_io, context = {})
-          path_or_io = File.open(path_or_io, 'r') if path_or_io.kind_of?(String)
-          new(path_or_io.read, context)
+          payload = path_or_io.respond_to?(:read) ? path_or_io.read : File.read(path_or_io)
+          new(payload, context)
         end
       end
 
