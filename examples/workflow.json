@@ -10,6 +10,7 @@
       },
       "Next": "ChoiceState"
     },
+
     "ChoiceState": {
       "Type" : "Choice",
       "Choices": [
@@ -35,12 +36,22 @@
     "FirstMatchState": {
       "Type" : "Task",
       "Resource": "docker://hello-world:latest",
-      "Next": "NextState"
+      "Next": "PassState"
     },
 
     "SecondMatchState": {
       "Type" : "Task",
       "Resource": "docker://hello-world:latest",
+      "Next": "NextState"
+    },
+
+    "PassState": {
+      "Type": "Pass",
+      "Result": {
+        "foo": "bar",
+        "bar": "baz"
+      },
+      "ResultPath": "$.result",
       "Next": "NextState"
     },
 

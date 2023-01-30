@@ -8,6 +8,7 @@ RSpec.describe ManageIQ::Floe::Workflow do
         ChoiceState [ shape=diamond ]
         FirstMatchState
         SecondMatchState
+        PassState
         FailState [ style=bold color=red ]
         SuccessState [ style=bold color=green ]
         NextState [ style=bold ]
@@ -17,8 +18,9 @@ RSpec.describe ManageIQ::Floe::Workflow do
         ChoiceState -> SecondMatchState [ label="$.foo == 2" ]
         ChoiceState -> SuccessState [ label="$.foo == 3" ]
         ChoiceState -> FailState [ label="Default" ]
-        FirstMatchState -> NextState
+        FirstMatchState -> PassState
         SecondMatchState -> NextState
+        PassState -> NextState
       }
     DOT
   end

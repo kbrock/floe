@@ -12,7 +12,7 @@ module ManageIQ
 
             @next        = payload["Next"]
             @result      = payload["Result"]
-            @result_path = payload["ResultPath"]
+            @result_path = JsonPath.new(payload["ResultPath"]) if payload.key?("ResultPath")
           end
         end
       end
