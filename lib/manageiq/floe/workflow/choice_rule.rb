@@ -24,7 +24,7 @@ module ManageIQ
         attr_reader :context, :next, :payload, :variable
 
         def initialize(payload, context)
-          @context = context.to_json
+          @context = context
           @payload = payload
 
           @next     = payload["Next"]
