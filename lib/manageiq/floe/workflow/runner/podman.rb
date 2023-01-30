@@ -3,6 +3,12 @@ module ManageIQ
     class Workflow
       class Runner
         class Podman < ManageIQ::Floe::Workflow::Runner
+          def initialize(*)
+            require "securerandom"
+
+            super
+          end
+
           def run!(resource, env = {}, secrets = {})
             raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
 
@@ -11,7 +17,6 @@ module ManageIQ
             secret_guid = nil
 
             if secrets && !secrets.empty?
-              require "securerandom"
               secret_guid = SecureRandom.uuid
               AwesomeSpawn.run!("podman", :params => ["secret", "create", secret_guid, "-"], :in_data => secrets.to_json)
             end
