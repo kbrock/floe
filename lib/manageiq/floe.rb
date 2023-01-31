@@ -9,6 +9,9 @@ require_relative "floe/workflow"
 require_relative "floe/workflow/choice_rule"
 require_relative "floe/workflow/choice_rule/boolean"
 require_relative "floe/workflow/choice_rule/data"
+require_relative "floe/workflow/path"
+require_relative "floe/workflow/payload_template"
+require_relative "floe/workflow/reference_path"
 require_relative "floe/workflow/runner"
 require_relative "floe/workflow/runner/docker"
 require_relative "floe/workflow/runner/kubernetes"
@@ -22,6 +25,8 @@ require_relative "floe/workflow/states/pass"
 require_relative "floe/workflow/states/succeed"
 require_relative "floe/workflow/states/task"
 require_relative "floe/workflow/states/wait"
+
+require "jsonpath"
 
 module ManageIQ
   module Floe

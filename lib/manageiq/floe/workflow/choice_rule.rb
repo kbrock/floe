@@ -4,8 +4,6 @@ module ManageIQ
   module Floe
     class Workflow
       class ChoiceRule
-        require "jsonpath"
-
         class << self
           def true?(payload, context)
             build(payload, context).true?
