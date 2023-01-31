@@ -35,6 +35,10 @@ module ManageIQ
           @end
         end
 
+        def context
+          workflow.context
+        end
+
         def run!
           logger.info("Running state: [#{name}]")
 
