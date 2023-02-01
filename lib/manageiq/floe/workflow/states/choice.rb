@@ -5,13 +5,16 @@ module ManageIQ
     class Workflow
       module States
         class Choice < ManageIQ::Floe::Workflow::State
-          attr_reader :choices, :default
+          attr_reader :choices, :default, :input_path, :output_path
 
           def initialize(workflow, name, payload)
             super
 
             @choices = payload["Choices"]
             @default = payload["Default"]
+
+            @input_path  = Path.new(payload.fetch("InputPath", "$"), context)
+            @output_path = Path.new(payload.fetch("OutputPath", "$"), context)
           end
 
           def run!

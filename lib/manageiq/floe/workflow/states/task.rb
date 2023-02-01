@@ -6,7 +6,8 @@ module ManageIQ
       module States
         class Task < ManageIQ::Floe::Workflow::State
           attr_reader :credentials, :end, :heartbeat_seconds, :next, :parameters,
-                      :result_selector, :resource, :timeout_seconds
+                      :result_selector, :resource, :timeout_seconds,
+                      :input_path, :output_path, :result_path
 
           def initialize(workflow, name, payload)
             super
@@ -14,10 +15,15 @@ module ManageIQ
             @credentials       = payload["Credentials"]
             @heartbeat_seconds = payload["HeartbeatSeconds"]
             @next              = payload["Next"]
-            @parameters        = payload["Parameters"]
-            @result_selector   = payload["ResultSelector"]
             @resource          = payload["Resource"]
             @timeout_seconds   = payload["TimeoutSeconds"]
+
+            @input_path  = Path.new(payload.fetch("InputPath", "$"), context)
+            @output_path = Path.new(payload.fetch("OutputPath", "$"), context)
+            @result_path = ReferencePath.new(payload.fetch("ResultPath", "$"), context)
+
+            @parameters      = PayloadTemplate.new(payload["Parameters"], context) if payload["Parameters"]
+            @result_selector = PayloadTemplate.new(payload["ResultSelector"], context) if payload["ResultSelector"]
           end
 
           def run!

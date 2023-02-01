@@ -5,13 +5,16 @@ module ManageIQ
     class Workflow
       module States
         class Wait < ManageIQ::Floe::Workflow::State
-          attr_reader :end, :next, :seconds
+          attr_reader :end, :next, :seconds, :input_path, :output_path
 
           def initialize(workflow, name, payload)
             super
 
             @next    = payload["Next"]
             @seconds = payload["Seconds"]
+
+            @input_path  = Path.new(payload.fetch("InputPath", "$"), context)
+            @output_path = Path.new(payload.fetch("OutputPath", "$"), context)
           end
 
           def run!

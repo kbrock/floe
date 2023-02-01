@@ -5,14 +5,18 @@ module ManageIQ
     class Workflow
       module States
         class Pass < ManageIQ::Floe::Workflow::State
-          attr_reader :end, :next, :result, :result_path
+          attr_reader :end, :next, :result, :parameters, :input_path, :output_path, :result_path
 
           def initialize(workflow, name, payload)
             super
 
             @next        = payload["Next"]
             @result      = payload["Result"]
-            @result_path = ReferencePath.new(payload["ResultPath"], context) if payload.key?("ResultPath")
+
+            @parameters  = PayloadTemplate.new(payload["Parameters"], context) if payload["Parameters"]
+            @input_path  = Path.new(payload.fetch("InputPath", "$"), context)
+            @output_path = Path.new(payload.fetch("OutputPath", "$"), context)
+            @result_path = ReferencePath.new(payload.fetch("ResultPath", "$"), context)
           end
 
           def run!
