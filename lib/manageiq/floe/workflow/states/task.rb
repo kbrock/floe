@@ -33,11 +33,13 @@ module ManageIQ
             input = parameters.value(input) if parameters
 
             runner = ManageIQ::Floe::Workflow::Runner.for_resource(resource)
-            _exit_status, outputs = runner.run!(resource, input, credentials)
+            _exit_status, results = runner.run!(resource, input, credentials)
+
+            results = result_selector.value(results) if result_selector
 
             next_state = workflow.states_by_name[@next] unless end?
 
-            [next_state, outputs]
+            [next_state, results]
           end
         end
       end

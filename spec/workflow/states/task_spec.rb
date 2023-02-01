@@ -49,6 +49,25 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
         end
       end
     end
+
+    describe "Output" do
+      let(:state) { described_class.new(workflow, "Task", payload) }
+
+      context "ResultSelector" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "ResultSelector" => {"ip_addrs.$" => "$.response"}} }
+
+        it "filters the results" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], {}, nil)
+            .and_return([0, {"response" => ["192.168.1.2"], "exit_code" => 0}])
+
+          _, results = state.run!
+
+          expect(results).to eq("ip_addrs" => ["192.168.1.2"])
+        end
+      end
+    end
   end
 
   context "with a normal state" do
