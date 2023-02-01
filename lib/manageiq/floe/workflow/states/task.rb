@@ -29,8 +29,11 @@ module ManageIQ
           def run!
             logger.info("Running state: [#{name}]")
 
+            input = input_path.value(context)
+            input = parameters.value(input) if parameters
+
             runner = ManageIQ::Floe::Workflow::Runner.for_resource(resource)
-            _exit_status, outputs = runner.run!(resource, parameters, credentials)
+            _exit_status, outputs = runner.run!(resource, input, credentials)
 
             next_state = workflow.states_by_name[@next] unless end?
 

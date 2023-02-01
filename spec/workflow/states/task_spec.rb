@@ -1,5 +1,55 @@
-RSpec.describe ManageIQ::Floe::Workflow::States::Succeed do
+RSpec.describe ManageIQ::Floe::Workflow::States::Task do
   let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.json")) }
+
+  describe "#run" do
+    let(:mock_runner) { double("ManageIQ::Floe::Workflow::Runner") }
+    before { allow(ManageIQ::Floe::Workflow::Runner).to receive(:for_resource).and_return(mock_runner) }
+
+    describe "Input" do
+      let(:state) { described_class.new(workflow, "Task", payload) }
+
+      before do
+        workflow.context["foo"] = {"bar" => "baz"}
+        workflow.context["bar"] = {"baz" => "foo"}
+      end
+
+      context "with no InputPath" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest"} }
+
+        it "passes the whole context to the resource" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
+
+          state.run!
+        end
+      end
+
+      context "with an InputPath" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "InputPath" => "$.foo"} }
+
+        it "filters the context passed to the resource" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], {"bar" => "baz"}, nil)
+
+          state.run!
+        end
+      end
+
+      context "with Parameters" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Parameters" => {"var1.$" => "$$.foo.bar"}} }
+
+        it "passes the interpolated parameters to the resource" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], {"var1" => "baz"}, nil)
+
+          state.run!
+        end
+      end
+    end
+  end
 
   context "with a normal state" do
     let(:state) { workflow.states_by_name["FirstState"] }
