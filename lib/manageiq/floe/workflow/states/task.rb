@@ -35,12 +35,21 @@ module ManageIQ
             runner = ManageIQ::Floe::Workflow::Runner.for_resource(resource)
             _exit_status, results = runner.run!(resource, input, credentials)
 
-            output  = input
-            results = result_selector.value(results)        if result_selector
-            ReferencePath.set(result_path, output, results) if results
+            output = input
+            if results
+              begin
+                results = JSON.parse(results)
+              rescue JSON::ParserError
+                results = {"results" => results}
+              end
+
+              results = result_selector.value(results)        if result_selector
+              ReferencePath.set(result_path, output, results)
+            end
 
             next_state = workflow.states_by_name[@next] unless end?
 
+            logger.info("next state: [#{next_state&.name}] output: [#{output}]")
             [next_state, output]
           end
         end

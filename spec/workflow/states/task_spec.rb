@@ -57,7 +57,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], {"foo"=>{"bar"=>"baz"}, "bar"=>{"baz"=>"foo"}}, nil)
-            .and_return([0, {"response" => ["192.168.1.2"], "exit_code" => 0}])
+            .and_return([0, "{\"response\":[\"192.168.1.2\"],\"exit_code\":0}"])
 
           _, results = state.run!
 
@@ -72,7 +72,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], input, nil)
-            .and_return([0, ["192.168.1.2"]])
+            .and_return([0, "[\"192.168.1.2\"]"])
 
           _, results = state.run!
 
