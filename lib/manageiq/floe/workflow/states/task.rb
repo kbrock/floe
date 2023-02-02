@@ -16,11 +16,11 @@ module ManageIQ
             @heartbeat_seconds = payload["HeartbeatSeconds"]
             @next              = payload["Next"]
             @resource          = payload["Resource"]
+            @result_path       = payload.fetch("ResultPath", "$")
             @timeout_seconds   = payload["TimeoutSeconds"]
 
             @input_path  = Path.new(payload.fetch("InputPath", "$"), context)
             @output_path = Path.new(payload.fetch("OutputPath", "$"), context)
-            @result_path = ReferencePath.new(payload.fetch("ResultPath", "$"), context)
 
             @parameters      = PayloadTemplate.new(payload["Parameters"], context) if payload["Parameters"]
             @result_selector = PayloadTemplate.new(payload["ResultSelector"], context) if payload["ResultSelector"]
@@ -35,11 +35,13 @@ module ManageIQ
             runner = ManageIQ::Floe::Workflow::Runner.for_resource(resource)
             _exit_status, results = runner.run!(resource, input, credentials)
 
-            results = result_selector.value(results) if result_selector
+            output  = input
+            results = result_selector.value(results)        if result_selector
+            ReferencePath.set(result_path, output, results) if results
 
             next_state = workflow.states_by_name[@next] unless end?
 
-            [next_state, results]
+            [next_state, output]
           end
         end
       end

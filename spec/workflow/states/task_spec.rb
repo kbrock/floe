@@ -1,17 +1,14 @@
 RSpec.describe ManageIQ::Floe::Workflow::States::Task do
-  let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.json")) }
+  let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.json"), input) }
+  let(:input) { nil }
 
   describe "#run" do
     let(:mock_runner) { double("ManageIQ::Floe::Workflow::Runner") }
+    let(:input) { {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}} }
     before { allow(ManageIQ::Floe::Workflow::Runner).to receive(:for_resource).and_return(mock_runner) }
 
     describe "Input" do
       let(:state) { described_class.new(workflow, "Task", payload) }
-
-      before do
-        workflow.context["foo"] = {"bar" => "baz"}
-        workflow.context["bar"] = {"baz" => "foo"}
-      end
 
       context "with no InputPath" do
         let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest"} }
@@ -59,12 +56,31 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
         it "filters the results" do
           expect(mock_runner)
             .to receive(:run!)
-            .with(payload["Resource"], {}, nil)
+            .with(payload["Resource"], {"foo"=>{"bar"=>"baz"}, "bar"=>{"baz"=>"foo"}}, nil)
             .and_return([0, {"response" => ["192.168.1.2"], "exit_code" => 0}])
 
           _, results = state.run!
 
-          expect(results).to eq("ip_addrs" => ["192.168.1.2"])
+          expect(results).to eq("foo"=>{"bar"=>"baz"}, "bar"=>{"baz"=>"foo"}, "ip_addrs" => ["192.168.1.2"])
+        end
+      end
+
+      context "ResultPath" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "ResultPath" => "$.ip_addrs"} }
+
+        it "inserts the response into the input" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_return([0, ["192.168.1.2"]])
+
+          _, results = state.run!
+
+          expect(results).to eq(
+            "foo"      => {"bar" => "baz"},
+            "bar"      => {"baz" => "foo"},
+            "ip_addrs" => ["192.168.1.2"]
+          )
         end
       end
     end
