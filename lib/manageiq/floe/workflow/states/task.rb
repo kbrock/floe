@@ -26,31 +26,37 @@ module ManageIQ
             @result_selector = PayloadTemplate.new(payload["ResultSelector"], context) if payload["ResultSelector"]
           end
 
-          def run!
-            logger.info("Running state: [#{name}]")
+          def run!(input)
+            logger.info("Running state: [#{name}] with input [#{input}]")
 
-            input = input_path.value(context)
+            input = input_path.value(input)
             input = parameters.value(input) if parameters
 
             runner = ManageIQ::Floe::Workflow::Runner.for_resource(resource)
             _exit_status, results = runner.run!(resource, input, credentials)
 
             output = input
-            if results
-              begin
-                results = JSON.parse(results)
-              rescue JSON::ParserError
-                results = {"results" => results}
-              end
-
-              results = result_selector.value(results)        if result_selector
-              ReferencePath.set(result_path, output, results)
-            end
+            process_output!(output, results)
 
             next_state = workflow.states_by_name[@next] unless end?
 
             logger.info("next state: [#{next_state&.name}] output: [#{output}]")
             [next_state, output]
+          end
+
+          private
+
+          def process_output!(output, results)
+            return if results.nil?
+
+            begin
+              results = JSON.parse(results)
+            rescue JSON::ParserError
+              results = {"results" => results}
+            end
+
+            results = result_selector.value(results) if result_selector
+            ReferencePath.set(result_path, output, results)
           end
         end
       end

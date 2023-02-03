@@ -39,8 +39,8 @@ module ManageIQ
           workflow.context
         end
 
-        def run!
-          logger.info("Running state: [#{name}]")
+        def run!(input)
+          logger.info("Running state: [#{name}] with input [#{input}]")
 
           next_state = workflow.states_by_name[payload["Next"]] unless end?
           outputs = {}

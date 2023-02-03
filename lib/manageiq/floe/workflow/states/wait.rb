@@ -17,7 +17,8 @@ module ManageIQ
             @output_path = Path.new(payload.fetch("OutputPath", "$"), context)
           end
 
-          def run!
+          def run!(input)
+            logger.info("Running state: [#{name}] with input [#{input}]")
             sleep(seconds)
 
             super

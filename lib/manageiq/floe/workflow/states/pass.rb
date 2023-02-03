@@ -19,8 +19,8 @@ module ManageIQ
             @result_path = ReferencePath.new(payload.fetch("ResultPath", "$"), context)
           end
 
-          def run!
-            logger.info("Running state: [#{name}]")
+          def run!(input)
+            logger.info("Running state: [#{name}] with input [#{input}]")
 
             result_path.set(result) if result && result_path
 

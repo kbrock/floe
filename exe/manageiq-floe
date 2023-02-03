@@ -16,4 +16,11 @@ ManageIQ::Floe.logger = Logger.new(STDOUT)
 workflow = ManageIQ::Floe::Workflow.load(opts[:workflow], opts[:inputs])
 
 state = workflow.first_state
-state, _outputs = state.run! until state.nil?
+input = workflow.context
+
+until state.nil?
+  state, output = state.run!(input)
+  input = output
+end
+
+puts output.inspect

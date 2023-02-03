@@ -1,10 +1,12 @@
 RSpec.describe ManageIQ::Floe::Workflow::States::Task do
   let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.json"), input) }
-  let(:input) { nil }
+  let(:input) { {} }
 
   describe "#run" do
     let(:mock_runner) { double("ManageIQ::Floe::Workflow::Runner") }
-    let(:input) { {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}} }
+    let(:input)       { {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}} }
+    let(:subject)     { state.run!(input) }
+
     before { allow(ManageIQ::Floe::Workflow::Runner).to receive(:for_resource).and_return(mock_runner) }
 
     describe "Input" do
@@ -18,7 +20,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
             .to receive(:run!)
             .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
 
-          state.run!
+          subject
         end
       end
 
@@ -30,7 +32,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
             .to receive(:run!)
             .with(payload["Resource"], {"bar" => "baz"}, nil)
 
-          state.run!
+          subject
         end
       end
 
@@ -42,7 +44,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
             .to receive(:run!)
             .with(payload["Resource"], {"var1" => "baz"}, nil)
 
-          state.run!
+          subject
         end
       end
     end
@@ -59,7 +61,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
             .with(payload["Resource"], {"foo"=>{"bar"=>"baz"}, "bar"=>{"baz"=>"foo"}}, nil)
             .and_return([0, "{\"response\":[\"192.168.1.2\"],\"exit_code\":0}"])
 
-          _, results = state.run!
+          _, results = subject
 
           expect(results).to eq("foo"=>{"bar"=>"baz"}, "bar"=>{"baz"=>"foo"}, "ip_addrs" => ["192.168.1.2"])
         end
@@ -74,7 +76,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
             .with(payload["Resource"], input, nil)
             .and_return([0, "[\"192.168.1.2\"]"])
 
-          _, results = state.run!
+          _, results = subject
 
           expect(results).to eq(
             "foo"      => {"bar" => "baz"},

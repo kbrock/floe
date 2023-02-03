@@ -17,8 +17,8 @@ module ManageIQ
             @output_path = Path.new(payload.fetch("OutputPath", "$"), context)
           end
 
-          def run!
-            logger.info("Running state: [#{name}]")
+          def run!(input)
+            logger.info("Running state: [#{name}] with input [#{input}]")
 
             next_state_name = choices.map { |choice| ChoiceRule.build(choice, workflow.context) }.detect(&:true?)&.next || default
 

@@ -4,7 +4,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Pass do
 
   describe "#run!" do
     it "sets the result to the result path" do
-      state.run!
+      state.run!({})
       expect(workflow.context["result"]).to include(state.result)
     end
   end
