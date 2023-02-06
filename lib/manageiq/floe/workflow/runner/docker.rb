@@ -5,6 +5,7 @@ module ManageIQ
         class Docker < ManageIQ::Floe::Workflow::Runner
           def initialize(*)
             require "awesome_spawn"
+            require "tempfile"
 
             super
           end
@@ -14,18 +15,20 @@ module ManageIQ
 
             image = resource.gsub("docker://", "")
 
+            params = ["run", :rm]
+            params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env && !env.empty?
+
             secrets_file = nil
 
             if secrets && !secrets.empty?
-              require "tempfile"
               secrets_file = Tempfile.new
               secrets_file.write(secrets.to_json)
               secrets_file.flush
+
+              params << [:e, "SECRETS=/run/secrets"]
+              params << [:v, "#{secrets_file.path}:/run/secrets:z"]
             end
 
-            params = ["run", :rm]
-            params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env && !env.empty?
-            params << [:v, "#{secrets_file.path}:/run/secrets:z"] if secrets_file
             params << image
 
             logger.debug("Running docker: #{AwesomeSpawn.build_command_line("docker", params)}")
