@@ -11,7 +11,7 @@ module ManageIQ
             super
 
             @next    = payload["Next"]
-            @seconds = payload["Seconds"]
+            @seconds = payload["Seconds"].to_i
 
             @input_path  = Path.new(payload.fetch("InputPath", "$"), context)
             @output_path = Path.new(payload.fetch("OutputPath", "$"), context)
