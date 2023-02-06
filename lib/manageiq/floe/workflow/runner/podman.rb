@@ -4,8 +4,8 @@ module ManageIQ
       class Runner
         class Podman < ManageIQ::Floe::Workflow::Runner
           def initialize(*)
-            require "securerandom"
             require "awesome_spawn"
+            require "securerandom"
 
             super
           end
@@ -15,16 +15,17 @@ module ManageIQ
 
             image = resource.gsub("docker://", "")
 
-            secret_guid = nil
+            params = ["run", :rm]
+            params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env && !env.empty?
 
             if secrets && !secrets.empty?
               secret_guid = SecureRandom.uuid
               AwesomeSpawn.run!("podman", :params => ["secret", "create", secret_guid, "-"], :in_data => secrets.to_json)
+
+              params << [:e, "SECRETS=/run/secrets/#{secret_guid}"]
+              params << [:secret, secret_guid]
             end
 
-            params = ["run", :rm]
-            params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env && !env.empty?
-            params << [:secret, secret_guid] if secret_guid
             params << image
 
             logger.debug("Running podman: #{AwesomeSpawn.build_command_line("podman", params)}")

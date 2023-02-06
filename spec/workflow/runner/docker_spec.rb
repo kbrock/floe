@@ -23,7 +23,7 @@ RSpec.describe ManageIQ::Floe::Workflow::Runner::Docker do
     end
 
     it "passes a secrets volume to docker run" do
-      stub_good_run!("docker", :params => ["run", :rm, [:e, "FOO=BAR"], [:v, a_string_including(":/run/secrets")], "hello-world:latest"])
+      stub_good_run!("docker", :params => ["run", :rm, [:e, "FOO=BAR"], [:e, "SECRETS=/run/secrets"], [:v, a_string_including(":/run/secrets")], "hello-world:latest"])
 
       subject.run!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
     end
