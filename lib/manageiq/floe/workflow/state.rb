@@ -43,9 +43,8 @@ module ManageIQ
           logger.info("Running state: [#{name}] with input [#{input}]")
 
           next_state = workflow.states_by_name[payload["Next"]] unless end?
-          outputs = {}
 
-          [next_state, outputs]
+          [next_state, input]
         end
 
         def to_dot
