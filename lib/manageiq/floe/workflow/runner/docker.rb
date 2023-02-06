@@ -14,6 +14,7 @@ module ManageIQ
               require "tempfile"
               secrets_file = Tempfile.new
               secrets_file.write(secrets.to_json)
+              secrets_file.flush
             end
 
             params = ["run", :rm]
@@ -27,7 +28,7 @@ module ManageIQ
 
             [result.exit_status, result.output]
           ensure
-            File.unlink(secrets_file) if secrets_file
+            secrets_file&.close!
           end
         end
       end
