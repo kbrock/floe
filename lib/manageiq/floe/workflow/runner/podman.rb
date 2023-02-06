@@ -5,6 +5,7 @@ module ManageIQ
         class Podman < ManageIQ::Floe::Workflow::Runner
           def initialize(*)
             require "securerandom"
+            require "awesome_spawn"
 
             super
           end
@@ -26,7 +27,6 @@ module ManageIQ
             params << [:secret, secret_guid] if secret_guid
             params << image
 
-            require "awesome_spawn"
             logger.debug("Running podman: #{AwesomeSpawn.build_command_line("podman", params)}")
             result = AwesomeSpawn.run!("podman", :params => params)
 

@@ -3,6 +3,12 @@ module ManageIQ
     class Workflow
       class Runner
         class Docker < ManageIQ::Floe::Workflow::Runner
+          def initialize(*)
+            require "awesome_spawn"
+
+            super
+          end
+
           def run!(resource, env = {}, secrets = {})
             raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
 
@@ -22,7 +28,6 @@ module ManageIQ
             params << [:v, "#{secrets_file.path}:/run/secrets"] if secrets_file
             params << image
 
-            require "awesome_spawn"
             logger.debug("Running docker: #{AwesomeSpawn.build_command_line("docker", params)}")
             result = AwesomeSpawn.run!("docker", :params => params)
 
