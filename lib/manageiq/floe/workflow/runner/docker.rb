@@ -25,7 +25,7 @@ module ManageIQ
 
             params = ["run", :rm]
             params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env && !env.empty?
-            params << [:v, "#{secrets_file.path}:/run/secrets"] if secrets_file
+            params << [:v, "#{secrets_file.path}:/run/secrets:z"] if secrets_file
             params << image
 
             logger.debug("Running docker: #{AwesomeSpawn.build_command_line("docker", params)}")
