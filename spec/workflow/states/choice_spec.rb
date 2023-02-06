@@ -4,9 +4,11 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Choice do
   let(:inputs)   { {} }
 
   describe "#run!" do
+    let(:subject) { state.run!(inputs) }
+
     context "with a missing variable" do
       it "raises an exception" do
-        expect { state.run! }.to raise_error(RuntimeError, "No such variable [$.foo]")
+        expect { subject }.to raise_error(RuntimeError, "No such variable [$.foo]")
       end
     end
 
@@ -14,7 +16,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Choice do
       let(:inputs) { {"foo" => 1} }
 
       it "returns the next state" do
-        next_state, = state.run!
+        next_state, = subject
         expect(next_state).to eq(workflow.states_by_name["FirstMatchState"])
       end
     end
@@ -23,7 +25,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Choice do
       let(:inputs) { {"foo" => 4} }
 
       it "returns the default state" do
-        next_state, = state.run!
+        next_state, = subject
         expect(next_state).to eq(workflow.states_by_name["FailState"])
       end
     end

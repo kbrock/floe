@@ -97,7 +97,7 @@ RSpec.configure do |config|
 =end
 
   require "awesome_spawn/spec_helper"
-  config.define_derived_metadata(file_path: %r{/spec/workflow/runner/}) do |metadata|
+  config.define_derived_metadata(file_path: %r{/spec/workflow/}) do |metadata|
     metadata[:uses_awesome_spawn] = true
   end
   config.include AwesomeSpawn::SpecHelper, :uses_awesome_spawn => true

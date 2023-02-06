@@ -5,32 +5,29 @@ module ManageIQ
     class Workflow
       module States
         class Pass < ManageIQ::Floe::Workflow::State
-          attr_reader :end, :next, :result, :result_path
+          attr_reader :end, :next, :result, :parameters, :input_path, :output_path, :result_path
 
           def initialize(workflow, name, payload)
-            require "more_core_extensions/core_ext/hash/nested"
-            require "more_core_extensions/core_ext/array/nested"
             super
 
             @next        = payload["Next"]
             @result      = payload["Result"]
-            @result_path = JsonPath.new(payload["ResultPath"]) if payload.key?("ResultPath")
+
+            @parameters  = PayloadTemplate.new(payload["Parameters"], context) if payload["Parameters"]
+            @input_path  = Path.new(payload.fetch("InputPath", "$"), context)
+            @output_path = Path.new(payload.fetch("OutputPath", "$"), context)
+            @result_path = payload.fetch("ResultPath", "$")
           end
 
-          def run!
-            logger.info("Running state: [#{name}]")
+          def run!(input)
+            logger.info("Running state: [#{name}] with input [#{input}]")
 
-            if result
-              path = result_path.path[1..]
-                                .map { |v| v.match(/\[(?<name>.+)\]/)["name"] }
-                                .map { |v| v[0] == "'" ? v.gsub("'", "") : v.to_i }
-
-              workflow.context.store_path(path, result)
-            end
+            output = input
+            ReferencePath.set(result_path, output, result) if result && result_path
 
             next_state = workflow.states_by_name[@next] unless end?
 
-            [next_state, result]
+            [next_state, output]
           end
         end
       end

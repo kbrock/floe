@@ -1,13 +1,14 @@
 RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
   describe "#true?" do
-    let(:subject) { described_class.true?(payload, context) }
+    let(:subject) { described_class.true?(payload, context, input) }
+    let(:context) { {} }
 
     context "Boolean Expression" do
       context "Not" do
         let(:payload) { {"Not" => {"Variable" => "$.foo", "StringEquals" => "bar"}, "Next" => "FirstMatchState"} }
 
         context "that is not equal to 'bar'" do
-          let(:context) { {"foo" => "foo"} }
+          let(:input) { {"foo" => "foo"} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -15,7 +16,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "that is equal to 'bar'" do
-          let(:context) { {"foo" => "bar"} }
+          let(:input) { {"foo" => "bar"} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -24,7 +25,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
       end
 
       context "And" do
-        let(:context) { {"foo" => "foo", "bar" => "bar"} }
+        let(:input) { {"foo" => "foo", "bar" => "bar"} }
 
         context "with all sub-choices being true" do
           let(:payload) { {"And" => [{"Variable" => "$.foo", "StringEquals" => "foo"}, {"Variable" => "$.bar", "StringEquals" => "bar"}], "Next" => "FirstMatchState"} }
@@ -44,7 +45,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
       end
 
       context "Or" do
-        let(:context) { {"foo" => "foo", "bar" => "bar"} }
+        let(:input) { {"foo" => "foo", "bar" => "bar"} }
 
         context "with one sub-choice being true" do
           let(:payload) { {"Or" => [{"Variable" => "$.foo", "StringEquals" => "foo"}, {"Variable" => "$.bar", "StringEquals" => "foo"}], "Next" => "FirstMatchState"} }
@@ -67,7 +68,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
     context "Data-Test Expression" do
       context "with a missing variable" do
         let(:payload) { {"Variable" => "$.foo", "NumericEquals" => 1, "Next" => "FirstMatchState" } }
-        let(:context) { {} }
+        let(:input) { {} }
 
         it "raises an exception" do
           expect { subject }.to raise_exception(RuntimeError, "No such variable [$.foo]")
@@ -78,7 +79,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "IsNull" => true} }
 
         context "with null" do
-          let(:context) { {"foo" => nil} }
+          let(:input) { {"foo" => nil} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -86,7 +87,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "with non-null" do
-          let(:context) { {"foo" => "bar"} }
+          let(:input) { {"foo" => "bar"} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -98,7 +99,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "IsPresent" => true} }
 
         context "with null" do
-          let(:context) { {"foo" => nil} }
+          let(:input) { {"foo" => nil} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -106,7 +107,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "with non-null" do
-          let(:context) { {"foo" => "bar"} }
+          let(:input) { {"foo" => "bar"} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -118,7 +119,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "IsNumeric" => true} }
 
         context "with an integer" do
-          let(:context) { {"foo" => 1} }
+          let(:input) { {"foo" => 1} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -126,7 +127,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "with a float" do
-          let(:context) { {"foo" => 1.5} }
+          let(:input) { {"foo" => 1.5} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -134,7 +135,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "with a string" do
-          let(:context) { {"foo" => "bar"} }
+          let(:input) { {"foo" => "bar"} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -146,7 +147,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "IsString" => true} }
 
         context "with a string" do
-          let(:context) { {"foo" => "bar"} }
+          let(:input) { {"foo" => "bar"} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -154,7 +155,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "with a number" do
-          let(:context) { {"foo" => 1} }
+          let(:input) { {"foo" => 1} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -166,7 +167,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "IsBoolean" => true} }
 
         context "with a boolean" do
-          let(:context) { {"foo" => true} }
+          let(:input) { {"foo" => true} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -174,7 +175,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "with a number" do
-          let(:context) { {"foo" => 1} }
+          let(:input) { {"foo" => 1} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -186,7 +187,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "IsTimestamp" => true} }
 
         context "with a timestamp" do
-          let(:context) { {"foo" => "2016-03-14T01:59:00Z"} }
+          let(:input) { {"foo" => "2016-03-14T01:59:00Z"} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -194,7 +195,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "with a number" do
-          let(:context) { {"foo" => 1} }
+          let(:input) { {"foo" => 1} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -202,7 +203,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "with a string that isn't a date" do
-          let(:context) { {"foo" => "bar"} }
+          let(:input) { {"foo" => "bar"} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -210,7 +211,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "with a date that isn't in rfc3339 format" do
-          let(:context) { {"foo" => "2023-01-21 16:30:32 UTC"} }
+          let(:input) { {"foo" => "2023-01-21 16:30:32 UTC"} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -222,7 +223,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "NumericEquals" => 1, "Next" => "FirstMatchState" } }
 
         context "that equals the variable" do
-          let(:context) { {"foo" => 1} }
+          let(:input) { {"foo" => 1} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -230,7 +231,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "that does not equal the variable" do
-          let(:context) { {"foo" => 2} }
+          let(:input) { {"foo" => 2} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -242,7 +243,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "NumericEqualsPath" => "$.bar", "Next" => "FirstMatchState" } }
 
         context "that equals the variable" do
-          let(:context) { {"foo" => 1, "bar" => 1} }
+          let(:input) { {"foo" => 1, "bar" => 1} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -250,7 +251,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "that does not equal the variable" do
-          let(:context) { {"foo" => 2, "bar" => 1} }
+          let(:input) { {"foo" => 2, "bar" => 1} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -262,7 +263,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "NumericLessThan" => 1, "Next" => "FirstMatchState" } }
 
         context "that is true" do
-          let(:context) { {"foo" => 0} }
+          let(:input) { {"foo" => 0} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -270,7 +271,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "that is false" do
-          let(:context) { {"foo" => 1} }
+          let(:input) { {"foo" => 1} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -282,7 +283,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "NumericLessThanPath" => "$.bar", "Next" => "FirstMatchState" } }
 
         context "that is true" do
-          let(:context) { {"foo" => 0, "bar" => 1} }
+          let(:input) { {"foo" => 0, "bar" => 1} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -290,7 +291,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "that is false" do
-          let(:context) { {"foo" => 1, "bar" => 1} }
+          let(:input) { {"foo" => 1, "bar" => 1} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -302,7 +303,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "NumericGreaterThan" => 1, "Next" => "FirstMatchState" } }
 
         context "that is true" do
-          let(:context) { {"foo" => 2} }
+          let(:input) { {"foo" => 2} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -310,7 +311,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "that is false" do
-          let(:context) { {"foo" => 1} }
+          let(:input) { {"foo" => 1} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -322,7 +323,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "NumericGreaterThanPath" => "$.bar", "Next" => "FirstMatchState" } }
 
         context "that is true" do
-          let(:context) { {"foo" => 2, "bar" => 1} }
+          let(:input) { {"foo" => 2, "bar" => 1} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -330,7 +331,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "that is false" do
-          let(:context) { {"foo" => 1, "bar" => 1} }
+          let(:input) { {"foo" => 1, "bar" => 1} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -342,7 +343,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "NumericLessThanEquals" => 1, "Next" => "FirstMatchState" } }
 
         context "that is true" do
-          let(:context) { {"foo" => 1} }
+          let(:input) { {"foo" => 1} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -350,7 +351,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "that is false" do
-          let(:context) { {"foo" => 2} }
+          let(:input) { {"foo" => 2} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -362,7 +363,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "NumericLessThanEqualsPath" => "$.bar", "Next" => "FirstMatchState" } }
 
         context "that is true" do
-          let(:context) { {"foo" => 1, "bar" => 1} }
+          let(:input) { {"foo" => 1, "bar" => 1} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -370,7 +371,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "that is false" do
-          let(:context) { {"foo" => 2, "bar" => 1} }
+          let(:input) { {"foo" => 2, "bar" => 1} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -382,7 +383,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "NumericGreaterThanEquals" => 1, "Next" => "FirstMatchState" } }
 
         context "that is true" do
-          let(:context) { {"foo" => 1} }
+          let(:input) { {"foo" => 1} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -390,7 +391,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "that is false" do
-          let(:context) { {"foo" => 0} }
+          let(:input) { {"foo" => 0} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -402,7 +403,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "NumericGreaterThanEqualsPath" => "$.bar", "Next" => "FirstMatchState" } }
 
         context "that is true" do
-          let(:context) { {"foo" => 1, "bar" => 1} }
+          let(:input) { {"foo" => 1, "bar" => 1} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -410,7 +411,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "that is false" do
-          let(:context) { {"foo" => 0, "bar" => 1} }
+          let(:input) { {"foo" => 0, "bar" => 1} }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -422,7 +423,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         let(:payload) { {"Variable" => "$.foo", "StringMatches" => "*.log", "Next" => "FirstMatchState" } }
 
         context "that is true" do
-          let(:context) { {"foo" => "audit.log"} }
+          let(:input) { {"foo" => "audit.log"} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -430,7 +431,7 @@ RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
         end
 
         context "that is false" do
-          let(:context) { {"foo" => "audit"} }
+          let(:input) { {"foo" => "audit"} }
 
           it "returns false" do
             expect(subject).to eq(false)

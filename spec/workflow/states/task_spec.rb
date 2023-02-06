@@ -1,5 +1,92 @@
-RSpec.describe ManageIQ::Floe::Workflow::States::Succeed do
-  let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.json")) }
+RSpec.describe ManageIQ::Floe::Workflow::States::Task do
+  let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.json"), input) }
+  let(:input) { {} }
+
+  describe "#run" do
+    let(:mock_runner) { double("ManageIQ::Floe::Workflow::Runner") }
+    let(:input)       { {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}} }
+    let(:subject)     { state.run!(input) }
+
+    before { allow(ManageIQ::Floe::Workflow::Runner).to receive(:for_resource).and_return(mock_runner) }
+
+    describe "Input" do
+      let(:state) { described_class.new(workflow, "Task", payload) }
+
+      context "with no InputPath" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest"} }
+
+        it "passes the whole context to the resource" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
+
+          subject
+        end
+      end
+
+      context "with an InputPath" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "InputPath" => "$.foo"} }
+
+        it "filters the context passed to the resource" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], {"bar" => "baz"}, nil)
+
+          subject
+        end
+      end
+
+      context "with Parameters" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Parameters" => {"var1.$" => "$$.foo.bar"}} }
+
+        it "passes the interpolated parameters to the resource" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], {"var1" => "baz"}, nil)
+
+          subject
+        end
+      end
+    end
+
+    describe "Output" do
+      let(:state) { described_class.new(workflow, "Task", payload) }
+
+      context "ResultSelector" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "ResultSelector" => {"ip_addrs.$" => "$.response"}} }
+
+        it "filters the results" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], {"foo"=>{"bar"=>"baz"}, "bar"=>{"baz"=>"foo"}}, nil)
+            .and_return([0, "{\"response\":[\"192.168.1.2\"],\"exit_code\":0}"])
+
+          _, results = subject
+
+          expect(results).to eq("foo"=>{"bar"=>"baz"}, "bar"=>{"baz"=>"foo"}, "ip_addrs" => ["192.168.1.2"])
+        end
+      end
+
+      context "ResultPath" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "ResultPath" => "$.ip_addrs"} }
+
+        it "inserts the response into the input" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_return([0, "[\"192.168.1.2\"]"])
+
+          _, results = subject
+
+          expect(results).to eq(
+            "foo"      => {"bar" => "baz"},
+            "bar"      => {"baz" => "foo"},
+            "ip_addrs" => ["192.168.1.2"]
+          )
+        end
+      end
+    end
+  end
 
   context "with a normal state" do
     let(:state) { workflow.states_by_name["FirstState"] }

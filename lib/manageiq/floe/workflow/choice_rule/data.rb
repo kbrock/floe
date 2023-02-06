@@ -83,7 +83,7 @@ module ManageIQ
           end
 
           def compare_value
-            @compare_value ||= compare_key.end_with?("Path") ? JsonPath.on(context, payload[compare_key]).first : payload[compare_key]
+            @compare_value ||= compare_key.end_with?("Path") ? Path.value(payload[compare_key], context, input) : payload[compare_key]
           end
         end
       end
