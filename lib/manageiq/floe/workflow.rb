@@ -6,20 +6,22 @@ module ManageIQ
   module Floe
     class Workflow
       class << self
-        def load(path_or_io, context = {})
+        def load(path_or_io, context = {}, credentials = {})
           payload = path_or_io.respond_to?(:read) ? path_or_io.read : File.read(path_or_io)
-          new(payload, context)
+          new(payload, context, credentials)
         end
       end
 
-      attr_reader :context, :first_state, :payload, :states, :states_by_name, :start_at
+      attr_reader :context, :credentials, :first_state, :payload, :states, :states_by_name, :start_at
 
-      def initialize(payload, context = {})
-        payload = JSON.parse(payload) if payload.kind_of?(String)
-        context = JSON.parse(context) if context.kind_of?(String)
+      def initialize(payload, context = {}, credentials = {})
+        payload     = JSON.parse(payload)     if payload.kind_of?(String)
+        context     = JSON.parse(context)     if context.kind_of?(String)
+        credentials = JSON.parse(credentials) if credentials.kind_of?(String)
 
         @payload        = payload
         @context        = context
+        @credentials    = credentials
         @states         = parse_states
         @states_by_name = states.each_with_object({}) { |state, result| result[state.name] = state }
         @start_at       = @payload["StartAt"]
