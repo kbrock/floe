@@ -10,7 +10,7 @@ module ManageIQ
           def initialize(workflow, name, payload)
             super
 
-            @choices = payload["Choices"]
+            @choices = payload["Choices"].map { |choice| ChoiceRule.build(choice) }
             @default = payload["Default"]
 
             @input_path  = Path.new(payload.fetch("InputPath", "$"), context)
@@ -20,7 +20,7 @@ module ManageIQ
           def run!(input)
             super do
               output = input
-              next_state_name = choices.map { |choice| ChoiceRule.build(choice, context, input) }.detect(&:true?)&.next || default
+              next_state_name = choices.detect { |choice| choice.true?(context, input) }&.next || default
               next_state      = workflow.states_by_name[next_state_name]
               [output, next_state]
             end
@@ -34,13 +34,13 @@ module ManageIQ
             [].tap do |a|
               choices.each do |choice|
                 choice_label =
-                  if choice["NumericEquals"]
-                    "#{choice["Variable"]} == #{choice["NumericEquals"]}"
+                  if choice.payload["NumericEquals"]
+                    "#{choice.variable} == #{choice.payload["NumericEquals"]}"
                   else
                     "Unknown" # TODO
                   end
 
-                a << "  #{name} -> #{choice["Next"]} [ label=#{choice_label.inspect} ]"
+                a << "  #{name} -> #{choice.next} [ label=#{choice_label.inspect} ]"
               end
 
               a << "  #{name} -> #{default} [ label=\"Default\" ]" if default

@@ -5,39 +5,43 @@ module ManageIQ
     class Workflow
       class ChoiceRule
         class Data < ManageIQ::Floe::Workflow::ChoiceRule
-          def true?
-            validate!
+          def true?(context, input)
+
+            lhs = variable_value(context, input)
+            rhs = compare_value(context, input)
+
+            validate!(lhs)
 
             case compare_key
-            when "IsNull"; is_null?
-            when "IsPresent"; is_present?
-            when "IsNumeric"; is_numeric?
-            when "IsString"; is_string?
-            when "IsBoolean"; is_boolean?
-            when "IsTimestamp"; is_timestamp?
+            when "IsNull"; is_null?(lhs)
+            when "IsPresent"; is_present?(lhs)
+            when "IsNumeric"; is_numeric?(lhs)
+            when "IsString"; is_string?(lhs)
+            when "IsBoolean"; is_boolean?(lhs)
+            when "IsTimestamp"; is_timestamp?(lhs)
             when "StringEquals", "StringEqualsPath",
                  "NumericEquals", "NumericEqualsPath",
                  "BooleanEquals", "BooleanEqualsPath",
                  "TimestampEquals", "TimestampEqualsPath"
-              variable_value == compare_value
+              lhs == rhs
             when "StringLessThan", "StringLessThanPath",
                  "NumericLessThan", "NumericLessThanPath",
                  "TimestampLessThan", "TimestampLessThanPath"
-              variable_value < compare_value
+              lhs < rhs
             when "StringGreaterThan", "StringGreaterThanPath",
                  "NumericGreaterThan", "NumericGreaterThanPath",
                  "TimestampGreaterThan", "TimestampGreaterThanPath"
-              variable_value > compare_value
+              lhs > rhs
             when "StringLessThanEquals", "StringLessThanEqualsPath",
                  "NumericLessThanEquals", "NumericLessThanEqualsPath",
                  "TimestampLessThanEquals", "TimestampLessThanEqualsPath"
-              variable_value <= compare_value
+              lhs <= rhs
             when "StringGreaterThanEquals", "StringGreaterThanEqualsPath",
                  "NumericGreaterThanEquals", "NumericGreaterThanEqualsPath",
                  "TimestampGreaterThanEquals", "TimestampGreaterThanEqualsPath"
-              variable_value >= compare_value
+              lhs >= rhs
             when "StringMatches"
-              variable_value.match?(Regexp.escape(compare_value).gsub('\*','.*?'))
+              lhs.match?(Regexp.escape(rhs).gsub('\*','.*?'))
             else
               raise ManageIQ::Floe::InvalidWorkflowError, "Invalid choice [#{compare_key}]"
             end
@@ -45,34 +49,34 @@ module ManageIQ
 
           private
 
-          def validate!
-            raise RuntimeError, "No such variable [#{variable}]" if variable_value.nil? && !%w[IsNull IsPresent].include?(compare_key)
+          def validate!(value)
+            raise RuntimeError, "No such variable [#{variable}]" if value.nil? && !%w[IsNull IsPresent].include?(compare_key)
           end
 
-          def is_null?
-            variable_value.nil?
+          def is_null?(value)
+            value.nil?
           end
 
-          def is_present?
-            !variable_value.nil?
+          def is_present?(value)
+            !value.nil?
           end
 
-          def is_numeric?
-            variable_value.kind_of?(Integer) || variable_value.kind_of?(Float)
+          def is_numeric?(value)
+            value.kind_of?(Integer) || value.kind_of?(Float)
           end
 
-          def is_string?
-            variable_value.kind_of?(String)
+          def is_string?(value)
+            value.kind_of?(String)
           end
 
-          def is_boolean?
-            [true, false].include?(variable_value)
+          def is_boolean?(value)
+            [true, false].include?(value)
           end
 
-          def is_timestamp?
+          def is_timestamp?(value)
             require "date"
 
-            DateTime.rfc3339(variable_value)
+            DateTime.rfc3339(value)
             true
           rescue TypeError, Date::Error
             false
@@ -82,8 +86,8 @@ module ManageIQ
             @compare_key ||= payload.keys.detect { |key| key.match?(/^(IsNull|IsPresent|IsNumeric|IsString|IsBoolean|IsTimestamp|String|Numeric|Boolean|Timestamp)/) }
           end
 
-          def compare_value
-            @compare_value ||= compare_key.end_with?("Path") ? Path.value(payload[compare_key], context, input) : payload[compare_key]
+          def compare_value(context, input)
+            compare_key.end_with?("Path") ? Path.value(payload[compare_key], context, input) : payload[compare_key]
           end
         end
       end
