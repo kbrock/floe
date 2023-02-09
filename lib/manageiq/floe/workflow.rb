@@ -57,6 +57,17 @@ module ManageIQ
         out
       end
 
+      def to_ascii(path: nil)
+        require "open3"
+        out, err, _status = Open3.capture3("graph-easy", :stdin_data => to_dot)
+
+        raise "Error from graph-easy:\n#{err}" if err && !err.empty?
+
+        File.write(path, out) if path
+
+        out
+      end
+
       private
 
       def parse_states
