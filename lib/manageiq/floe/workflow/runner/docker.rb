@@ -15,7 +15,7 @@ module ManageIQ
 
             image = resource.gsub("docker://", "")
 
-            params = ["run", :rm]
+            params = ["run", :rm, [:net, "host"]]
             params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env && !env.empty?
 
             secrets_file = nil
