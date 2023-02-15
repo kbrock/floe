@@ -18,10 +18,10 @@ module ManageIQ
           end
 
           def run!(input)
-            logger.info("Running state: [#{name}] with input [#{input}]")
-            sleep(seconds)
-
-            super
+            super do
+              sleep(seconds)
+              input
+            end
           end
         end
       end

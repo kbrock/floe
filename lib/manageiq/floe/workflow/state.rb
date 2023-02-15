@@ -42,9 +42,12 @@ module ManageIQ
         def run!(input)
           logger.info("Running state: [#{name}] with input [#{input}]")
 
-          next_state = workflow.states_by_name[payload["Next"]] unless end?
+          output, next_state = block_given? ? yield : input
+          next_state ||= workflow.states_by_name[payload["Next"]] unless end?
 
-          [next_state, input]
+          logger.info("Running state: [#{name}] with input [#{input}]...Complete - next state: [#{next_state&.name}]")
+
+          [next_state, output]
         end
 
         def to_dot

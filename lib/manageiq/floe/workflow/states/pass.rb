@@ -20,14 +20,11 @@ module ManageIQ
           end
 
           def run!(input)
-            logger.info("Running state: [#{name}] with input [#{input}]")
-
-            output = input
-            ReferencePath.set(result_path, output, result) if result && result_path
-
-            next_state = workflow.states_by_name[@next] unless end?
-
-            [next_state, output]
+            super do
+              output = input
+              ReferencePath.set(result_path, output, result) if result && result_path
+              output
+            end
           end
         end
       end
