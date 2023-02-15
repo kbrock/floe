@@ -25,21 +25,17 @@ module ManageIQ
           end
 
           def run!(input)
-            logger.info("Running state: [#{name}] with input [#{input}]")
+            super do
+              input = input_path.value(input)
+              input = parameters.value(input) if parameters
 
-            input = input_path.value(input)
-            input = parameters.value(input) if parameters
+              runner = ManageIQ::Floe::Workflow::Runner.for_resource(resource)
+              _exit_status, results = runner.run!(resource, input, credentials&.value(workflow.credentials))
 
-            runner = ManageIQ::Floe::Workflow::Runner.for_resource(resource)
-            _exit_status, results = runner.run!(resource, input, credentials&.value(workflow.credentials))
-
-            output = input
-            process_output!(output, results)
-
-            next_state = workflow.states_by_name[@next] unless end?
-
-            logger.info("next state: [#{next_state&.name}] output: [#{output}]")
-            [next_state, output]
+              output = input
+              process_output!(output, results)
+              output
+            end
           end
 
           private

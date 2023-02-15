@@ -18,12 +18,12 @@ module ManageIQ
           end
 
           def run!(input)
-            logger.info("Running state: [#{name}] with input [#{input}]")
-
-            next_state_name = choices.map { |choice| ChoiceRule.build(choice, context, input) }.detect(&:true?)&.next || default
-            next_state      = workflow.states_by_name[next_state_name]
-
-            [next_state, input]
+            super do
+              output = input
+              next_state_name = choices.map { |choice| ChoiceRule.build(choice, context, input) }.detect(&:true?)&.next || default
+              next_state      = workflow.states_by_name[next_state_name]
+              [output, next_state]
+            end
           end
 
           private def to_dot_attributes
