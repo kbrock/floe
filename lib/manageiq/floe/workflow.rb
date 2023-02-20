@@ -22,8 +22,8 @@ module ManageIQ
         @payload        = payload
         @context        = context
         @credentials    = credentials
-        @states         = parse_states
-        @states_by_name = states.each_with_object({}) { |state, result| result[state.name] = state }
+        @states         = payload["States"].to_a.map { |name, state| State.build!(self, name, state) }
+        @states_by_name = states.to_h { |state| [state.name, state] }
         @start_at       = @payload["StartAt"]
         @first_state    = @states_by_name[@start_at]
       rescue JSON::ParserError => err
@@ -66,14 +66,6 @@ module ManageIQ
         File.write(path, out) if path
 
         out
-      end
-
-      private
-
-      def parse_states
-        payload["States"].map do |name, state_payload|
-          State.build!(self, name, state_payload)
-        end
       end
     end
   end
