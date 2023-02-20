@@ -5,7 +5,7 @@ module ManageIQ
     class Workflow
       class ChoiceRule
         class Boolean < ManageIQ::Floe::Workflow::ChoiceRule
-          def true?
+          def true?(context, input)
             if payload.key?("Not")
               !ChoiceRule.true?(payload["Not"], context, input)
             elsif payload.key?("And")
