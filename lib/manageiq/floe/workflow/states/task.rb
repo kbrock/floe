@@ -6,7 +6,7 @@ module ManageIQ
       module States
         class Task < ManageIQ::Floe::Workflow::State
           attr_reader :credentials, :end, :heartbeat_seconds, :next, :parameters,
-                      :result_selector, :resource, :timeout_seconds,
+                      :result_selector, :resource, :timeout_seconds, :retry,
                       :input_path, :output_path, :result_path
 
           def initialize(workflow, name, payload)
@@ -16,6 +16,8 @@ module ManageIQ
             @next              = payload["Next"]
             @resource          = payload["Resource"]
             @timeout_seconds   = payload["TimeoutSeconds"]
+            @retry             = payload["Retry"].to_a.map { |retrier| Retrier.new(retrier) }
+            @catch             = payload["Catch"].to_a.map { |catcher| Catcher.new(catcher) }
             @input_path        = Path.new(payload.fetch("InputPath", "$"))
             @output_path       = Path.new(payload.fetch("OutputPath", "$"))
             @result_path       = ReferencePath.new(payload.fetch("ResultPath", "$"))
