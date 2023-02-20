@@ -13,10 +13,10 @@ module ManageIQ
           def run!(resource, env = {}, secrets = {})
             raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
 
-            image = resource.gsub("docker://", "")
+            image = resource.sub("docker://", "")
 
             params = ["run", :rm, [:net, "host"]]
-            params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env && !env.empty?
+            params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env
 
             secrets_file = nil
 
