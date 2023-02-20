@@ -85,6 +85,44 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
           )
         end
       end
+
+      context "OutputPath" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "ResultPath" => "$.data.ip_addrs", "OutputPath" => output_path} }
+
+        context "with the default '$'" do
+          let(:output_path) { "$" }
+
+          it "returns the entire input as the output" do
+            expect(mock_runner)
+              .to receive(:run!)
+              .with(payload["Resource"], input, nil)
+              .and_return([0, "[\"192.168.1.2\"]"])
+
+            _, results = subject
+
+            expect(results).to eq(
+              "foo"      => {"bar" => "baz"},
+              "bar"      => {"baz" => "foo"},
+              "data"     => {"ip_addrs" => ["192.168.1.2"]}
+            )
+          end
+        end
+
+        context "with a path" do
+          let(:output_path) { "$.data" }
+
+          it "filters the output" do
+            expect(mock_runner)
+              .to receive(:run!)
+              .with(payload["Resource"], input, nil)
+              .and_return([0, "[\"192.168.1.2\"]"])
+
+            _, results = subject
+
+            expect(results).to eq("ip_addrs" => ["192.168.1.2"])
+          end
+        end
+      end
     end
   end
 

@@ -34,14 +34,14 @@ module ManageIQ
 
               output = input
               process_output!(output, results)
-              output
             end
           end
 
           private
 
           def process_output!(output, results)
-            return if results.nil?
+            return output if results.nil?
+            return if output_path.nil?
 
             begin
               results = JSON.parse(results)
@@ -51,6 +51,7 @@ module ManageIQ
 
             results = result_selector.value(results) if result_selector
             ReferencePath.set(result_path, output, results)
+            output_path.value(output)
           end
         end
       end
