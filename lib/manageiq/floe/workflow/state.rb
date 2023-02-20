@@ -42,10 +42,15 @@ module ManageIQ
         def run!(input)
           logger.info("Running state: [#{name}] with input [#{input}]")
 
-          output, next_state = block_given? ? yield : input
+          input = input_path.value(context, input)
+
+          output, next_state = block_given? ? yield(input) : input
           next_state ||= workflow.states_by_name[payload["Next"]] unless end?
 
-          logger.info("Running state: [#{name}] with input [#{input}]...Complete - next state: [#{next_state&.name}]")
+          output ||= input
+          output   = output_path&.value(context, output)
+
+          logger.info("Running state: [#{name}] with input [#{input}]...Complete - next state: [#{next_state&.name}] output: [#{output}]")
 
           [next_state, output]
         end
