@@ -6,7 +6,7 @@ module ManageIQ
       class ReferencePath < Path
         class << self
           def set (payload, context, value)
-            new(payload, context).set(value)
+            new(payload).set(context, value)
           end
         end
 
@@ -19,7 +19,9 @@ module ManageIQ
           raise ManageIQ::Floe::InvalidWorkflowError, "Invalid Reference Path" if payload.match?(/@|,|:|\?/)
         end
 
-        def set(value)
+        def set(context, value)
+          result = context.dup
+
           path = JsonPath.new(payload)
                          .path[1..]
                          .map { |v| v.match(/\[(?<name>.+)\]/)["name"] }
@@ -31,10 +33,12 @@ module ManageIQ
           #
           # TODO: how to handle non-hash values, raise error if path=$ and value not a hash?
           if path.empty?
-            context.merge!(value)
+            result.merge!(value)
           else
-            context.store_path(path, value)
+            result.store_path(path, value)
           end
+
+          result
         end
       end
     end
