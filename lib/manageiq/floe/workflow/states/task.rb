@@ -15,22 +15,22 @@ module ManageIQ
             @heartbeat_seconds = payload["HeartbeatSeconds"]
             @next              = payload["Next"]
             @resource          = payload["Resource"]
-            @result_path       = payload.fetch("ResultPath", "$")
             @timeout_seconds   = payload["TimeoutSeconds"]
-            @input_path        = Path.new(payload.fetch("InputPath", "$"), context)
-            @output_path       = Path.new(payload.fetch("OutputPath", "$"), context)
-            @parameters        = PayloadTemplate.new(payload["Parameters"], context)     if payload["Parameters"]
-            @result_selector   = PayloadTemplate.new(payload["ResultSelector"], context) if payload["ResultSelector"]
-            @credentials       = PayloadTemplate.new(payload["Credentials"], {})         if payload["Credentials"]
+            @input_path        = Path.new(payload.fetch("InputPath", "$"))
+            @output_path       = Path.new(payload.fetch("OutputPath", "$"))
+            @result_path       = ReferencePath.new(payload.fetch("ResultPath", "$"))
+            @parameters        = PayloadTemplate.new(payload["Parameters"])     if payload["Parameters"]
+            @result_selector   = PayloadTemplate.new(payload["ResultSelector"]) if payload["ResultSelector"]
+            @credentials       = PayloadTemplate.new(payload["Credentials"])    if payload["Credentials"]
           end
 
           def run!(input)
             super do
-              input = input_path.value(input)
-              input = parameters.value(input) if parameters
+              input = input_path.value(context, input)
+              input = parameters.value(context, input) if parameters
 
               runner = ManageIQ::Floe::Workflow::Runner.for_resource(resource)
-              _exit_status, results = runner.run!(resource, input, credentials&.value(workflow.credentials))
+              _exit_status, results = runner.run!(resource, input, credentials&.value({}, workflow.credentials))
 
               output = input
               process_output!(output, results)
@@ -49,9 +49,9 @@ module ManageIQ
               results = {"results" => results}
             end
 
-            results = result_selector.value(results) if result_selector
-            ReferencePath.set(result_path, output, results)
-            output_path.value(output)
+            results = result_selector.value(context, results) if result_selector
+            output  = result_path.set(output, results)
+            output_path.value(context, output)
           end
         end
       end

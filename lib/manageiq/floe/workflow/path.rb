@@ -6,16 +6,15 @@ module ManageIQ
       class Path
         class << self
           def value(payload, context, input = {})
-            new(payload, context).value(input)
+            new(payload).value(context, input)
           end
         end
 
-        def initialize(payload, context)
+        def initialize(payload)
           @payload = payload
-          @context = context
         end
 
-        def value(input = {})
+        def value(context, input = {})
           obj, path =
             if payload.start_with?("$$")
               [context, payload[1..]]
@@ -30,7 +29,7 @@ module ManageIQ
 
         private
 
-        attr_reader :payload, :context
+        attr_reader :payload
       end
     end
   end

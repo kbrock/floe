@@ -1,5 +1,5 @@
 RSpec.describe ManageIQ::Floe::Workflow::PayloadTemplate do
-  let(:subject) { described_class.new(payload, context) }
+  let(:subject) { described_class.new(payload) }
 
   describe "#value" do
     context "with static values" do
@@ -7,7 +7,7 @@ RSpec.describe ManageIQ::Floe::Workflow::PayloadTemplate do
       let(:context) { {} }
 
       it "returns the original value" do
-        expect(subject.value).to eq({"foo" => "bar"})
+        expect(subject.value(context)).to eq({"foo" => "bar"})
       end
     end
 
@@ -17,7 +17,7 @@ RSpec.describe ManageIQ::Floe::Workflow::PayloadTemplate do
       let(:inputs)  { {"foo" => "bar"} }
 
       it "returns the value from the inputs" do
-        expect(subject.value(inputs)).to eq({"foo" => "bar", "bar" => "baz"})
+        expect(subject.value(context, inputs)).to eq({"foo" => "bar", "bar" => "baz"})
       end
     end
   end
