@@ -19,15 +19,15 @@ module ManageIQ
             @timeout_seconds   = payload["TimeoutSeconds"]
             @input_path        = Path.new(payload.fetch("InputPath", "$"), context)
             @output_path       = Path.new(payload.fetch("OutputPath", "$"), context)
-            @parameters        = PayloadTemplate.new(payload["Parameters"], context)     if payload["Parameters"]
-            @result_selector   = PayloadTemplate.new(payload["ResultSelector"], context) if payload["ResultSelector"]
-            @credentials       = PayloadTemplate.new(payload["Credentials"], {})         if payload["Credentials"]
+            @parameters        = PayloadTemplate.new(payload["Parameters"])     if payload["Parameters"]
+            @result_selector   = PayloadTemplate.new(payload["ResultSelector"]) if payload["ResultSelector"]
+            @credentials       = PayloadTemplate.new(payload["Credentials"])    if payload["Credentials"]
           end
 
           def run!(input)
             super do
               input = input_path.value(input)
-              input = parameters.value(input) if parameters
+              input = parameters.value(context, input) if parameters
 
               runner = ManageIQ::Floe::Workflow::Runner.for_resource(resource)
               _exit_status, results = runner.run!(resource, input, credentials&.value(workflow.credentials))
@@ -49,7 +49,7 @@ module ManageIQ
               results = {"results" => results}
             end
 
-            results = result_selector.value(results) if result_selector
+            results = result_selector.value(context, results) if result_selector
             ReferencePath.set(result_path, output, results)
             output_path.value(output)
           end

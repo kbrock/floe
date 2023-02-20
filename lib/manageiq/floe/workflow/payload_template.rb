@@ -4,26 +4,25 @@ module ManageIQ
   module Floe
     class Workflow
       class PayloadTemplate
-        def initialize(payload, context)
+        def initialize(payload)
           @payload = payload
-          @context = context
         end
 
-        def value(inputs = {})
-          interpolate_value_nested(payload, inputs)
+        def value(context, inputs = {})
+          interpolate_value_nested(payload, context, inputs)
         end
 
         private
 
-        attr_reader :payload, :context
+        attr_reader :payload
 
-        def interpolate_value_nested(value, inputs)
+        def interpolate_value_nested(value, context, inputs)
           case value
           when Array
-            value.map { |val| interpolate_value_nested(val, inputs) }
+            value.map { |val| interpolate_value_nested(val, context, inputs) }
           when Hash
             value.to_h do |key, val|
-              val = interpolate_value_nested(val, inputs)
+              val = interpolate_value_nested(val, context, inputs)
               key = key.gsub(/\.\$$/, "") if key.end_with?(".$")
 
               [key, val]
