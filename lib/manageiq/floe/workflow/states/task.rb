@@ -6,7 +6,7 @@ module ManageIQ
       module States
         class Task < ManageIQ::Floe::Workflow::State
           attr_reader :credentials, :end, :heartbeat_seconds, :next, :parameters,
-                      :result_selector, :resource, :timeout_seconds, :retry,
+                      :result_selector, :resource, :timeout_seconds, :retry, :catch,
                       :input_path, :output_path, :result_path
 
           def initialize(workflow, name, payload)
@@ -35,6 +35,14 @@ module ManageIQ
 
               output = input
               process_output!(output, results)
+            rescue => err
+              retrier = self.retry.detect { |r| r.error_equals.include?(err.to_s) }
+              catcher = self.catch.detect { |c| !(c.error_equals & [err.to_s, "States.ALL"]).empty? }
+
+              raise if retrier.nil? && catcher.nil?
+
+              retry if retrier # TODO: this doesn't handle any of the retrier options
+              [output, workflow.states_by_name[catcher.next]] if catcher
             end
           end
 
