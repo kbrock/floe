@@ -36,8 +36,8 @@ module ManageIQ
               output = input
               process_output!(output, results)
             rescue => err
-              retrier = self.retry.detect { |r| r.error_equals.include?(err.to_s) }
-              catcher = self.catch.detect { |c| !(c.error_equals & [err.to_s, "States.ALL"]).empty? }
+              retrier = self.retry.detect { |r| (r.error_equals & [err.to_s, "States.ALL"]).any? }
+              catcher = self.catch.detect { |c| (c.error_equals & [err.to_s, "States.ALL"]).any? }
 
               raise if retrier.nil? && catcher.nil?
 

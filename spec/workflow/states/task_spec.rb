@@ -122,15 +122,94 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
       end
     end
 
+    describe "Retry" do
+      context "with specific errors" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Retry" => [{"ErrorEquals" => ["States.Timeout"]}]} }
+
+        it "retries if that error is raised" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "States.Timeout")
+
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_return([0])
+            _, results = subject
+
+            expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+        end
+
+        it "raises if the exception isn't caught" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "Exception")
+
+          expect { subject }.to raise_error(RuntimeError, "Exception")
+        end
+      end
+
+      context "with a States.ALL retrier" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Retry" => [{"ErrorEquals" => ["States.Timeout"]}, {"ErrorEquals" => ["States.ALL"]}]} }
+
+        it "retries if any error is raised" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "ABORT!")
+
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_return([0])
+            _, results = subject
+
+            expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+        end
+      end
+
+      context "with a Catch" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Retry" => [{"ErrorEquals" => ["States.Timeout"]}], "Catch" => [{"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}]} }
+
+        it "retry preceeds catch" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "States.Timeout")
+
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_return([0])
+            _, results = subject
+
+            expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+        end
+
+        it "invokes the Catch if no retriers match" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "Exception")
+
+          next_state, _ = subject
+
+          expect(next_state.name).to eq("FailState")
+        end
+      end
+    end
+
     describe "Catch" do
       context "with specific errors" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Catch" => [{"ErrorEquals" => ["Timeout"], "Next" => "FirstState"}]} }
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Catch" => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}]} }
 
         it "catches the exception" do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], input, nil)
-            .and_raise(RuntimeError, "Timeout")
+            .and_raise(RuntimeError, "States.Timeout")
 
           next_state, _ = subject
 
@@ -148,13 +227,13 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
       end
 
       context "with a State.ALL catcher" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Catch" => [{"ErrorEquals" => ["Timeout"], "Next" => "FirstState"}, {"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}]} }
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Catch" => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}, {"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}]} }
 
         it "catches a more specific exception" do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], input, nil)
-            .and_raise(RuntimeError, "Timeout")
+            .and_raise(RuntimeError, "States.Timeout")
 
           next_state, _ = subject
 
@@ -165,7 +244,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], input, nil)
-            .and_raise
+            .and_raise(RuntimeError, "Exception")
 
           next_state, _ = subject
 
