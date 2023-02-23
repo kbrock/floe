@@ -145,6 +145,30 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
           expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
         end
 
+        context "with multiple retriers" do
+          let(:retriers) { [{"ErrorEquals" => ["States.Timeout"], "MaxAttempts" => 1}, {"ErrorEquals" => ["Exception"]}] }
+
+          it "resets the retrier if a different exception is raised" do
+            expect(mock_runner)
+              .to receive(:run!)
+              .with(payload["Resource"], input, nil)
+              .and_raise(RuntimeError, "States.Timeout")
+
+            expect(mock_runner)
+              .to receive(:run!)
+              .with(payload["Resource"], input, nil)
+              .and_raise(RuntimeError, "Exception")
+
+            expect(mock_runner)
+              .to receive(:run!)
+              .with(payload["Resource"], input, nil)
+              .and_return([0])
+            _, results = subject
+
+            expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+          end
+        end
+
         it "raises if the number of retries is greater than MaxAttempts" do
           expect(mock_runner)
             .to receive(:run!)

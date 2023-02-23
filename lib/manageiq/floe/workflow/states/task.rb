@@ -51,7 +51,11 @@ module ManageIQ
           def retry!(retrier)
             return if retrier.nil?
 
-            context["retrier"] ||= {"retry_count" => 0}
+            # If a different retrier is hit reset the context
+            if !context.key?("retrier") || context["retrier"]["error_equals"] != retrier.error_equals
+              context["retrier"] = {"error_equals" => retrier.error_equals, "retry_count" => 0}
+            end
+
             context["retrier"]["retry_count"] += 1
 
             return if context["retrier"]["retry_count"] > retrier.max_attempts
