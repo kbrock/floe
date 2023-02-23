@@ -17,11 +17,13 @@ module ManageIQ
             @output_path = Path.new(payload.fetch("OutputPath", "$"))
           end
 
-          def run!(input)
-            super do
-              output = input
+          def run!(*)
+            super do |input|
               next_state_name = choices.detect { |choice| choice.true?(context, input) }&.next || default
               next_state      = workflow.states_by_name[next_state_name]
+
+              output = input
+
               [output, next_state]
             end
           end

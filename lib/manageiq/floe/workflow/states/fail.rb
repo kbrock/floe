@@ -14,6 +14,17 @@ module ManageIQ
             @error = payload["Error"]
           end
 
+          def run!(input)
+            logger.info("Running state: [#{name}] with input [#{input}]")
+
+            next_state = nil
+            output     = input
+
+            logger.info("Running state: [#{name}] with input [#{input}]...Complete - next state: [#{next_state&.name}]")
+
+            [next_state, output]
+          end
+
           def end?
             true
           end

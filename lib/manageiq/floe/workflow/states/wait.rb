@@ -17,11 +17,8 @@ module ManageIQ
             @output_path = Path.new(payload.fetch("OutputPath", "$"), context)
           end
 
-          def run!(input)
-            super do
-              sleep(seconds)
-              input
-            end
+          def run!(*)
+            super { sleep(seconds); nil }
           end
         end
       end

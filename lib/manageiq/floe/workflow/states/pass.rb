@@ -19,8 +19,8 @@ module ManageIQ
             @result_path = ReferencePath.new(payload.fetch("ResultPath", "$"))
           end
 
-          def run!(input)
-            super do
+          def run!(*)
+            super do |input|
               output = input
               output = result_path.set(output, result) if result && result_path
               output

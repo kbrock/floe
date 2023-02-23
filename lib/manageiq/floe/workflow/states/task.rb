@@ -24,9 +24,8 @@ module ManageIQ
             @credentials       = PayloadTemplate.new(payload["Credentials"])    if payload["Credentials"]
           end
 
-          def run!(input)
-            super do
-              input = input_path.value(context, input)
+          def run!(*)
+            super do |input|
               input = parameters.value(context, input) if parameters
 
               runner = ManageIQ::Floe::Workflow::Runner.for_resource(resource)
@@ -50,8 +49,7 @@ module ManageIQ
             end
 
             results = result_selector.value(context, results) if result_selector
-            output  = result_path.set(output, results)
-            output_path.value(context, output)
+            result_path.set(output, results)
           end
         end
       end

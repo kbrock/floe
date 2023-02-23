@@ -1,6 +1,6 @@
 RSpec.describe ManageIQ::Floe::Workflow::States::Task do
-  let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.json"), input) }
-  let(:input) { {} }
+  let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.json")) }
+  let(:input)    { {} }
 
   describe "#run" do
     let(:mock_runner) { double("ManageIQ::Floe::Workflow::Runner") }
@@ -37,7 +37,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
       end
 
       context "with Parameters" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Parameters" => {"var1.$" => "$$.foo.bar"}} }
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Parameters" => {"var1.$" => "$.foo.bar"}} }
 
         it "passes the interpolated parameters to the resource" do
           expect(mock_runner)
