@@ -1,5 +1,5 @@
 RSpec.describe ManageIQ::Floe::Workflow::States::Choice do
-  let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.json"), inputs) }
+  let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.json")) }
   let(:state)    { workflow.states_by_name["ChoiceState"] }
   let(:inputs)   { {} }
 
