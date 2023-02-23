@@ -37,16 +37,28 @@ module ManageIQ
               process_output!(output, results)
             rescue => err
               retrier = self.retry.detect { |r| (r.error_equals & [err.to_s, "States.ALL"]).any? }
+              retry if retry!(retrier)
+
               catcher = self.catch.detect { |c| (c.error_equals & [err.to_s, "States.ALL"]).any? }
+              raise if catcher.nil?
 
-              raise if retrier.nil? && catcher.nil?
-
-              retry if retrier # TODO: this doesn't handle any of the retrier options
-              [output, workflow.states_by_name[catcher.next]] if catcher
+              [output, workflow.states_by_name[catcher.next]]
             end
           end
 
           private
+
+          def retry!(retrier)
+            return if retrier.nil?
+
+            context["retrier"] ||= {"retry_count" => 0}
+            context["retrier"]["retry_count"] += 1
+
+            return if context["retrier"]["retry_count"] > retrier.max_attempts
+
+            Kernel.sleep(retrier.sleep_duration(context["retrier"]["retry_count"]))
+            true
+          end
 
           def process_output!(output, results)
             return output if results.nil?

@@ -123,8 +123,11 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
     end
 
     describe "Retry" do
+      let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Retry" => retriers} }
+      before { allow(Kernel).to receive(:sleep).and_return(0) }
+
       context "with specific errors" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Retry" => [{"ErrorEquals" => ["States.Timeout"]}]} }
+        let(:retriers) { [{"ErrorEquals" => ["States.Timeout"], "MaxAttempts" => 1}] }
 
         it "retries if that error is raised" do
           expect(mock_runner)
@@ -136,9 +139,20 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
             .to receive(:run!)
             .with(payload["Resource"], input, nil)
             .and_return([0])
-            _, results = subject
 
-            expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+          _, results = subject
+
+          expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+        end
+
+        it "raises if the number of retries is greater than MaxAttempts" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .twice
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "States.Timeout")
+
+          expect { subject }.to raise_error(RuntimeError, "States.Timeout")
         end
 
         it "raises if the exception isn't caught" do
@@ -152,7 +166,7 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
       end
 
       context "with a States.ALL retrier" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Retry" => [{"ErrorEquals" => ["States.Timeout"]}, {"ErrorEquals" => ["States.ALL"]}]} }
+        let(:retriers) { [{"ErrorEquals" => ["States.Timeout"]}, {"ErrorEquals" => ["States.ALL"]}] }
 
         it "retries if any error is raised" do
           expect(mock_runner)
