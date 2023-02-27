@@ -8,6 +8,20 @@
       "Credentials": {
         "mysecret": "dont tell anyone"
       },
+      "Retry": [
+        {
+          "ErrorEquals": [ "States.Timeout" ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 2,
+          "BackoffRate": 1.5
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [ "States.ALL" ],
+          "Next": "FailState"
+        }
+      ],
       "Next": "ChoiceState"
     },
 

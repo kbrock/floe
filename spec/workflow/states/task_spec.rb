@@ -5,13 +5,12 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
   describe "#run" do
     let(:mock_runner) { double("ManageIQ::Floe::Workflow::Runner") }
     let(:input)       { {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}} }
+    let(:state)       { described_class.new(workflow, "Task", payload) }
     let(:subject)     { state.run!(input) }
 
     before { allow(ManageIQ::Floe::Workflow::Runner).to receive(:for_resource).and_return(mock_runner) }
 
     describe "Input" do
-      let(:state) { described_class.new(workflow, "Task", payload) }
-
       context "with no InputPath" do
         let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest"} }
 
@@ -50,8 +49,6 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
     end
 
     describe "Output" do
-      let(:state) { described_class.new(workflow, "Task", payload) }
-
       context "ResultSelector" do
         let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "ResultSelector" => {"ip_addrs.$" => "$.response"}} }
 
@@ -121,6 +118,175 @@ RSpec.describe ManageIQ::Floe::Workflow::States::Task do
 
             expect(results).to eq("ip_addrs" => ["192.168.1.2"])
           end
+        end
+      end
+    end
+
+    describe "Retry" do
+      let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Retry" => retriers} }
+      before { allow(Kernel).to receive(:sleep).and_return(0) }
+
+      context "with specific errors" do
+        let(:retriers) { [{"ErrorEquals" => ["States.Timeout"], "MaxAttempts" => 1}] }
+
+        it "retries if that error is raised" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "States.Timeout")
+
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_return([0])
+
+          _, results = subject
+
+          expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+        end
+
+        context "with multiple retriers" do
+          let(:retriers) { [{"ErrorEquals" => ["States.Timeout"], "MaxAttempts" => 1}, {"ErrorEquals" => ["Exception"]}] }
+
+          it "resets the retrier if a different exception is raised" do
+            expect(mock_runner)
+              .to receive(:run!)
+              .with(payload["Resource"], input, nil)
+              .and_raise(RuntimeError, "States.Timeout")
+
+            expect(mock_runner)
+              .to receive(:run!)
+              .with(payload["Resource"], input, nil)
+              .and_raise(RuntimeError, "Exception")
+
+            expect(mock_runner)
+              .to receive(:run!)
+              .with(payload["Resource"], input, nil)
+              .and_return([0])
+            _, results = subject
+
+            expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+          end
+        end
+
+        it "raises if the number of retries is greater than MaxAttempts" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .twice
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "States.Timeout")
+
+          expect { subject }.to raise_error(RuntimeError, "States.Timeout")
+        end
+
+        it "raises if the exception isn't caught" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "Exception")
+
+          expect { subject }.to raise_error(RuntimeError, "Exception")
+        end
+      end
+
+      context "with a States.ALL retrier" do
+        let(:retriers) { [{"ErrorEquals" => ["States.Timeout"]}, {"ErrorEquals" => ["States.ALL"]}] }
+
+        it "retries if any error is raised" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "ABORT!")
+
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_return([0])
+            _, results = subject
+
+            expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+        end
+      end
+
+      context "with a Catch" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Retry" => [{"ErrorEquals" => ["States.Timeout"]}], "Catch" => [{"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}]} }
+
+        it "retry preceeds catch" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "States.Timeout")
+
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_return([0])
+            _, results = subject
+
+            expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+        end
+
+        it "invokes the Catch if no retriers match" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "Exception")
+
+          next_state, _ = subject
+
+          expect(next_state.name).to eq("FailState")
+        end
+      end
+    end
+
+    describe "Catch" do
+      context "with specific errors" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Catch" => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}]} }
+
+        it "catches the exception" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "States.Timeout")
+
+          next_state, _ = subject
+
+          expect(next_state.name).to eq("FirstState")
+        end
+
+        it "raises if the exception isn't caught" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "Exception")
+
+          expect { subject }.to raise_error(RuntimeError, "Exception")
+        end
+      end
+
+      context "with a State.ALL catcher" do
+        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Catch" => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}, {"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}]} }
+
+        it "catches a more specific exception" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "States.Timeout")
+
+          next_state, _ = subject
+
+          expect(next_state.name).to eq("FirstState")
+        end
+
+        it "catches the exception and transits to the next state" do
+          expect(mock_runner)
+            .to receive(:run!)
+            .with(payload["Resource"], input, nil)
+            .and_raise(RuntimeError, "Exception")
+
+          next_state, _ = subject
+
+          expect(next_state.name).to eq("FailState")
         end
       end
     end

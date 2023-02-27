@@ -6,7 +6,7 @@ module ManageIQ
       module States
         class Task < ManageIQ::Floe::Workflow::State
           attr_reader :credentials, :end, :heartbeat_seconds, :next, :parameters,
-                      :result_selector, :resource, :timeout_seconds,
+                      :result_selector, :resource, :timeout_seconds, :retry, :catch,
                       :input_path, :output_path, :result_path
 
           def initialize(workflow, name, payload)
@@ -16,6 +16,8 @@ module ManageIQ
             @next              = payload["Next"]
             @resource          = payload["Resource"]
             @timeout_seconds   = payload["TimeoutSeconds"]
+            @retry             = payload["Retry"].to_a.map { |retrier| Retrier.new(retrier) }
+            @catch             = payload["Catch"].to_a.map { |catcher| Catcher.new(catcher) }
             @input_path        = Path.new(payload.fetch("InputPath", "$"))
             @output_path       = Path.new(payload.fetch("OutputPath", "$"))
             @result_path       = ReferencePath.new(payload.fetch("ResultPath", "$"))
@@ -33,10 +35,34 @@ module ManageIQ
 
               output = input
               process_output!(output, results)
+            rescue => err
+              retrier = self.retry.detect { |r| (r.error_equals & [err.to_s, "States.ALL"]).any? }
+              retry if retry!(retrier)
+
+              catcher = self.catch.detect { |c| (c.error_equals & [err.to_s, "States.ALL"]).any? }
+              raise if catcher.nil?
+
+              [output, workflow.states_by_name[catcher.next]]
             end
           end
 
           private
+
+          def retry!(retrier)
+            return if retrier.nil?
+
+            # If a different retrier is hit reset the context
+            if !context.key?("retrier") || context["retrier"]["error_equals"] != retrier.error_equals
+              context["retrier"] = {"error_equals" => retrier.error_equals, "retry_count" => 0}
+            end
+
+            context["retrier"]["retry_count"] += 1
+
+            return if context["retrier"]["retry_count"] > retrier.max_attempts
+
+            Kernel.sleep(retrier.sleep_duration(context["retrier"]["retry_count"]))
+            true
+          end
 
           def process_output!(output, results)
             return output if results.nil?
