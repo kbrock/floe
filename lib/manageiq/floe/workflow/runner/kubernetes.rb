@@ -17,13 +17,13 @@ module ManageIQ
 
             name = pod_name(image)
             params = ["run", :rm, :attach, [:image, image], [:restart, "Never"], name]
-            params += env.map { |k, v| [:env, "#{k}=#{v}"] } if env
 
-            # TODO: Secrets
-            #if secrets && !secrets.empty?
-            #  params << [:env, "SECRETS=/TODO"]
-            #  params << [:overrides, {"spec" => {"containers" => {"env" => [{"name" => "SECRETS", "valueFrom" => {"secretKeyRef" => {"name" => "SECRET_NAME", "key" => "SECRET_KEY"}}}]}}}.to_json]
-            #end
+            if secrets && !secrets.empty?
+              secret_name = create_secret!(secrets)
+              #params << [:env, "SECRETS=/TODO"]
+            end
+
+            params += env.map { |k, v| [:env, "#{k}=#{v}"] } if env
 
             logger.debug("Running kubectl: #{AwesomeSpawn.build_command_line("kubectl", params)}")
             result = AwesomeSpawn.run!("kubectl", :params => params)
@@ -32,6 +32,8 @@ module ManageIQ
             output = result.output.gsub(/pod \"#{name}\" deleted/, "")
 
             [result.exit_status, output]
+          ensure
+            delete_secret!(secret_name) if secret_name
           end
 
           private
@@ -41,6 +43,20 @@ module ManageIQ
             raise ArgumentError, "Invalid docker image [#{image}]" if image_name.nil?
 
             "#{image_name}-#{SecureRandom.uuid}"
+          end
+
+          def create_secret!(secrets)
+            secret_name = SecureRandom.uuid
+            params = ["create", "secret", "generic", secret_name]
+            secrets.each { |key, value| params << "--from-literal=#{key}=#{value}" }
+
+            AwesomeSpawn.run!("kubectl", :params => params)
+
+            secret_name
+          end
+
+          def delete_secret!(secret_name)
+            AwesomeSpawn.run!("kubectl", :params => ["delete", "secret", secret_name])
           end
         end
       end
