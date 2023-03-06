@@ -15,7 +15,7 @@ module ManageIQ
 
             image = resource.sub("docker://", "")
 
-            name = "#{image.split("/").last.split(":").first}-#{SecureRandom.uuid}"
+            name = pod_name(image)
             params = ["run", :rm, :attach, [:image, image], [:restart, "Never"], name]
             params += env.map { |k, v| [:env, "#{k}=#{v}"] } if env
 
@@ -32,6 +32,15 @@ module ManageIQ
             output = result.output.gsub(/pod \"#{name}\" deleted/, "")
 
             [result.exit_status, output]
+          end
+
+          private
+
+          def pod_name(image)
+            image_name = image.match(%r{^(?<repository>.+\/)?(?<image>.+):(?<tag>.+)$})&.named_captures&.dig("image")
+            raise ArgumentError, "Invalid docker image [#{image}]" if image_name.nil?
+
+            "#{image_name}-#{SecureRandom.uuid}"
           end
         end
       end
