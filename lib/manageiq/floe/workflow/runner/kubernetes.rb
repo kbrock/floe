@@ -21,6 +21,21 @@ module ManageIQ
             if secrets && !secrets.empty?
               secret_name = create_secret!(secrets)
               #params << [:env, "SECRETS=/TODO"]
+
+              container_overrides = {
+                "spec" => {
+                  "volumes" => [
+                    {
+                      "name"   => "secret-volume",
+                      "secret" => {
+                        "secretName" => secret_name
+                      }
+                    }
+                  ]
+                }
+              }
+
+              params << "--overrides=#{container_overrides.to_json}"
             end
 
             params += env.map { |k, v| [:env, "#{k}=#{v}"] } if env
