@@ -3,9 +3,13 @@ module ManageIQ
     class Workflow
       class Runner
         class Kubernetes < ManageIQ::Floe::Workflow::Runner
+          attr_reader :namespace
+
           def initialize(*)
             require "awesome_spawn"
             require "securerandom"
+
+            @namespace = "default"
 
             super
           end
@@ -16,7 +20,7 @@ module ManageIQ
             image = resource.sub("docker://", "")
 
             name = pod_name(image)
-            params = ["run", :rm, :attach, [:image, image], [:restart, "Never"], name]
+            params = ["run", :rm, :attach, [:image, image], [:restart, "Never"], [:namespace, namespace], name]
 
             if secrets && !secrets.empty?
               secret_name = create_secret!(secrets)
@@ -24,7 +28,20 @@ module ManageIQ
 
               container_overrides = {
                 "spec" => {
-                  "volumes" => [
+                  "containers" => [
+                    {
+                      "name" => container_name(image),
+                      "image" => image,
+                      "volumeMounts" => [
+                        {
+                          "name" => "secret-volume",
+                          "mountPath" => "/run/secrets",
+                          "readOnly" => true
+                        }
+                      ]
+                    }
+                  ],
+                  "volumes"    => [
                     {
                       "name"   => "secret-volume",
                       "secret" => {
@@ -53,16 +70,20 @@ module ManageIQ
 
           private
 
-          def pod_name(image)
-            image_name = image.match(%r{^(?<repository>.+\/)?(?<image>.+):(?<tag>.+)$})&.named_captures&.dig("image")
-            raise ArgumentError, "Invalid docker image [#{image}]" if image_name.nil?
+          def container_name(image)
+            image.match(%r{^(?<repository>.+\/)?(?<image>.+):(?<tag>.+)$})&.named_captures&.dig("image")
+          end
 
-            "#{image_name}-#{SecureRandom.uuid}"
+          def pod_name(image)
+            container_short_name = container_name(image)
+            raise ArgumentError, "Invalid docker image [#{image}]" if container_short_name.nil?
+
+            "#{container_short_name}-#{SecureRandom.uuid}"
           end
 
           def create_secret!(secrets)
             secret_name = SecureRandom.uuid
-            params = ["create", "secret", "generic", secret_name]
+            params = ["create", "secret", "generic", secret_name, [:namespace, namespace]]
             secrets.each { |key, value| params << "--from-literal=#{key}=#{value}" }
 
             AwesomeSpawn.run!("kubectl", :params => params)
@@ -71,7 +92,7 @@ module ManageIQ
           end
 
           def delete_secret!(secret_name)
-            AwesomeSpawn.run!("kubectl", :params => ["delete", "secret", secret_name])
+            AwesomeSpawn.run!("kubectl", :params => ["delete", "secret", secret_name, [:namespace, namespace]])
           end
         end
       end
