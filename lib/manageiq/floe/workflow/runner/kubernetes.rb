@@ -24,18 +24,22 @@ module ManageIQ
 
             if secrets && !secrets.empty?
               secret_name = create_secret!(secrets)
-              #params << [:env, "SECRETS=/TODO"]
-
               container_overrides = {
                 "spec" => {
                   "containers" => [
                     {
                       "name" => container_name(image),
                       "image" => image,
+                      "env" => [
+                        {
+                          "name" => "SECRETS",
+                          "value" => "/run/secrets/#{secret_name}/secret"
+                        }
+                      ],
                       "volumeMounts" => [
                         {
                           "name" => "secret-volume",
-                          "mountPath" => "/run/secrets",
+                          "mountPath" => "/run/secrets/#{secret_name}",
                           "readOnly" => true
                         }
                       ]
@@ -84,7 +88,7 @@ module ManageIQ
           def create_secret!(secrets)
             secret_name = SecureRandom.uuid
             params = ["create", "secret", "generic", secret_name, [:namespace, namespace]]
-            secrets.each { |key, value| params << "--from-literal=#{key}=#{value}" }
+            params << "--from-literal=secret=#{secrets.to_json}"
 
             AwesomeSpawn.run!("kubectl", :params => params)
 
