@@ -8,6 +8,8 @@ module ManageIQ
           def initialize(*)
             require "awesome_spawn"
             require "securerandom"
+            require "base64"
+            require "yaml"
 
             @namespace = "default"
 
@@ -87,10 +89,21 @@ module ManageIQ
 
           def create_secret!(secrets)
             secret_name = SecureRandom.uuid
-            params = ["create", "secret", "generic", secret_name, [:namespace, namespace]]
-            params << "--from-literal=secret=#{secrets.to_json}"
 
-            AwesomeSpawn.run!("kubectl", :params => params)
+            secret_yaml = {
+              "kind"       => "Secret",
+              "apiVersion" => "v1",
+              "metadata"   => {
+                "name" => secret_name,
+                "namespace" => namespace
+              },
+              "data"       => {
+                "secret" => Base64.urlsafe_encode64(secrets.to_json)
+              },
+              "type"       => "Opaque"
+            }.to_yaml
+
+            AwesomeSpawn.run!("kubectl", :params => ["create", "-f", "-"], :in_data => secret_yaml)
 
             secret_name
           end
