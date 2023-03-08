@@ -64,7 +64,7 @@ module ManageIQ
             params << "--overrides=#{container_overrides.to_json}"
 
             logger.debug("Running kubectl: #{AwesomeSpawn.build_command_line("kubectl", params)}")
-            result = AwesomeSpawn.run!("kubectl", :params => params)
+            result = kubectl!(*params)
 
             # Kubectl prints that the pod was deleted, strip this from the output
             output = result.output.gsub(/pod \"#{name}\" deleted/, "")
@@ -103,13 +103,17 @@ module ManageIQ
               "type"       => "Opaque"
             }.to_yaml
 
-            AwesomeSpawn.run!("kubectl", :params => ["create", "-f", "-"], :in_data => secret_yaml)
+            kubectl!("create", "-f", "-", :in_data => secret_yaml)
 
             secret_name
           end
 
           def delete_secret!(secret_name)
-            AwesomeSpawn.run!("kubectl", :params => ["delete", "secret", secret_name, [:namespace, namespace]])
+            kubectl!("delete", "secret", secret_name, [:namespace, namespace])
+          end
+
+          def kubectl!(*params, **kwargs)
+            AwesomeSpawn.run!("kubectl", :params => params, **kwargs)
           end
         end
       end
