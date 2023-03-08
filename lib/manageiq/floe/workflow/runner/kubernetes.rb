@@ -22,44 +22,44 @@ module ManageIQ
             name = pod_name(image)
             params = ["run", :rm, :attach, [:image, image], [:restart, "Never"], [:namespace, namespace], name]
 
+            container_overrides = {
+              "spec" => {
+                "containers" => [
+                  {
+                    "name" => container_name(image),
+                    "image" => image,
+                    "env" => []
+                  }
+                ]
+              }
+            }
+
+            container_overrides["spec"]["containers"][0]["env"] += env.map { |k, v| {"name" => k, "value" => v} } if env
+
             if secrets && !secrets.empty?
               secret_name = create_secret!(secrets)
-              container_overrides = {
-                "spec" => {
-                  "containers" => [
-                    {
-                      "name" => container_name(image),
-                      "image" => image,
-                      "env" => [
-                        {
-                          "name" => "SECRETS",
-                          "value" => "/run/secrets/#{secret_name}/secret"
-                        }
-                      ],
-                      "volumeMounts" => [
-                        {
-                          "name" => "secret-volume",
-                          "mountPath" => "/run/secrets/#{secret_name}",
-                          "readOnly" => true
-                        }
-                      ]
-                    }
-                  ],
-                  "volumes"    => [
-                    {
-                      "name"   => "secret-volume",
-                      "secret" => {
-                        "secretName" => secret_name
-                      }
-                    }
-                  ]
-                }
+              container_overrides["spec"]["containers"][0]["env"] << {
+                "name" => "SECRETS",
+                "value" => "/run/secrets/#{secret_name}/secret"
               }
 
-              params << "--overrides=#{container_overrides.to_json}"
+              container_overrides["spec"]["containers"][0]["volumeMounts"] = [
+                {
+                  "name" => "secret-volume",
+                  "mountPath" => "/run/secrets/#{secret_name}",
+                  "readOnly" => true
+                }
+              ]
+
+              container_overrides["spec"]["volumes"] = [
+                {
+                  "name"   => "secret-volume",
+                  "secret" => {"secretName" => secret_name}
+                }
+              ]
             end
 
-            params += env.map { |k, v| [:env, "#{k}=#{v}"] } if env
+            params << "--overrides=#{container_overrides.to_json}"
 
             logger.debug("Running kubectl: #{AwesomeSpawn.build_command_line("kubectl", params)}")
             result = AwesomeSpawn.run!("kubectl", :params => params)
