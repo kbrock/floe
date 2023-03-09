@@ -19,59 +19,19 @@ module ManageIQ
           def run!(resource, env = {}, secrets = {})
             raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
 
-            image = resource.sub("docker://", "")
+            image     = resource.sub("docker://", "")
+            name      = pod_name(image)
+            secret    = create_secret!(secrets) unless secrets&.empty?
+            overrides = pod_spec(image, env, secret)
 
-            name = pod_name(image)
-            params = ["run", :rm, :attach, [:image, image], [:restart, "Never"], [:namespace, namespace], name]
-
-            container_overrides = {
-              "spec" => {
-                "containers" => [
-                  {
-                    "name" => container_name(image),
-                    "image" => image,
-                    "env" => []
-                  }
-                ]
-              }
-            }
-
-            container_overrides["spec"]["containers"][0]["env"] += env.map { |k, v| {"name" => k, "value" => v} } if env
-
-            if secrets && !secrets.empty?
-              secret_name = create_secret!(secrets)
-              container_overrides["spec"]["containers"][0]["env"] << {
-                "name" => "SECRETS",
-                "value" => "/run/secrets/#{secret_name}/secret"
-              }
-
-              container_overrides["spec"]["containers"][0]["volumeMounts"] = [
-                {
-                  "name" => "secret-volume",
-                  "mountPath" => "/run/secrets/#{secret_name}",
-                  "readOnly" => true
-                }
-              ]
-
-              container_overrides["spec"]["volumes"] = [
-                {
-                  "name"   => "secret-volume",
-                  "secret" => {"secretName" => secret_name}
-                }
-              ]
-            end
-
-            params << "--overrides=#{container_overrides.to_json}"
-
-            logger.debug("Running kubectl: #{AwesomeSpawn.build_command_line("kubectl", params)}")
-            result = kubectl!(*params)
+            result = kubectl_run!(image, name, overrides)
 
             # Kubectl prints that the pod was deleted, strip this from the output
             output = result.output.gsub(/pod \"#{name}\" deleted/, "")
 
             [result.exit_status, output]
           ensure
-            delete_secret!(secret_name) if secret_name
+            delete_secret!(secret) if secret
           end
 
           private
@@ -85,6 +45,30 @@ module ManageIQ
             raise ArgumentError, "Invalid docker image [#{image}]" if container_short_name.nil?
 
             "#{container_short_name}-#{SecureRandom.uuid}"
+          end
+
+          def pod_spec(image, env, secret = nil)
+            container_spec = {
+              "name" => container_name(image),
+              "image" => image,
+              "env" => env.to_h.map { |k, v| {"name" => k, "value" => v} }
+            }
+
+            spec = {"spec" => {"containers" => [container_spec]}}
+
+            if secret
+              spec["spec"]["volumes"] = [{"name"   => "secret-volume", "secret" => {"secretName" => secret}}]
+              container_spec["env"] << {"name" => "SECRETS", "value" => "/run/secrets/#{secret}/secret"}
+              container_spec["volumeMounts"] = [
+                {
+                  "name"      => "secret-volume",
+                  "mountPath" => "/run/secrets/#{secret}",
+                  "readOnly"  => true
+                }
+              ]
+            end
+
+            spec
           end
 
           def create_secret!(secrets)
@@ -114,6 +98,18 @@ module ManageIQ
 
           def kubectl!(*params, **kwargs)
             AwesomeSpawn.run!("kubectl", :params => params, **kwargs)
+          end
+
+          def kubectl_run!(image, name, overrides = nil)
+            params = [
+              "run", :rm, :attach, [:image, image], [:restart, "Never"], [:namespace, namespace], name
+            ]
+
+            params << "--overrides=#{overrides.to_json}" if overrides
+
+            logger.debug("Running kubectl: #{AwesomeSpawn.build_command_line("kubectl", params)}")
+
+            kubectl!(*params)
           end
         end
       end
