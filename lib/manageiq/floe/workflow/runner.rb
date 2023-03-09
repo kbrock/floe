@@ -5,14 +5,19 @@ module ManageIQ
         include Logging
 
         class << self
+          attr_writer :docker_runner_klass
+
+          def docker_runner_klass
+            @docker_runner_klass ||= const_get(ENV.fetch("DOCKER_RUNNER", "docker").capitalize)
+          end
+
           def for_resource(resource)
             raise ArgumentError, "resource cannot be nil" if resource.nil?
 
             scheme = resource.split("://").first
             case scheme
             when "docker"
-              # TODO detect if we should use Docker, Podman, or Kubernetes
-              Docker.new
+              docker_runner_klass.new
             else
               raise "Invalid resource scheme [#{scheme}]"
             end

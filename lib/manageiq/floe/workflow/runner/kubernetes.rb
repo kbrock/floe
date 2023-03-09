@@ -3,6 +3,118 @@ module ManageIQ
     class Workflow
       class Runner
         class Kubernetes < ManageIQ::Floe::Workflow::Runner
+          attr_reader :namespace
+
+          def initialize(*)
+            require "awesome_spawn"
+            require "securerandom"
+            require "base64"
+            require "yaml"
+
+            @namespace = "default"
+
+            super
+          end
+
+          def run!(resource, env = {}, secrets = {})
+            raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
+
+            image = resource.sub("docker://", "")
+
+            name = pod_name(image)
+            params = ["run", :rm, :attach, [:image, image], [:restart, "Never"], [:namespace, namespace], name]
+
+            container_overrides = {
+              "spec" => {
+                "containers" => [
+                  {
+                    "name" => container_name(image),
+                    "image" => image,
+                    "env" => []
+                  }
+                ]
+              }
+            }
+
+            container_overrides["spec"]["containers"][0]["env"] += env.map { |k, v| {"name" => k, "value" => v} } if env
+
+            if secrets && !secrets.empty?
+              secret_name = create_secret!(secrets)
+              container_overrides["spec"]["containers"][0]["env"] << {
+                "name" => "SECRETS",
+                "value" => "/run/secrets/#{secret_name}/secret"
+              }
+
+              container_overrides["spec"]["containers"][0]["volumeMounts"] = [
+                {
+                  "name" => "secret-volume",
+                  "mountPath" => "/run/secrets/#{secret_name}",
+                  "readOnly" => true
+                }
+              ]
+
+              container_overrides["spec"]["volumes"] = [
+                {
+                  "name"   => "secret-volume",
+                  "secret" => {"secretName" => secret_name}
+                }
+              ]
+            end
+
+            params << "--overrides=#{container_overrides.to_json}"
+
+            logger.debug("Running kubectl: #{AwesomeSpawn.build_command_line("kubectl", params)}")
+            result = kubectl!(*params)
+
+            # Kubectl prints that the pod was deleted, strip this from the output
+            output = result.output.gsub(/pod \"#{name}\" deleted/, "")
+
+            [result.exit_status, output]
+          ensure
+            delete_secret!(secret_name) if secret_name
+          end
+
+          private
+
+          def container_name(image)
+            image.match(%r{^(?<repository>.+\/)?(?<image>.+):(?<tag>.+)$})&.named_captures&.dig("image")
+          end
+
+          def pod_name(image)
+            container_short_name = container_name(image)
+            raise ArgumentError, "Invalid docker image [#{image}]" if container_short_name.nil?
+
+            "#{container_short_name}-#{SecureRandom.uuid}"
+          end
+
+          def create_secret!(secrets)
+            secret_name = SecureRandom.uuid
+
+            secret_yaml = {
+              "kind"       => "Secret",
+              "apiVersion" => "v1",
+              "metadata"   => {
+                "name" => secret_name,
+                "namespace" => namespace
+              },
+              "data"       => {
+                "secret" => Base64.urlsafe_encode64(secrets.to_json)
+              },
+              "type"       => "Opaque"
+            }.to_yaml
+
+            kubectl!("create", "-f", "-", :in_data => secret_yaml)
+
+            secret_name
+          end
+
+          def delete_secret!(secret_name)
+            kubectl!("delete", "secret", secret_name, [:namespace, namespace])
+          end
+
+          def kubectl!(*params, **kwargs)
+            AwesomeSpawn.run!("kubectl", :params => params, **kwargs)
+          end
         end
       end
     end
