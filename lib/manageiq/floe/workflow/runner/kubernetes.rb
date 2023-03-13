@@ -11,7 +11,7 @@ module ManageIQ
             require "base64"
             require "yaml"
 
-            @namespace = "default"
+            @namespace = ENV.fetch("DOCKER_RUNNER_NAMESPACE", "default")
 
             super
           end
