@@ -1,8 +1,10 @@
 # ManageIQ::Floe
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/manageiq/floe`. To experiment with that code, run `bin/console` for an interactive prompt.
+[![CI](https://github.com/ManageIQ/manageiq-floe/actions/workflows/ci.yaml/badge.svg)](https://github.com/ManageIQ/manageiq-floe/actions/workflows/ci.yaml)
 
-TODO: Delete this and the text above, and describe your gem
+## Overview
+
+Floe is a runner for [Amazon States Language](https://states-language.net/) workflows with support for Docker resources and running on Docker, Podman, or Kubernetes.
 
 ## Installation
 
@@ -16,8 +18,21 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
 ## Usage
 
+Floe can be run as a command-line utility or as a ruby class.
+
+### Command Line
+
 ```
-bundle exec ruby exe/manageiq-floe --workflow examples/workflow.json
+bundle exec ruby exe/manageiq-floe --workflow examples/workflow.json --inputs='{"foo": 1}'
+```
+
+### Ruby Library
+
+```ruby
+require 'manageiq-floe'
+
+workflow = ManageIQ::Floe::Workflow.load(File.read("workflow.json"))
+workflow.run!
 ```
 
 ## Development
@@ -28,4 +43,4 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/manageiq-floe.
+Bug reports and pull requests are welcome on GitHub at https://github.com/ManageIQ/manageiq-floe.
