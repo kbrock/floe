@@ -30,6 +30,18 @@ module ManageIQ
         raise ManageIQ::Floe::InvalidWorkflowError, err.message
       end
 
+      def run!
+        state = first_state
+        input = context.dup
+
+        until state.nil?
+          state, output = state.run!(input)
+          input = output
+        end
+
+        output
+      end
+
       def to_dot
         String.new.tap do |s|
           s << "digraph {\n"
