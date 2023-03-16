@@ -23,7 +23,7 @@ Floe can be run as a command-line utility or as a ruby class.
 ### Command Line
 
 ```
-bundle exec ruby exe/manageiq-floe --workflow examples/workflow.json --inputs='{"foo": 1}'
+bundle exec ruby exe/manageiq-floe --workflow examples/workflow.asl --inputs='{"foo": 1}'
 ```
 
 ### Ruby Library
