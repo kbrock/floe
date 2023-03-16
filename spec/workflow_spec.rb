@@ -1,5 +1,5 @@
 RSpec.describe ManageIQ::Floe::Workflow do
-  let(:workflow) { described_class.load(GEM_ROOT.join("examples/workflow.json")) }
+  let(:workflow) { described_class.load(GEM_ROOT.join("examples/workflow.asl")) }
 
   it "#to_dot" do
     expect(workflow.to_dot).to eq <<~DOT

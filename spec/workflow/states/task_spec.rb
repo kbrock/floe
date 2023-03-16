@@ -1,5 +1,5 @@
 RSpec.describe ManageIQ::Floe::Workflow::States::Task do
-  let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.json")) }
+  let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl")) }
   let(:input)    { {} }
 
   describe "#run" do
