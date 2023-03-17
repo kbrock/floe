@@ -1,6 +1,6 @@
-# ManageIQ::Floe
+# Floe
 
-[![CI](https://github.com/ManageIQ/manageiq-floe/actions/workflows/ci.yaml/badge.svg)](https://github.com/ManageIQ/manageiq-floe/actions/workflows/ci.yaml)
+[![CI](https://github.com/ManageIQ/floe/actions/workflows/ci.yaml/badge.svg)](https://github.com/ManageIQ/floe/actions/workflows/ci.yaml)
 
 ## Overview
 
@@ -10,11 +10,11 @@ Floe is a runner for [Amazon States Language](https://states-language.net/) work
 
 Install the gem and add to the application's Gemfile by executing:
 
-    $ bundle add manageiq-floe
+    $ bundle add floe
 
 If bundler is not being used to manage dependencies, install the gem by executing:
 
-    $ gem install manageiq-floe
+    $ gem install floe
 
 ## Usage
 
@@ -23,15 +23,15 @@ Floe can be run as a command-line utility or as a ruby class.
 ### Command Line
 
 ```
-bundle exec ruby exe/manageiq-floe --workflow examples/workflow.asl --inputs='{"foo": 1}'
+bundle exec ruby exe/floe --workflow examples/workflow.asl --inputs='{"foo": 1}'
 ```
 
 ### Ruby Library
 
 ```ruby
-require 'manageiq-floe'
+require 'floe'
 
-workflow = ManageIQ::Floe::Workflow.load(File.read("workflow.json"))
+workflow = Floe::Workflow.load(File.read("workflow.json"))
 workflow.run!
 ```
 
@@ -43,4 +43,4 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/ManageIQ/manageiq-floe.
+Bug reports and pull requests are welcome on GitHub at https://github.com/ManageIQ/floe.

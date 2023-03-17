@@ -1,4 +1,4 @@
-RSpec.describe ManageIQ::Floe::Workflow::Path do
+RSpec.describe Floe::Workflow::Path do
   describe "#value" do
     context "referencing the global context" do
       it "with a missing value" do

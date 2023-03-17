@@ -1,4 +1,4 @@
-RSpec.describe ManageIQ::Floe::Workflow::Runner::Kubernetes do
+RSpec.describe Floe::Workflow::Runner::Kubernetes do
   let(:subject) { described_class.new }
 
   describe "#run!" do

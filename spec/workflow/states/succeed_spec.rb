@@ -1,5 +1,5 @@
-RSpec.describe ManageIQ::Floe::Workflow::States::Succeed do
-  let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl")) }
+RSpec.describe Floe::Workflow::States::Succeed do
+  let(:workflow) { Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl")) }
   let(:state)    { workflow.states_by_name["SuccessState"] }
 
   it "#end?" do

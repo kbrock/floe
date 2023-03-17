@@ -104,7 +104,7 @@ RSpec.configure do |config|
   config.before(:each, :uses_awesome_spawn) { disable_spawning }
 end
 
-require "manageiq-floe"
+require "floe"
 
 require "pathname"
 GEM_ROOT = Pathname.new(__dir__).join("..").expand_path

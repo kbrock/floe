@@ -1,14 +1,14 @@
-RSpec.describe ManageIQ::Floe::Workflow::States::Task do
-  let(:workflow) { ManageIQ::Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl")) }
+RSpec.describe Floe::Workflow::States::Task do
+  let(:workflow) { Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl")) }
   let(:input)    { {} }
 
   describe "#run" do
-    let(:mock_runner) { double("ManageIQ::Floe::Workflow::Runner") }
+    let(:mock_runner) { double("Floe::Workflow::Runner") }
     let(:input)       { {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}} }
     let(:state)       { described_class.new(workflow, "Task", payload) }
     let(:subject)     { state.run!(input) }
 
-    before { allow(ManageIQ::Floe::Workflow::Runner).to receive(:for_resource).and_return(mock_runner) }
+    before { allow(Floe::Workflow::Runner).to receive(:for_resource).and_return(mock_runner) }
 
     describe "Input" do
       context "with no InputPath" do
