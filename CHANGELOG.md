@@ -8,4 +8,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/manageiq-floe/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.1.0...HEAD
