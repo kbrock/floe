@@ -31,7 +31,7 @@ bundle exec ruby exe/floe --workflow examples/workflow.asl --inputs='{"foo": 1}'
 ```ruby
 require 'floe'
 
-workflow = Floe::Workflow.load(File.read("workflow.json"))
+workflow = Floe::Workflow.load(File.read("workflow.asl"))
 workflow.run!
 ```
 
