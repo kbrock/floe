@@ -1,4 +1,4 @@
-RSpec.describe ManageIQ::Floe::Workflow::Runner::Podman do
+RSpec.describe Floe::Workflow::Runner::Podman do
   let(:subject) { described_class.new }
 
   describe "#run!" do

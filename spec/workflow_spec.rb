@@ -1,4 +1,4 @@
-RSpec.describe ManageIQ::Floe::Workflow do
+RSpec.describe Floe::Workflow do
   let(:workflow) { described_class.load(GEM_ROOT.join("examples/workflow.asl")) }
 
   it "#to_dot" do

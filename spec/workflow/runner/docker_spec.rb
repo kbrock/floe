@@ -1,4 +1,4 @@
-RSpec.describe ManageIQ::Floe::Workflow::Runner::Docker do
+RSpec.describe Floe::Workflow::Runner::Docker do
   let(:subject) { described_class.new }
 
   describe "#run!" do

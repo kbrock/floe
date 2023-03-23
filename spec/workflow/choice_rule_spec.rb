@@ -1,4 +1,4 @@
-RSpec.describe ManageIQ::Floe::Workflow::ChoiceRule do
+RSpec.describe Floe::Workflow::ChoiceRule do
   describe "#true?" do
     let(:subject) { described_class.true?(payload, context, input) }
     let(:context) { {} }

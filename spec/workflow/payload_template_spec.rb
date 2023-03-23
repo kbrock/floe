@@ -1,4 +1,4 @@
-RSpec.describe ManageIQ::Floe::Workflow::PayloadTemplate do
+RSpec.describe Floe::Workflow::PayloadTemplate do
   let(:subject) { described_class.new(payload) }
 
   describe "#value" do
