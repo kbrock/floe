@@ -17,6 +17,7 @@ module Floe
       payload     = JSON.parse(payload)     if payload.kind_of?(String)
       context     = JSON.parse(context)     if context.kind_of?(String)
       credentials = JSON.parse(credentials) if credentials.kind_of?(String)
+      context     = Context.new(context)    unless context.kind_of?(Context)
 
       @payload     = payload
       @context     = context || {"global" => {}}
@@ -26,10 +27,7 @@ module Floe
       @states_by_name = @states.each_with_object({}) { |state, result| result[state.name] = state }
       start_at        = @payload["StartAt"]
 
-      @context["states"] ||= []
-      @context["current_state"] ||= start_at
-
-      current_state_name = @context["current_state"]
+      current_state_name = @context["State"]["Name"] || start_at
       @current_state = @states_by_name[current_state_name]
 
       @status = current_state_name == start_at ? "pending" : current_state.status
@@ -39,19 +37,28 @@ module Floe
 
     def step
       @status = "running" if @status == "pending"
+      @context["Execution"]["StartTime"] ||= Time.now.utc
 
-      input = @context["states"]&.last&.dig("output") || @context["global"]
+      input = @context["State"]["Output"] || @context["Execution"]["Input"].dup
 
       tick = Time.now.utc
       next_state, output = current_state.run!(input)
       tock = Time.now.utc
 
-      @context["states"] << {"name" => current_state.name, "start" => tick, "end" => tock, "time" => tock - tick, "input" => input, "output" => output}
+      @context["State"] = {
+        "EnteredTime"  => tick,
+        "FinishedTime" => tock,
+        "Duration"     => tock - tick,
+        "Output"       => output,
+        "Name"         => next_state&.name,
+        "Input"        => output
+      }
+
+      @context["States"] << @context["State"]
 
       @status = current_state.status
 
       next_state_name = next_state&.name
-      @context["current_state"] = next_state_name
       @current_state = next_state_name && @states_by_name[next_state_name]
 
       self

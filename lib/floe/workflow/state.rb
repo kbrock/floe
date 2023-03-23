@@ -35,7 +35,7 @@ module Floe
       end
 
       def context
-        workflow.context["global"]
+        workflow.context
       end
 
       def status
