@@ -1,21 +1,22 @@
 RSpec.describe Floe::Workflow::States::Pass do
   let(:workflow) { Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl")) }
-  let(:state)    { workflow.states_by_name["PassState"] }
+  let(:state)    { workflow.states_by_name["WaitState"] }
 
   describe "#run!" do
-    it "sets the result to the result path" do
+    it "sleeps for the requested amount of time" do
+      expect(state).to receive(:sleep).with(state.seconds)
+
       _, output = state.run!({})
-      expect(output["result"]).to include(state.result)
     end
   end
 
   it "#to_dot" do
-    expect(state.to_dot).to eq "  PassState"
+    expect(state.to_dot).to eq "  WaitState"
   end
 
   it "#to_dot_transitions" do
     expect(state.to_dot_transitions).to eq [
-      "  PassState -> WaitState"
+      "  WaitState -> NextState"
     ]
   end
 end
