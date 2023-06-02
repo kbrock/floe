@@ -9,6 +9,7 @@ RSpec.describe Floe::Workflow do
         FirstMatchState
         SecondMatchState
         PassState
+        WaitState
         FailState [ style=bold color=red ]
         SuccessState [ style=bold color=green ]
         NextState [ style=bold ]
@@ -20,7 +21,8 @@ RSpec.describe Floe::Workflow do
         ChoiceState -> FailState [ label="Default" ]
         FirstMatchState -> PassState
         SecondMatchState -> NextState
-        PassState -> NextState
+        PassState -> WaitState
+        WaitState -> NextState
       }
     DOT
   end

@@ -66,6 +66,12 @@
         "bar": "baz"
       },
       "ResultPath": "$.result",
+      "Next": "WaitState"
+    },
+
+    "WaitState": {
+      "Type": "Wait",
+      "Seconds": 1,
       "Next": "NextState"
     },
 
