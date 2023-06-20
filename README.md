@@ -28,10 +28,30 @@ Floe can be run as a command-line utility or as a ruby class.
 bundle exec ruby exe/floe --workflow examples/workflow.asl --inputs='{"foo": 1}'
 ```
 
+By default Floe will use `docker` to run `docker://` type resources, but `podman` and `kubernet` are also supported runners.
+A different runner can be specified with the `--runner` option:
+
+```
+bundle exec ruby exe/floe --workflow examples/workflow.asl --inputs='{"foo": 1}' --runner podman
+bundle exec ruby exe/floe --workflow examples/workflow.asl --inputs='{"foo": 1}' --runner kubernetes --runner-option namespace=default
+```
+
 ### Ruby Library
 
 ```ruby
 require 'floe'
+
+workflow = Floe::Workflow.load(File.read("workflow.asl"))
+workflow.run!
+```
+
+You can also specify a specific docker runner and runner options:
+```ruby
+require 'floe'
+
+Floe::Workflow::Runner.docker_runner = Floe::Workflow::Runner::Podman.new
+# Or
+Floe::Workflow::Runner.docker_runner = Floe::Workflow::Runner::Kubernetes.new("namespace" => "default")
 
 workflow = Floe::Workflow.load(File.read("workflow.asl"))
 workflow.run!

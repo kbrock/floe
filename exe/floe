@@ -7,14 +7,31 @@ require "optimist"
 opts = Optimist.options do
   version "v#{Floe::VERSION}\n"
   opt :workflow, "Path to your workflow json", :type => :string, :required => true
-  opt :inputs, "JSON payload to input to the workflow", :type => :string, :default => '{}'
-  opt :credentials, "JSON payload with credentials", :type => :string, :default => '{}'
+  opt :inputs, "JSON payload to input to the workflow", :type => :string, :default => "{}"
+  opt :credentials, "JSON payload with credentials", :type => :string, :default => "{}"
+  opt :runner, "Type of runner for docker images", :type => :string, :default => "docker"
+  opt :runner_option, "Options to pass to the runner", :type => :string, :multi => true
 end
 
 require "logger"
 Floe.logger = Logger.new(STDOUT)
 
 workflow = Floe::Workflow.load(opts[:workflow], opts[:inputs], opts[:credentials])
+
+runner_klass = case opts[:runner]
+               when "docker"
+                 Floe::Workflow::Runner::Docker
+               when "podman"
+                 Floe::Workflow::Runner::Podman
+               when "kubernetes"
+                 Floe::Workflow::Runner::Kubernetes
+               else
+                 raise
+               end
+
+runner_options = opts[:runner_option].to_h { |opt| opt.split("=") }
+
+Floe::Workflow::Runner.docker_runner = runner_klass.new(runner_options)
 
 output = workflow.run!
 

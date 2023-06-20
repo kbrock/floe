@@ -6,13 +6,13 @@ module Floe
       class Kubernetes < Floe::Workflow::Runner
         attr_reader :namespace
 
-        def initialize(*)
+        def initialize(options = {})
           require "awesome_spawn"
           require "securerandom"
           require "base64"
           require "yaml"
 
-          @namespace = ENV.fetch("DOCKER_RUNNER_NAMESPACE", "default")
+          @namespace = options.fetch("namespace", "default")
 
           super
         end
