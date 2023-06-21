@@ -65,5 +65,79 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
       subject.run!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
     end
+
+    context "with an alternate namespace" do
+      let(:namespace) { "my-project" }
+      let(:subject)   { described_class.new("namespace" => namespace) }
+
+      it "calls kubectl run with the image name" do
+        stub_good_run!(
+          "kubectl",
+          :params => [
+            "run",
+            :rm,
+            :attach,
+            [:image, "hello-world:latest"],
+            [:restart, "Never"],
+            [:namespace, namespace],
+            a_string_including("hello-world-"),
+            a_string_including("--overrides")
+          ]
+        )
+
+        subject.run!("docker://hello-world:latest")
+      end
+    end
+
+    context "with a token" do
+      let(:token)   { "my-token" }
+      let(:subject) { described_class.new("token" => token) }
+
+      it "calls kubectl run with the image name" do
+        stub_good_run!(
+          "kubectl",
+          :params => [
+            [:token, token],
+            "run",
+            :rm,
+            :attach,
+            [:image, "hello-world:latest"],
+            [:restart, "Never"],
+            [:namespace, "default"],
+            a_string_including("hello-world-"),
+            a_string_including("--overrides")
+          ]
+        )
+
+        subject.run!("docker://hello-world:latest")
+      end
+    end
+
+    context "with a token file" do
+      let(:token)      { "my-token" }
+      let(:token_file) { "/path/to/my-token" }
+      let(:subject)    { described_class.new("token_file" => token_file) }
+
+      it "calls kubectl run with the image name" do
+        expect(File).to receive(:read).with(token_file).and_return(token)
+
+        stub_good_run!(
+          "kubectl",
+          :params => [
+            [:token, token],
+            "run",
+            :rm,
+            :attach,
+            [:image, "hello-world:latest"],
+            [:restart, "Never"],
+            [:namespace, "default"],
+            a_string_including("hello-world-"),
+            a_string_including("--overrides")
+          ]
+        )
+
+        subject.run!("docker://hello-world:latest")
+      end
+    end
   end
 end

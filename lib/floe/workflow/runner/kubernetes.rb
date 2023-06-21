@@ -4,7 +4,7 @@ module Floe
   class Workflow
     class Runner
       class Kubernetes < Floe::Workflow::Runner
-        attr_reader :namespace
+        attr_reader :namespace, :server, :token
 
         def initialize(options = {})
           require "awesome_spawn"
@@ -13,6 +13,9 @@ module Floe
           require "yaml"
 
           @namespace = options.fetch("namespace", "default")
+          @server    = options.fetch("server", nil)
+          @token     = options.fetch("token", nil)
+          @token   ||= File.read(options["token_file"]) if options.key?("token_file")
 
           super
         end
@@ -98,6 +101,9 @@ module Floe
         end
 
         def kubectl!(*params, **kwargs)
+          params.unshift([:token, token])   if token
+          params.unshift([:server, server]) if server
+
           AwesomeSpawn.run!("kubectl", :params => params, **kwargs)
         end
 
