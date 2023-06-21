@@ -29,7 +29,7 @@ runner_klass = case opts[:docker_runner]
                  Floe::Workflow::Runner::Kubernetes
                end
 
-runner_options = opts[:docker_runner_options].to_h { |opt| opt.split("=") }
+runner_options = opts[:docker_runner_options].to_h { |opt| opt.split("=", 2) }
 
 Floe::Workflow::Runner.docker_runner = runner_klass.new(runner_options)
 
