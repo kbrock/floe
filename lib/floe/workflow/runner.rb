@@ -5,11 +5,16 @@ module Floe
     class Runner
       include Logging
 
-      class << self
-        attr_writer :docker_runner_klass
+      TYPES = %w[docker podman kubernetes].freeze
 
-        def docker_runner_klass
-          @docker_runner_klass ||= const_get(ENV.fetch("DOCKER_RUNNER", "docker").capitalize)
+      def initialize(_options = {})
+      end
+
+      class << self
+        attr_writer :docker_runner
+
+        def docker_runner
+          @docker_runner ||= Floe::Workflow::Runner::Docker.new
         end
 
         def for_resource(resource)
@@ -18,7 +23,7 @@ module Floe
           scheme = resource.split("://").first
           case scheme
           when "docker"
-            docker_runner_klass.new
+            docker_runner
           else
             raise "Invalid resource scheme [#{scheme}]"
           end
