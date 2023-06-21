@@ -13,6 +13,8 @@ opts = Optimist.options do
   opt :docker_runner_options, "Options to pass to the runner", :type => :strings
 end
 
+Optimist.die(:docker_runner, "must be one of #{Floe::Workflow::Runner::TYPES.join(", ")}") unless Floe::Workflow::Runner::TYPES.include?(opts[:docker_runner])
+
 require "logger"
 Floe.logger = Logger.new(STDOUT)
 
@@ -25,8 +27,6 @@ runner_klass = case opts[:docker_runner]
                  Floe::Workflow::Runner::Podman
                when "kubernetes"
                  Floe::Workflow::Runner::Kubernetes
-               else
-                 raise
                end
 
 runner_options = opts[:docker_runner_options].to_h { |opt| opt.split("=") }

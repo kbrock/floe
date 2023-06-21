@@ -5,6 +5,8 @@ module Floe
     class Runner
       include Logging
 
+      TYPES = %w[docker podman kubernetes].freeze
+
       def initialize(_options = {})
       end
 
