@@ -32,8 +32,8 @@ By default Floe will use `docker` to run `docker://` type resources, but `podman
 A different runner can be specified with the `--runner` option:
 
 ```
-bundle exec ruby exe/floe --workflow examples/workflow.asl --inputs='{"foo": 1}' --runner podman
-bundle exec ruby exe/floe --workflow examples/workflow.asl --inputs='{"foo": 1}' --runner kubernetes --runner-option namespace=default --runner-option server=https://k8s.example.com:6443 --runner-option token=my-token
+bundle exec ruby exe/floe --workflow examples/workflow.asl --inputs='{"foo": 1}' --docker_runner podman
+bundle exec ruby exe/floe --workflow examples/workflow.asl --inputs='{"foo": 1}' --docker_runner kubernetes --docker_runner-options namespace=default server=https://k8s.example.com:6443 token=my-token
 ```
 
 ### Ruby Library
