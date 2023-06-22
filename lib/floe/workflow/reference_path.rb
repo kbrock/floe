@@ -4,7 +4,7 @@ module Floe
   class Workflow
     class ReferencePath < Path
       class << self
-        def set (payload, context, value)
+        def set(payload, context, value)
           new(payload).set(context, value)
         end
       end
@@ -24,7 +24,7 @@ module Floe
         path = JsonPath.new(payload)
                        .path[1..]
                        .map { |v| v.match(/\[(?<name>.+)\]/)["name"] }
-                       .map { |v| v[0] == "'" ? v.gsub("'", "") : v.to_i }
+                       .map { |v| v[0] == "'" ? v.delete("'") : v.to_i }
                        .compact
 
         # If the payload is '$' then merge the value into the context

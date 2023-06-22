@@ -4,7 +4,7 @@ module Floe
   class Workflow
     class Context
       def initialize(context = nil, input: {})
-        context = JSON.parse(context) if context&.kind_of?(String)
+        context = JSON.parse(context) if context.kind_of?(String)
 
         @context = context || {
           "Execution"    => {
@@ -12,10 +12,8 @@ module Floe
           },
           "State"        => {},
           "States"       => [],
-          "StateMachine" => {
-          },
-          "Task"         => {
-          }
+          "StateMachine" => {},
+          "Task"         => {}
         }
       end
 

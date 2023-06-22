@@ -31,9 +31,10 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "awesome_spawn", "~>1.0"
   spec.add_dependency "jsonpath", "~>1.1"
-  spec.add_dependency "optimist", "~>3.0"
   spec.add_dependency "more_core_extensions"
+  spec.add_dependency "optimist", "~>3.0"
 
-  spec.add_development_dependency "rubocop"
+  spec.add_development_dependency "manageiq-style"
   spec.add_development_dependency "rspec"
+  spec.add_development_dependency "rubocop"
 end

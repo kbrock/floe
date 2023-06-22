@@ -31,7 +31,7 @@ module Floe
           result = kubectl_run!(image, name, overrides)
 
           # Kubectl prints that the pod was deleted, strip this from the output
-          output = result.output.gsub(/pod \"#{name}\" deleted/, "")
+          output = result.output.gsub(/pod "#{name}" deleted/, "")
 
           [result.exit_status, output]
         ensure
@@ -41,7 +41,7 @@ module Floe
         private
 
         def container_name(image)
-          image.match(%r{^(?<repository>.+\/)?(?<image>.+):(?<tag>.+)$})&.named_captures&.dig("image")
+          image.match(%r{^(?<repository>.+/)?(?<image>.+):(?<tag>.+)$})&.named_captures&.dig("image")
         end
 
         def pod_name(image)
@@ -53,15 +53,15 @@ module Floe
 
         def pod_spec(image, env, secret = nil)
           container_spec = {
-            "name" => container_name(image),
+            "name"  => container_name(image),
             "image" => image,
-            "env" => env.to_h.map { |k, v| {"name" => k, "value" => v} }
+            "env"   => env.to_h.map { |k, v| {"name" => k, "value" => v} }
           }
 
           spec = {"spec" => {"containers" => [container_spec]}}
 
           if secret
-            spec["spec"]["volumes"] = [{"name"   => "secret-volume", "secret" => {"secretName" => secret}}]
+            spec["spec"]["volumes"] = [{"name" => "secret-volume", "secret" => {"secretName" => secret}}]
             container_spec["env"] << {"name" => "SECRETS", "value" => "/run/secrets/#{secret}/secret"}
             container_spec["volumeMounts"] = [
               {
@@ -82,7 +82,7 @@ module Floe
             "kind"       => "Secret",
             "apiVersion" => "v1",
             "metadata"   => {
-              "name" => secret_name,
+              "name"      => secret_name,
               "namespace" => namespace
             },
             "data"       => {

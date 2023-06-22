@@ -4,7 +4,7 @@ require 'logger'
 
 module Floe
   class NullLogger < Logger
-    def initialize(*_args)
+    def initialize(*)
     end
 
     def add(*_args, &_block)

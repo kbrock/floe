@@ -6,7 +6,7 @@ RSpec.describe Floe::Workflow::States::Pass do
     it "sleeps for the requested amount of time" do
       expect(state).to receive(:sleep).with(state.seconds)
 
-      _, output = state.run!({})
+      state.run!({})
     end
   end
 

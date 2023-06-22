@@ -5,19 +5,18 @@ module Floe
     class ChoiceRule
       class Data < Floe::Workflow::ChoiceRule
         def true?(context, input)
-
           lhs = variable_value(context, input)
           rhs = compare_value(context, input)
 
           validate!(lhs)
 
           case compare_key
-          when "IsNull"; is_null?(lhs)
-          when "IsPresent"; is_present?(lhs)
-          when "IsNumeric"; is_numeric?(lhs)
-          when "IsString"; is_string?(lhs)
-          when "IsBoolean"; is_boolean?(lhs)
-          when "IsTimestamp"; is_timestamp?(lhs)
+          when "IsNull" then is_null?(lhs)
+          when "IsPresent" then is_present?(lhs)
+          when "IsNumeric" then is_numeric?(lhs)
+          when "IsString" then is_string?(lhs)
+          when "IsBoolean" then is_boolean?(lhs)
+          when "IsTimestamp" then is_timestamp?(lhs)
           when "StringEquals", "StringEqualsPath",
                "NumericEquals", "NumericEqualsPath",
                "BooleanEquals", "BooleanEqualsPath",
@@ -40,7 +39,7 @@ module Floe
                "TimestampGreaterThanEquals", "TimestampGreaterThanEqualsPath"
             lhs >= rhs
           when "StringMatches"
-            lhs.match?(Regexp.escape(rhs).gsub('\*','.*?'))
+            lhs.match?(Regexp.escape(rhs).gsub('\*', '.*?'))
           else
             raise Floe::InvalidWorkflowError, "Invalid choice [#{compare_key}]"
           end
@@ -49,7 +48,7 @@ module Floe
         private
 
         def validate!(value)
-          raise RuntimeError, "No such variable [#{variable}]" if value.nil? && !%w[IsNull IsPresent].include?(compare_key)
+          raise "No such variable [#{variable}]" if value.nil? && !%w[IsNull IsPresent].include?(compare_key)
         end
 
         def is_null?(value)

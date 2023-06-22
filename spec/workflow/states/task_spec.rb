@@ -55,12 +55,12 @@ RSpec.describe Floe::Workflow::States::Task do
         it "filters the results" do
           expect(mock_runner)
             .to receive(:run!)
-            .with(payload["Resource"], {"foo"=>{"bar"=>"baz"}, "bar"=>{"baz"=>"foo"}}, nil)
+            .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
             .and_return([0, "{\"response\":[\"192.168.1.2\"],\"exit_code\":0}"])
 
           _, results = subject
 
-          expect(results).to eq("foo"=>{"bar"=>"baz"}, "bar"=>{"baz"=>"foo"}, "ip_addrs" => ["192.168.1.2"])
+          expect(results).to eq("foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}, "ip_addrs" => ["192.168.1.2"])
         end
       end
 
@@ -98,9 +98,9 @@ RSpec.describe Floe::Workflow::States::Task do
             _, results = subject
 
             expect(results).to eq(
-              "foo"      => {"bar" => "baz"},
-              "bar"      => {"baz" => "foo"},
-              "data"     => {"ip_addrs" => ["192.168.1.2"]}
+              "foo"  => {"bar" => "baz"},
+              "bar"  => {"baz" => "foo"},
+              "data" => {"ip_addrs" => ["192.168.1.2"]}
             )
           end
         end
@@ -202,9 +202,9 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run!)
             .with(payload["Resource"], input, nil)
             .and_return([0])
-            _, results = subject
+          _, results = subject
 
-            expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+          expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
         end
       end
 
@@ -221,9 +221,10 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run!)
             .with(payload["Resource"], input, nil)
             .and_return([0])
-            _, results = subject
 
-            expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+          _, results = subject
+
+          expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
         end
 
         it "invokes the Catch if no retriers match" do

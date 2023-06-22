@@ -33,7 +33,7 @@ RSpec.describe Floe::Workflow do
     before { svg.delete if svg.exist? }
 
     it "writes to a path if given" do
-      expect(workflow.to_svg(path: svg)).to match(/^<svg/)
+      expect(workflow.to_svg(:path => svg)).to match(/^<svg/)
       expect(svg).to exist
       expect(svg.read).to match(/^<svg/)
     end
