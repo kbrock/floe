@@ -17,7 +17,10 @@ module Floe
         end
 
         def run!(*)
-          super { sleep(seconds); nil }
+          super do
+            sleep(seconds)
+            nil
+          end
         end
       end
     end

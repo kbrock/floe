@@ -5,7 +5,7 @@ require "floe"
 require "optimist"
 
 opts = Optimist.options do
-  version "v#{Floe::VERSION}\n"
+  version("v#{Floe::VERSION}\n")
   opt :workflow, "Path to your workflow json",                 :type => :string, :required => true
   opt :input, "JSON payload to input to the workflow",         :default => '{}'
   opt :credentials, "JSON payload with credentials",           :default => "{}"
@@ -16,7 +16,7 @@ end
 Optimist.die(:docker_runner, "must be one of #{Floe::Workflow::Runner::TYPES.join(", ")}") unless Floe::Workflow::Runner::TYPES.include?(opts[:docker_runner])
 
 require "logger"
-Floe.logger = Logger.new(STDOUT)
+Floe.logger = Logger.new($stdout)
 
 context = Floe::Workflow::Context.new(input: opts[:input])
 workflow = Floe::Workflow.load(opts[:workflow], context, opts[:credentials])
