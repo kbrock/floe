@@ -38,6 +38,10 @@ module Floe
         workflow.context
       end
 
+      def status
+        end? ? "success" : "running"
+      end
+
       def run!(input)
         logger.info("Running state: [#{name}] with input [#{input}]")
 

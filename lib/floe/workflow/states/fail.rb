@@ -28,6 +28,10 @@ module Floe
           true
         end
 
+        def status
+          "errored"
+        end
+
         private def to_dot_attributes
           super.merge(:color => "red")
         end

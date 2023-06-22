@@ -51,15 +51,16 @@ module Floe
           return if retrier.nil?
 
           # If a different retrier is hit reset the context
-          if !context.key?("retrier") || context["retrier"]["error_equals"] != retrier.error_equals
-            context["retrier"] = {"error_equals" => retrier.error_equals, "retry_count" => 0}
+          if !context["State"].key?("RetryCount") || context["State"]["Retrier"] != retrier.error_equals
+            context["State"]["RetryCount"] = 0
+            context["State"]["Retrier"]    = retrier.error_equals
           end
 
-          context["retrier"]["retry_count"] += 1
+          context["State"]["RetryCount"] += 1
 
-          return if context["retrier"]["retry_count"] > retrier.max_attempts
+          return if context["State"]["RetryCount"] > retrier.max_attempts
 
-          Kernel.sleep(retrier.sleep_duration(context["retrier"]["retry_count"]))
+          Kernel.sleep(retrier.sleep_duration(context["State"]["RetryCount"]))
           true
         end
 
