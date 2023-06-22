@@ -41,9 +41,9 @@ module Floe
 
       input = @context["State"]["Output"] || @context["Execution"]["Input"].dup
 
-      tick = Time.now.utc
+      tick = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       next_state, output = current_state.run!(input)
-      tock = Time.now.utc
+      tock = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       @context["State"] = {
         "EnteredTime"  => tick,
