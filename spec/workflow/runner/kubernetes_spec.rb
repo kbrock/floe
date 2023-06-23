@@ -6,23 +6,22 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
   let(:subject)        { described_class.new(runner_options) }
   let(:runner_options) { {"server" => "https://kubernetes.local:6443", "token" => "my-token"} }
+  let(:kubeclient) { double("Kubeclient::Client") }
+
+  before do
+    require "kubeclient"
+
+    allow(Kubeclient::Client).to receive(:new).and_return(kubeclient)
+    allow(kubeclient).to receive(:discover)
+  end
 
   describe "#run!" do
-    let(:kubeclient) { double("Kubeclient::Client") }
-
-    before do
-      require "kubeclient"
-
-      allow(Kubeclient::Client).to receive(:new).and_return(kubeclient)
-      allow(kubeclient).to receive(:discover)
-    end
-
     it "raises an exception without a resource" do
-      expect { subject.run!(nil) }.to raise_error(ArgumentError, "Invalid resource")
+      expect { subject.run_async!(nil) }.to raise_error(ArgumentError, "Invalid resource")
     end
 
     it "raises an exception for an invalid resource uri" do
-      expect { subject.run!("arn:abcd:efgh") }.to raise_error(ArgumentError, "Invalid resource")
+      expect { subject.run_async!("arn:abcd:efgh") }.to raise_error(ArgumentError, "Invalid resource")
     end
 
     it "calls kubectl run with the image name" do
@@ -121,6 +120,15 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
       expect(subject).to receive(:sleep).with(1)
       subject.run!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
+    end
+
+    it "cleans up secrets if running the pod fails" do
+      expect(subject).to receive(:delete_secret)
+
+      expect(kubeclient).to receive(:create_secret).with(hash_including(:kind => "Secret", :type => "Opaque"))
+      expect(kubeclient).to receive(:create_pod).and_raise(Kubeclient::HttpError.new(403, "Forbidden", {}))
+
+      expect { subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"}) }.to raise_error(Kubeclient::HttpError, /Forbidden/)
     end
 
     context "with an alternate namespace" do
@@ -278,6 +286,80 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
         subject.run!("docker://hello-world:latest")
       end
+    end
+  end
+
+  describe "#running?" do
+    it "returns true when phase is Pending" do
+      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Pending"}})
+      expect(subject.running?("my-pod")).to be_truthy
+    end
+
+    it "returns true when phase is Running" do
+      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Running"}})
+      expect(subject.running?("my-pod")).to be_truthy
+    end
+
+    it "returns false when phase is Succeeded" do
+      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Succeeded"}})
+      expect(subject.running?("my-pod")).to be_falsey
+    end
+  end
+
+  describe "#success?" do
+    it "returns false when phase is Pending" do
+      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Pending"}})
+      expect(subject.success?("my-pod")).to be_falsey
+    end
+
+    it "returns false when phase is Running" do
+      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Running"}})
+      expect(subject.success?("my-pod")).to be_falsey
+    end
+
+    it "returns true when phase is Succeeded" do
+      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Succeeded"}})
+      expect(subject.success?("my-pod")).to be_truthy
+    end
+
+    it "raises an exception when getting pod info fails" do
+      allow(kubeclient).to receive(:get_pod).and_raise(Kubeclient::ResourceNotFoundError.new(404, "Resource Not Found", {}))
+      expect { subject.success?("my-pod") }.to raise_error(Kubeclient::ResourceNotFoundError, /Resource Not Found/)
+    end
+  end
+
+  describe "#output" do
+    it "returns log output" do
+      expect(kubeclient).to receive(:get_pod_log).with("my-pod", "default").and_return(RestClient::Response.new("hello, world!"))
+      expect(subject.output("my-pod")).to eq("hello, world!")
+    end
+
+    it "raises an exception when getting pod logs fails" do
+      allow(kubeclient).to receive(:get_pod_log).and_raise(Kubeclient::ResourceNotFoundError.new(404, "Resource Not Found", {}))
+      expect { subject.output("my-pod") }.to raise_error(Kubeclient::ResourceNotFoundError, /Resource Not Found/)
+    end
+  end
+
+  describe "#cleanup" do
+    it "deletes pods and secrets" do
+      expect(kubeclient).to receive(:delete_pod).with("my-pod", "default")
+      expect(kubeclient).to receive(:delete_secret).with("my-secret", "default")
+
+      subject.cleanup("my-pod", "my-secret")
+    end
+
+    it "doesn't delete secret if none passed in" do
+      expect(kubeclient).to receive(:delete_pod).with("my-pod", "default")
+      expect(kubeclient).not_to receive(:delete_secret)
+
+      subject.cleanup("my-pod", nil)
+    end
+
+    it "deletes secret if pod deletion fails" do
+      expect(kubeclient).to receive(:delete_pod).with("my-pod", "default").and_raise(Kubeclient::ResourceNotFoundError.new(404, "Resource Not Found", {}))
+      expect(kubeclient).to receive(:delete_secret).with("my-secret", "default")
+
+      subject.cleanup("my-pod", "my-secret")
     end
   end
 end

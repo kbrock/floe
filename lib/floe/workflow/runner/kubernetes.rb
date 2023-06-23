@@ -62,6 +62,31 @@ module Floe
           end
         end
 
+        def run_async!(resource, env = {}, secrets = {})
+          raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
+
+          image  = resource.sub("docker://", "")
+          name   = pod_name(image)
+          secret = create_secret!(secrets) if secrets && !secrets.empty?
+
+          begin
+            create_pod!(name, image, env, secret)
+          rescue
+            delete_secret(secret) if secret
+            raise
+          end
+
+          [name, secret]
+        end
+
+        def running?(pod_name)
+          %w[Pending Running].include?(pod_info(pod_name).dig("status", "phase"))
+        end
+
+        def success?(pod_name)
+          pod_info(pod_name).dig("status", "phase") == "Succeeded"
+        end
+
         def output(pod)
           kubeclient.get_pod_log(pod, namespace).body
         end
