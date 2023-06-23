@@ -55,7 +55,7 @@ module Floe
           container_spec = {
             "name"  => container_name(image),
             "image" => image,
-            "env"   => env.to_h.map { |k, v| {"name" => k, "value" => v} }
+            "env"   => env.to_h.map { |k, v| {"name" => k, "value" => v.to_s} }
           }
 
           spec = {"spec" => {"containers" => [container_spec]}}

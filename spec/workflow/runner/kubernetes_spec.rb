@@ -46,6 +46,24 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       subject.run!("docker://hello-world:latest", {"FOO" => "BAR"})
     end
 
+    it "passes integer environment variables to kubectl run as strings" do
+      stub_good_run!(
+        "kubectl",
+        :params => [
+          "run",
+          :rm,
+          :attach,
+          [:image, "hello-world:latest"],
+          [:restart, "Never"],
+          [:namespace, "default"],
+          a_string_including("hello-world-"),
+          a_string_including("\"env\":[{\"name\":\"FOO\",\"value\":\"1\"}]")
+        ]
+      )
+
+      subject.run!("docker://hello-world:latest", {"FOO" => 1})
+    end
+
     it "passes a secrets volume to kubectl run" do
       stub_good_run!("kubectl", :params => ["create", "-f", "-"], :in_data => a_string_including("kind: Secret"))
       stub_good_run!(
