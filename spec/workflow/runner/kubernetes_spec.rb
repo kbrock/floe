@@ -28,6 +28,25 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       subject.run!("docker://hello-world:latest")
     end
 
+    it "doesn't create a secret if Credentials is nil" do
+      expect(subject).not_to receive(:create_secret!)
+      stub_good_run!(
+        "kubectl",
+        :params => [
+          "run",
+          :rm,
+          :attach,
+          [:image, "hello-world:latest"],
+          [:restart, "Never"],
+          [:namespace, "default"],
+          a_string_including("hello-world-"),
+          a_string_including("--overrides")
+        ]
+      )
+
+      subject.run!("docker://hello-world:latest", {}, nil)
+    end
+
     it "passes environment variables to kubectl run" do
       stub_good_run!(
         "kubectl",

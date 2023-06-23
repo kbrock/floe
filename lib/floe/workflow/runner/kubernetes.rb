@@ -25,7 +25,7 @@ module Floe
 
           image     = resource.sub("docker://", "")
           name      = pod_name(image)
-          secret    = create_secret!(secrets) unless secrets&.empty?
+          secret    = create_secret!(secrets) if secrets && !secrets.empty?
           overrides = pod_spec(image, env, secret)
 
           result = kubectl_run!(image, name, overrides)
