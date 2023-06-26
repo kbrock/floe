@@ -53,7 +53,66 @@ module Floe
           AwesomeSpawn.run("podman", :params => ["secret", "rm", secret_guid]) if secret_guid
         end
 
+        def run_async!(resource, env = {}, secrets = {})
+          raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
+
+          image = resource.sub("docker://", "")
+
+          params = ["run", :detach]
+          params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env
+
+          if secrets && !secrets.empty?
+            secret_guid = SecureRandom.uuid
+            podman!("secret", "create", secret_guid, "-", :in_data => secrets.to_json)
+
+            params << [:e, "_CREDENTIALS=/run/secrets/#{secret_guid}"]
+            params << [:secret, secret_guid]
+          end
+
+          params << image
+
+          logger.debug("Running podman: #{AwesomeSpawn.build_command_line("podman", params)}")
+
+          begin
+            container_id = podman!(*params).output
+          rescue
+            podman!("secret", "rm", secret_guid) if secret_guid
+            raise
+          end
+
+          [container_id, secret_guid]
+        end
+
+        def cleanup(container_id, secret_guid)
+          delete_container(container_id)
+          delete_secret(secret_guid) if secret_guid
+        end
+
+        def running?(container_id)
+          JSON.parse(podman!("inspect", container_id).output).first.dig("State", "Running")
+        end
+
+        def success?(container_id)
+          JSON.parse(podman!("inspect", container_id).output).first.dig("State", "ExitCode") == 0
+        end
+
+        def output(container_id)
+          podman!("logs", container_id).output
+        end
+
         private
+
+        def delete_container(container_id)
+          podman!("rm", container_id)
+        rescue
+          nil
+        end
+
+        def delete_secret(secret_guid)
+          podman!("secret", "rm", secret_guid)
+        rescue
+          nil
+        end
 
         def podman!(*args, **kwargs)
           params = podman_global_options + args
