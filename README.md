@@ -57,6 +57,20 @@ workflow = Floe::Workflow.load(File.read("workflow.asl"))
 workflow.run!
 ```
 
+### Docker Runner Options
+
+#### Kubernetes
+
+Options supported by the kubernetes docker runner are:
+
+* `kubeconfig` - Path to a kubeconfig file, defaults to `KUBECONFIG` environment variable or `~/.kube/config`
+* `kubeconfig_context` - Context to use in the kubeconfig file, defaults to `"default"`
+* `namespace` - Namespace to use when creating kubernetes resources, defaults to `"default"`
+* `server` - A kubernetes API Server URL, overrides anything in your kubeconfig file.  If set `KUBERNETES_SERVICE_HOST` and `KUBERNETES_SERVICE_PORT` will be used
+* `token` - A bearer_token to use to authenticate to the kubernetes API, overrides anything in your kubeconfig file.  If present, `/run/secrets/kubernetes.io/serviceaccount/token` will be used
+* `ca_file` - Path to a certificate-authority file for the kubernetes API, only valid if server and token are passed.  If present `/run/secrets/kubernetes.io/serviceaccount/ca.crt` will be used
+* `verify_ssl` - Controls if the kubernetes API certificate-authority should be verified, defaults to "true", only vaild if server and token are passed
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

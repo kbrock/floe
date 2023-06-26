@@ -4,18 +4,51 @@ module Floe
   class Workflow
     class Runner
       class Kubernetes < Floe::Workflow::Runner
-        attr_reader :namespace, :server, :token
+        TOKEN_FILE   = "/run/secrets/kubernetes.io/serviceaccount/token"
+        CA_CERT_FILE = "/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
         def initialize(options = {})
           require "awesome_spawn"
           require "securerandom"
           require "base64"
+          require "kubeclient"
           require "yaml"
 
-          @namespace = options.fetch("namespace", "default")
-          @server    = options.fetch("server", nil)
-          @token     = options.fetch("token", nil)
-          @token   ||= File.read(options["token_file"]) if options.key?("token_file")
+          kubeconfig_file    = ENV.fetch("KUBECONFIG", nil) || options.fetch("kubeconfig", File.join(Dir.home, ".kube", "config"))
+          kubeconfig_context = options["kubeconfig_context"]
+
+          kubeconfig  = Kubeclient::Config.read(kubeconfig_file) if File.exist?(kubeconfig_file)
+          kubecontext = kubeconfig.context(kubeconfig_context) if kubeconfig
+
+          token   = options["token"]
+          token ||= File.read(options["token_file"]) if options.key?("token_file")
+          token ||= File.read(TOKEN_FILE) if File.exist?(TOKEN_FILE)
+
+          server   = options["server"]
+          server ||= URI::HTTPS.build(:host => ENV.fetch("KUBERNETES_SERVICE_HOST"), :port => ENV.fetch("KUBERNETES_SERVICE_PORT", 6443)) if ENV.key?("KUBERNETES_SERVICE_HOST")
+
+          ca_file   = options["ca_file"]
+          ca_file ||= CA_CERT_FILE if File.exist?(CA_CERT_FILE)
+
+          verify_ssl = options["verify_ssl"] == "false" ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
+
+          if server && token
+            ssl_options = {:verify_ssl => verify_ssl}
+            ssl_options[:ca_file] = ca_file if ca_file
+
+            auth_options = {:bearer_token => token}
+          elsif kubecontext
+            server       = kubecontext.api_endpoint
+            ssl_options  = kubecontext.ssl_options
+            auth_options = kubecontext.auth_options
+          else
+            raise ArgumentError, "Missing connections options, provide a kubeconfig file or pass server and token via --docker-runner-options"
+          end
+
+          @namespace  = options.fetch("namespace", "default")
+
+          @kubeclient = Kubeclient::Client.new(server, "v1", :ssl_options => ssl_options, :auth_options => auth_options)
+          @kubeclient.discover
 
           super
         end
@@ -23,22 +56,49 @@ module Floe
         def run!(resource, env = {}, secrets = {})
           raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
 
-          image     = resource.sub("docker://", "")
-          name      = pod_name(image)
-          secret    = create_secret!(secrets) if secrets && !secrets.empty?
-          overrides = pod_spec(image, env, secret)
+          image  = resource.sub("docker://", "")
+          name   = pod_name(image)
+          secret = create_secret!(secrets) if secrets && !secrets.empty?
 
-          result = kubectl_run!(image, name, overrides)
+          begin
+            create_pod!(name, image, env, secret)
+            while running?(name)
+              sleep(1)
+            end
 
-          # Kubectl prints that the pod was deleted, strip this from the output
-          output = result.output.gsub(/pod "#{name}" deleted/, "")
+            exit_status = success?(name) ? 0 : 1
+            results     = output(name)
 
-          [result.exit_status, output]
-        ensure
-          delete_secret!(secret) if secret
+            [exit_status, results]
+          ensure
+            cleanup(name, secret)
+          end
+        end
+
+        def running?(pod_name)
+          %w[Pending Running].include?(pod_info(pod_name).dig("status", "phase"))
+        end
+
+        def success?(pod_name)
+          pod_info(pod_name).dig("status", "phase") == "Succeeded"
+        end
+
+        def output(pod)
+          kubeclient.get_pod_log(pod, namespace).body
+        end
+
+        def cleanup(pod, secret)
+          delete_pod(pod)       if pod
+          delete_secret(secret) if secret
         end
 
         private
+
+        attr_reader :kubeclient, :namespace
+
+        def pod_info(pod_name)
+          kubeclient.get_pod(pod_name, namespace)
+        end
 
         def container_name(image)
           image.match(%r{^(?<repository>.+/)?(?<image>.+):(?<tag>.+)$})&.named_captures&.dig("image")
@@ -51,23 +111,44 @@ module Floe
           "#{container_short_name}-#{SecureRandom.uuid}"
         end
 
-        def pod_spec(image, env, secret = nil)
-          container_spec = {
-            "name"  => container_name(image),
-            "image" => image,
-            "env"   => env.to_h.map { |k, v| {"name" => k, "value" => v.to_s} }
+        def pod_spec(name, image, env, secret = nil)
+          spec = {
+            :kind       => "Pod",
+            :apiVersion => "v1",
+            :metadata   => {
+              :name      => name,
+              :namespace => namespace
+            },
+            :spec       => {
+              :containers    => [
+                {
+                  :name  => container_name(image),
+                  :image => image,
+                  :env   => env.map { |k, v| {:name => k, :value => v.to_s} }
+                }
+              ],
+              :restartPolicy => "Never"
+            }
           }
 
-          spec = {"spec" => {"containers" => [container_spec]}}
-
           if secret
-            spec["spec"]["volumes"] = [{"name" => "secret-volume", "secret" => {"secretName" => secret}}]
-            container_spec["env"] << {"name" => "SECRETS", "value" => "/run/secrets/#{secret}/secret"}
-            container_spec["volumeMounts"] = [
+            spec[:spec][:volumes] = [
               {
-                "name"      => "secret-volume",
-                "mountPath" => "/run/secrets/#{secret}",
-                "readOnly"  => true
+                :name   => "secret-volume",
+                :secret => {:secretName => secret}
+              }
+            ]
+
+            spec[:spec][:containers][0][:env] << {
+              :name  => "SECRETS",
+              :value => "/run/secrets/#{secret}/secret"
+            }
+
+            spec[:spec][:containers][0][:volumeMounts] = [
+              {
+                :name      => "secret-volume",
+                :mountPath => "/run/secrets/#{secret}",
+                :readOnly  => true
               }
             ]
           end
@@ -75,48 +156,49 @@ module Floe
           spec
         end
 
+        def create_pod!(name, image, env, secret = nil)
+          kubeclient.create_pod(pod_spec(name, image, env, secret))
+        end
+
+        def delete_pod!(name)
+          kubeclient.delete_pod(name, namespace)
+        end
+
+        def delete_pod(name)
+          delete_pod!(name)
+        rescue
+          nil
+        end
+
         def create_secret!(secrets)
           secret_name = SecureRandom.uuid
 
-          secret_yaml = {
-            "kind"       => "Secret",
-            "apiVersion" => "v1",
-            "metadata"   => {
-              "name"      => secret_name,
-              "namespace" => namespace
+          secret_config = {
+            :kind       => "Secret",
+            :apiVersion => "v1",
+            :metadata   => {
+              :name      => secret_name,
+              :namespace => namespace
             },
-            "data"       => {
-              "secret" => Base64.urlsafe_encode64(secrets.to_json)
+            :data       => {
+              :secret => Base64.urlsafe_encode64(secrets.to_json)
             },
-            "type"       => "Opaque"
-          }.to_yaml
+            :type       => "Opaque"
+          }
 
-          kubectl!("create", "-f", "-", :in_data => secret_yaml)
+          kubeclient.create_secret(secret_config)
 
           secret_name
         end
 
         def delete_secret!(secret_name)
-          kubectl!("delete", "secret", secret_name, [:namespace, namespace])
+          kubeclient.delete_secret(secret_name, namespace)
         end
 
-        def kubectl!(*params, **kwargs)
-          params.unshift([:token, token])   if token
-          params.unshift([:server, server]) if server
-
-          AwesomeSpawn.run!("kubectl", :params => params, **kwargs)
-        end
-
-        def kubectl_run!(image, name, overrides = nil)
-          params = [
-            "run", :rm, :attach, [:image, image], [:restart, "Never"], [:namespace, namespace], name
-          ]
-
-          params << "--overrides=#{overrides.to_json}" if overrides
-
-          logger.debug("Running kubectl: #{AwesomeSpawn.build_command_line("kubectl", params)}")
-
-          kubectl!(*params)
+        def delete_secret(name)
+          delete_secret!(name)
+        rescue
+          nil
         end
       end
     end

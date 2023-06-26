@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - Add ability to pass options to `Floe::Workflow::Runner` (#48)
+- Add kubeconfig file support to `Floe::Workflow::Runner::Kubernetes` (#53)
 
 ## [0.1.1] - 2023-06-05
 ### Fixed
