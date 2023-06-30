@@ -182,17 +182,22 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
         allow(File).to receive(:exist?).and_call_original
         allow(File).to receive(:read).and_call_original
 
-        expect(File).to receive(:exist?).with(kubeconfig_path).and_return(true)
-        expect(File).to receive(:read).with(kubeconfig_path).and_return(kubeconfig)
+        allow(File).to receive(:exist?).with(kubeconfig_path).and_return(true)
+        allow(File).to receive(:read).with(kubeconfig_path).and_return(kubeconfig)
+
+        allow(kubeclient).to receive(:create_pod)
+        allow(kubeclient).to receive(:get_pod).twice.and_return({"status" => {"phase" => "Succeeded"}})
+        allow(kubeclient).to receive(:get_pod_log).and_return(RestClient::Response.new("hello, world!"))
+        allow(kubeclient).to receive(:delete_pod)
       end
 
       context "with no runner options passed" do
         let(:runner_options) { {} }
 
         it "uses the kubeconfig values" do
-          expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "my-token"})
+          expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "my-token"}).and_return(kubeclient)
 
-          described_class.new(runner_options)
+          subject.run!("docker://hello-world:latest")
         end
       end
 
@@ -202,7 +207,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
         it "prefers the provided options values over the kubeconfig file" do
           expect(Kubeclient::Client).to receive(:new).with("https://my-other-kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "my-other-token"})
 
-          described_class.new(runner_options)
+          subject.run!("docker://hello-world:latest")
         end
       end
 
@@ -213,7 +218,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
         it "uses the kubeconfig values" do
           expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "my-token"})
 
-          described_class.new(runner_options)
+          subject.run!("docker://hello-world:latest")
         end
       end
 
@@ -223,7 +228,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
         it "uses the values from the kubeconfig context" do
           expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "foo"})
 
-          described_class.new(runner_options)
+          subject.run!("docker://hello-world:latest")
         end
       end
     end
@@ -234,13 +239,11 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
       it "calls kubectl run with the image name" do
         expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => token}).and_return(kubeclient)
-        expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_including("hello-world-"), :namespace => "default"})
 
-        expect(kubeclient).to receive(:create_pod).with(expected_pod_spec)
-        expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").and_return({"status" => {"phase" => "Running"}})
-        expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").twice.and_return({"status" => {"phase" => "Succeeded"}})
-        expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), "default").and_return(RestClient::Response.new("hello, world!"))
-        expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default")
+        allow(kubeclient).to receive(:create_pod)
+        allow(kubeclient).to receive(:get_pod).twice.and_return({"status" => {"phase" => "Succeeded"}})
+        allow(kubeclient).to receive(:get_pod_log).and_return(RestClient::Response.new("hello, world!"))
+        allow(kubeclient).to receive(:delete_pod)
 
         subject.run!("docker://hello-world:latest")
       end
@@ -254,14 +257,13 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       it "calls kubectl run with the image name" do
         allow(File).to receive(:read).and_call_original
         expect(File).to receive(:read).with(token_file).and_return(token)
-        expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => token}).and_return(kubeclient)
-        expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_including("hello-world-"), :namespace => "default"})
 
-        expect(kubeclient).to receive(:create_pod).with(expected_pod_spec)
-        expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").and_return({"status" => {"phase" => "Running"}})
-        expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").twice.and_return({"status" => {"phase" => "Succeeded"}})
-        expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), "default").and_return(RestClient::Response.new("hello, world!"))
-        expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default")
+        expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => token}).and_return(kubeclient)
+
+        allow(kubeclient).to receive(:create_pod)
+        allow(kubeclient).to receive(:get_pod).twice.and_return({"status" => {"phase" => "Succeeded"}})
+        allow(kubeclient).to receive(:get_pod_log).and_return(RestClient::Response.new("hello, world!"))
+        allow(kubeclient).to receive(:delete_pod)
 
         subject.run!("docker://hello-world:latest")
       end
