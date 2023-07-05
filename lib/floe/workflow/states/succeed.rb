@@ -16,10 +16,6 @@ module Floe
         def end?
           true # TODO: Handle if this is ending a parallel or map state
         end
-
-        private def to_dot_attributes
-          super.merge(:color => "green")
-        end
       end
     end
   end

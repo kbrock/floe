@@ -74,43 +74,5 @@ module Floe
     def end?
       current_state.nil?
     end
-
-    def to_dot
-      String.new.tap do |s|
-        s << "digraph {\n"
-        states.each do |state|
-          s << state.to_dot << "\n"
-        end
-        s << "\n"
-        states.each do |state|
-          Array(state.to_dot_transitions).each do |transition|
-            s << transition << "\n"
-          end
-        end
-        s << "}\n"
-      end
-    end
-
-    def to_svg(path: nil)
-      require "open3"
-      out, err, _status = Open3.capture3("dot -Tsvg", :stdin_data => to_dot)
-
-      raise "Error from graphviz:\n#{err}" if err && !err.empty?
-
-      File.write(path, out) if path
-
-      out
-    end
-
-    def to_ascii(path: nil)
-      require "open3"
-      out, err, _status = Open3.capture3("graph-easy", :stdin_data => to_dot)
-
-      raise "Error from graph-easy:\n#{err}" if err && !err.empty?
-
-      File.write(path, out) if path
-
-      out
-    end
   end
 end
