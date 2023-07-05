@@ -5,12 +5,4 @@ RSpec.describe Floe::Workflow::States::Fail do
   it "#end?" do
     expect(state.end?).to be true
   end
-
-  it "#to_dot" do
-    expect(state.to_dot).to eq "  FailState [ style=bold color=red ]"
-  end
-
-  it "#to_dot_transitions" do
-    expect(state.to_dot_transitions).to be_empty
-  end
 end

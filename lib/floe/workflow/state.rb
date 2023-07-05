@@ -57,24 +57,6 @@ module Floe
 
         [next_state, output]
       end
-
-      def to_dot
-        String.new.tap do |s|
-          s << "  #{name}"
-
-          attributes = to_dot_attributes
-          s << " [ #{attributes.to_a.map { |kv| kv.join("=") }.join(" ")} ]" unless attributes.empty?
-        end
-      end
-
-      private def to_dot_attributes
-        end? ? {:style => "bold"} : {}
-      end
-
-      def to_dot_transitions
-        next_state_name = payload["Next"] unless end?
-        Array(next_state_name && "  #{name} -> #{next_state_name}")
-      end
     end
   end
 end

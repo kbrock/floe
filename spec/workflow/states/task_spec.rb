@@ -293,35 +293,15 @@ RSpec.describe Floe::Workflow::States::Task do
     end
   end
 
-  context "with a normal state" do
-    let(:state) { workflow.states_by_name["FirstState"] }
-
-    it "#end?" do
+  describe "#end?" do
+    it "with a normal state" do
+      state = workflow.states_by_name["FirstState"]
       expect(state.end?).to be false
     end
 
-    it "#to_dot" do
-      expect(state.to_dot).to eq "  FirstState"
-    end
-
-    it "#to_dot_transitions" do
-      expect(state.to_dot_transitions).to eq ["  FirstState -> ChoiceState"]
-    end
-  end
-
-  context "with an end state" do
-    let(:state) { workflow.states_by_name["NextState"] }
-
-    it "#end?" do
+    it "with an end state" do
+      state = workflow.states_by_name["NextState"]
       expect(state.end?).to be true
-    end
-
-    it "#to_dot" do
-      expect(state.to_dot).to eq "  NextState [ style=bold ]"
-    end
-
-    it "#to_dot_transitions" do
-      expect(state.to_dot_transitions).to be_empty
     end
   end
 end

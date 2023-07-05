@@ -9,14 +9,4 @@ RSpec.describe Floe::Workflow::States::Pass do
       state.run!({})
     end
   end
-
-  it "#to_dot" do
-    expect(state.to_dot).to eq "  WaitState"
-  end
-
-  it "#to_dot_transitions" do
-    expect(state.to_dot_transitions).to eq [
-      "  WaitState -> NextState"
-    ]
-  end
 end
