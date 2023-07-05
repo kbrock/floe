@@ -3,9 +3,17 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.2.0] - 2023-07-05
 ### Added
 - Add ability to pass options to `Floe::Workflow::Runner` (#48)
 - Add kubeconfig file support to `Floe::Workflow::Runner::Kubernetes` (#53)
+
+### Removed
+- Remove to_dot/to_svg code (#54)
+
+### Fixed
+- Fixed default rake task to spec (#55)
 
 ## [0.1.1] - 2023-06-05
 ### Fixed
