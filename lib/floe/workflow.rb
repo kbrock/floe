@@ -27,7 +27,7 @@ module Floe
       @states_by_name = @states.each_with_object({}) { |state, result| result[state.name] = state }
       start_at        = @payload["StartAt"]
 
-      current_state_name = @context["State"]["Name"] || start_at
+      current_state_name = context.state["Name"] || start_at
       @current_state = @states_by_name[current_state_name]
 
       @status = current_state_name == start_at ? "pending" : current_state.status
@@ -37,11 +37,11 @@ module Floe
 
     def step
       @status = "running" if @status == "pending"
-      @context["Execution"]["StartTime"] ||= Time.now.utc
+      context.execution["StartTime"] ||= Time.now.utc
 
-      input = @context["State"]["Output"] || @context["Execution"]["Input"].dup
+      input = context.state["Output"] || context.execution["Input"].dup
 
-      @context["State"] = {
+      context.state = {
         "EnteredTime" => Time.now,
         "Input"       => input,
         "Name"        => current_state.name
@@ -51,11 +51,11 @@ module Floe
       next_state, output = current_state.run!(input)
       tock = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-      @context["State"]["FinishedTime"] = Time.now
-      @context["State"]["Duration"]     = (tock - tick) / 1_000_000.0
-      @context["State"]["Output"]       = output
+      context.state["FinishedTime"] = Time.now.utc
+      context.state["Duration"]     = (tock - tick) / 1_000_000.0
+      context.state["Output"]       = output
 
-      @context["States"] << @context["State"]
+      context.states << context.state
 
       @status = current_state.status
 
