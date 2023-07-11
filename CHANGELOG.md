@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Fix State EnteredTime and FinishedTime (#59)
 
 ## [0.2.0] - 2023-07-05
 ### Added

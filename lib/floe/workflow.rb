@@ -41,18 +41,19 @@ module Floe
 
       input = @context["State"]["Output"] || @context["Execution"]["Input"].dup
 
+      @context["State"] = {
+        "EnteredTime" => Time.now,
+        "Input"       => input,
+        "Name"        => current_state.name
+      }
+
       tick = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       next_state, output = current_state.run!(input)
       tock = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-      @context["State"] = {
-        "EnteredTime"  => tick,
-        "FinishedTime" => tock,
-        "Duration"     => tock - tick,
-        "Output"       => output,
-        "Name"         => next_state&.name,
-        "Input"        => output
-      }
+      @context["State"]["FinishedTime"] = Time.now
+      @context["State"]["Duration"]     = (tock - tick) / 1_000_000.0
+      @context["State"]["Output"]       = output
 
       @context["States"] << @context["State"]
 
