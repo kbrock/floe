@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "securerandom"
 require "json"
 
 module Floe
@@ -42,6 +43,7 @@ module Floe
       input = context.state["Output"] || context.execution["Input"].dup
 
       context.state = {
+        "Guid"        => SecureRandom.uuid,
         "EnteredTime" => Time.now,
         "Input"       => input,
         "Name"        => current_state.name
