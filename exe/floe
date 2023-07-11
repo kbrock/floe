@@ -36,4 +36,4 @@ Floe::Workflow::Runner.docker_runner = runner_klass.new(runner_options)
 
 workflow.run!
 
-puts workflow.context.state["Output"].inspect
+puts workflow.output.inspect
