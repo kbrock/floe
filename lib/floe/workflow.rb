@@ -44,7 +44,7 @@ module Floe
 
       context.state = {
         "Guid"        => SecureRandom.uuid,
-        "EnteredTime" => Time.now,
+        "EnteredTime" => Time.now.utc,
         "Input"       => input,
         "Name"        => current_state.name
       }
