@@ -25,6 +25,10 @@ module Floe
         @context["State"]
       end
 
+      def state=(val)
+        @context["State"] = val
+      end
+
       def states
         @context["States"]
       end
