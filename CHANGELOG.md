@@ -6,6 +6,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Fix State EnteredTime and FinishedTime (#59)
 
+### Added
+- Add workflow output (#57)
+
 ## [0.2.0] - 2023-07-05
 ### Added
 - Add ability to pass options to `Floe::Workflow::Runner` (#48)

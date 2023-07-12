@@ -11,7 +11,7 @@ module Floe
       end
     end
 
-    attr_reader :context, :credentials, :payload, :states, :states_by_name, :current_state, :status
+    attr_reader :context, :credentials, :output, :payload, :states, :states_by_name, :current_state, :status
 
     def initialize(payload, context = nil, credentials = {})
       payload     = JSON.parse(payload)     if payload.kind_of?(String)
@@ -58,6 +58,7 @@ module Floe
       @context["States"] << @context["State"]
 
       @status = current_state.status
+      @output = output if end?
 
       next_state_name = next_state&.name
       @current_state = next_state_name && @states_by_name[next_state_name]
