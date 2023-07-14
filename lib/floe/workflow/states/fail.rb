@@ -11,6 +11,7 @@ module Floe
 
           @cause = payload["Cause"]
           @error = payload["Error"]
+          @end   = true
         end
 
         def run!(input)
@@ -22,10 +23,6 @@ module Floe
           logger.info("Running state: [#{name}] with input [#{input}]...Complete - next state: [#{next_state&.name}]")
 
           [next_state, output]
-        end
-
-        def end?
-          true
         end
 
         def status
