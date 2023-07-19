@@ -11,10 +11,7 @@ module Floe
 
           @input_path  = Path.new(payload.fetch("InputPath", "$"))
           @output_path = Path.new(payload.fetch("OutputPath", "$"))
-        end
-
-        def end?
-          true # TODO: Handle if this is ending a parallel or map state
+          @end         = true
         end
       end
     end
