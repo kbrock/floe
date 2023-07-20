@@ -18,12 +18,11 @@ module Floe
 
     def initialize(payload, context = nil, credentials = {})
       payload     = JSON.parse(payload)     if payload.kind_of?(String)
-      context     = JSON.parse(context)     if context.kind_of?(String)
       credentials = JSON.parse(credentials) if credentials.kind_of?(String)
       context     = Context.new(context)    unless context.kind_of?(Context)
 
       @payload     = payload
-      @context     = context || {"global" => {}}
+      @context     = context
       @credentials = credentials
 
       @states         = payload["States"].to_a.map { |name, state| State.build!(self, name, state) }
