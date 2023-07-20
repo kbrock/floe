@@ -59,11 +59,9 @@ module Floe
 
       context.states << context.state
 
-      @status = current_state.status
-      @output = output if end?
-
-      next_state_name = next_state&.name
-      @current_state = next_state_name && @states_by_name[next_state_name]
+      @status        = current_state.status
+      @current_state = next_state && @states_by_name[next_state]
+      @output        = output if end?
 
       self
     end

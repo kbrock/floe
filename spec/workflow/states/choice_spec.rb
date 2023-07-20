@@ -17,7 +17,7 @@ RSpec.describe Floe::Workflow::States::Choice do
 
       it "returns the next state" do
         next_state, = subject
-        expect(next_state).to eq(workflow.states_by_name["FirstMatchState"])
+        expect(next_state).to eq("FirstMatchState")
       end
     end
 
@@ -26,7 +26,7 @@ RSpec.describe Floe::Workflow::States::Choice do
 
       it "returns the default state" do
         next_state, = subject
-        expect(next_state).to eq(workflow.states_by_name["FailState"])
+        expect(next_state).to eq("FailState")
       end
     end
   end
