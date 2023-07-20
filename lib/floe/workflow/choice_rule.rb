@@ -34,7 +34,7 @@ module Floe
       private
 
       def variable_value(context, input)
-        @variable_value ||= Path.value(variable, context, input)
+        Path.value(variable, context, input)
       end
     end
   end
