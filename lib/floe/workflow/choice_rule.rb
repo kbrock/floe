@@ -4,24 +4,28 @@ module Floe
   class Workflow
     class ChoiceRule
       class << self
-        def true?(payload, context, input)
-          build(payload).true?(context, input)
+        def build(payload)
+          if (sub_payloads = payload["Not"])
+            Floe::Workflow::ChoiceRule::Not.new(payload, build_children([sub_payloads]))
+          elsif (sub_payloads = payload["And"])
+            Floe::Workflow::ChoiceRule::And.new(payload, build_children(sub_payloads))
+          elsif (sub_payloads = payload["Or"])
+            Floe::Workflow::ChoiceRule::Or.new(payload, build_children(sub_payloads))
+          else
+            Floe::Workflow::ChoiceRule::Data.new(payload)
+          end
         end
 
-        def build(payload)
-          data_expression = (payload.keys & %w[And Not Or]).empty?
-          if data_expression
-            Floe::Workflow::ChoiceRule::Data.new(payload)
-          else
-            Floe::Workflow::ChoiceRule::Boolean.new(payload)
-          end
+        def build_children(sub_payloads)
+          sub_payloads.map { |payload| build(payload) }
         end
       end
 
-      attr_reader :next, :payload, :variable
+      attr_reader :next, :payload, :variable, :children
 
-      def initialize(payload)
-        @payload = payload
+      def initialize(payload, children = nil)
+        @payload   = payload
+        @children  = children
 
         @next     = payload["Next"]
         @variable = payload["Variable"]
