@@ -25,24 +25,23 @@ module Floe
           @credentials       = PayloadTemplate.new(payload["Credentials"])    if payload["Credentials"]
         end
 
-        def run!(*)
-          super do |input|
-            input = parameters.value(context, input) if parameters
+        def run!(input)
+          input = input_path.value(context, input)
+          input = parameters.value(context, input) if parameters
 
-            runner = Floe::Workflow::Runner.for_resource(resource)
-            _exit_status, results = runner.run!(resource, input, credentials&.value({}, workflow.credentials))
+          runner = Floe::Workflow::Runner.for_resource(resource)
+          _exit_status, results = runner.run!(resource, input, credentials&.value({}, workflow.credentials))
 
-            output = input
-            process_output!(output, results)
-          rescue => err
-            retrier = self.retry.detect { |r| (r.error_equals & [err.to_s, "States.ALL"]).any? }
-            retry if retry!(retrier)
+          output = process_output!(input, results)
+          [@next, output]
+        rescue => err
+          retrier = self.retry.detect { |r| (r.error_equals & [err.to_s, "States.ALL"]).any? }
+          retry if retry!(retrier)
 
-            catcher = self.catch.detect { |c| (c.error_equals & [err.to_s, "States.ALL"]).any? }
-            raise if catcher.nil?
+          catcher = self.catch.detect { |c| (c.error_equals & [err.to_s, "States.ALL"]).any? }
+          raise if catcher.nil?
 
-            [output, workflow.states_by_name[catcher.next]]
-          end
+          [catcher.next, output]
         end
 
         private
@@ -75,7 +74,8 @@ module Floe
           end
 
           results = result_selector.value(context, results) if result_selector
-          result_path.set(output, results)
+          output  = result_path.set(output, results)
+          output_path.value(context, output)
         end
       end
     end

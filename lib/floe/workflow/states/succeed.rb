@@ -9,9 +9,11 @@ module Floe
         def initialize(workflow, name, payload)
           super
 
-          @input_path  = Path.new(payload.fetch("InputPath", "$"))
-          @output_path = Path.new(payload.fetch("OutputPath", "$"))
-          @end         = true
+          @end = true
+        end
+
+        def run!(input)
+          [nil, input]
         end
       end
     end

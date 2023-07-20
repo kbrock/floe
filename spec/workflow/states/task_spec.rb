@@ -235,7 +235,7 @@ RSpec.describe Floe::Workflow::States::Task do
 
           next_state, _ = subject
 
-          expect(next_state.name).to eq("FailState")
+          expect(next_state).to eq("FailState")
         end
       end
     end
@@ -252,7 +252,7 @@ RSpec.describe Floe::Workflow::States::Task do
 
           next_state, _ = subject
 
-          expect(next_state.name).to eq("FirstState")
+          expect(next_state).to eq("FirstState")
         end
 
         it "raises if the exception isn't caught" do
@@ -276,7 +276,7 @@ RSpec.describe Floe::Workflow::States::Task do
 
           next_state, _ = subject
 
-          expect(next_state.name).to eq("FirstState")
+          expect(next_state).to eq("FirstState")
         end
 
         it "catches the exception and transits to the next state" do
@@ -287,7 +287,7 @@ RSpec.describe Floe::Workflow::States::Task do
 
           next_state, _ = subject
 
-          expect(next_state.name).to eq("FailState")
+          expect(next_state).to eq("FailState")
         end
       end
     end

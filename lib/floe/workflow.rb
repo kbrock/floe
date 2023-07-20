@@ -5,6 +5,8 @@ require "json"
 
 module Floe
   class Workflow
+    include Logging
+
     class << self
       def load(path_or_io, context = nil, credentials = {})
         payload = path_or_io.respond_to?(:read) ? path_or_io.read : File.read(path_or_io)
@@ -42,6 +44,8 @@ module Floe
 
       input = context.state["Output"] || context.execution["Input"].dup
 
+      logger.info("Running state: [#{current_state.name}] with input [#{input}]...")
+
       context.state = {
         "Guid"        => SecureRandom.uuid,
         "EnteredTime" => Time.now.utc,
@@ -56,6 +60,8 @@ module Floe
       context.state["FinishedTime"] = Time.now.utc
       context.state["Duration"]     = (tock - tick) / 1_000_000.0
       context.state["Output"]       = output
+
+      logger.info("Running state: [#{current_state.name}] with input [#{input}]...Complete - next state: [#{next_state}] output: [#{output}]")
 
       context.states << context.state
 
