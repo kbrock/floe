@@ -16,11 +16,11 @@ module Floe
           @output_path = Path.new(payload.fetch("OutputPath", "$"))
         end
 
-        def run!(*)
-          super do
-            sleep(seconds)
-            nil
-          end
+        def run!(input)
+          input = input_path.value(context, input)
+          sleep(seconds)
+          output = output_path.value(context, input)
+          [@next, output]
         end
       end
     end

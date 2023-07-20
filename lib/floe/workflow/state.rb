@@ -41,22 +41,6 @@ module Floe
       def status
         end? ? "success" : "running"
       end
-
-      def run!(input)
-        logger.info("Running state: [#{name}] with input [#{input}]")
-
-        input = input_path.value(context, input)
-
-        output, next_state = block_given? ? yield(input) : input
-        next_state ||= payload["Next"] unless end?
-
-        output ||= input
-        output   = output_path&.value(context, output)
-
-        logger.info("Running state: [#{name}] with input [#{input}]...Complete - next state: [#{next_state}] output: [#{output}]")
-
-        [next_state, output]
-      end
     end
   end
 end
