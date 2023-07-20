@@ -1,4 +1,9 @@
 RSpec.describe Floe::Workflow::Runner::Kubernetes do
+  before do
+    allow(ENV).to receive(:fetch).and_call_original
+    allow(ENV).to receive(:fetch).with('KUBECONFIG', nil).and_return(nil)
+  end
+
   let(:subject)        { described_class.new(runner_options) }
   let(:runner_options) { {"server" => "https://kubernetes.local:6443", "token" => "my-token"} }
 
