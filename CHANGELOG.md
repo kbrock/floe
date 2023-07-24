@@ -6,37 +6,37 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.2.2] - 2023-07-24
 ### Fixed
-- Don't pick up real KUBECONFIG for tests (#73)
-- Fix double json.parse and context default value (#69)
+- Don't pick up real KUBECONFIG for tests ([#73](https://github.com/ManageIQ/floe/pull/73))
+- Fix double json.parse and context default value ([#69](https://github.com/ManageIQ/floe/pull/69))
 
 ### Added
-- Configure Renovate (#46)
+- Configure Renovate ([#46](https://github.com/ManageIQ/floe/pull/46))
 
 ### Changed
-- Simplify next state handling (#66)
-- Refactor Input/Output path handling (#68)
+- Simplify next state handling ([#66](https://github.com/ManageIQ/floe/pull/66))
+- Refactor Input/Output path handling ([#68](https://github.com/ManageIQ/floe/pull/68))
 
 ## [0.2.1] - 2023-07-12
 ### Fixed
-- Fix State EnteredTime and FinishedTime (#59)
+- Fix State EnteredTime and FinishedTime ([#59](https://github.com/ManageIQ/floe/pull/59))
 
 ### Added
-- Add workflow output (#57)
+- Add workflow output ([#57](https://github.com/ManageIQ/floe/pull/57))
 
 ## [0.2.0] - 2023-07-05
 ### Added
-- Add ability to pass options to `Floe::Workflow::Runner` (#48)
-- Add kubeconfig file support to `Floe::Workflow::Runner::Kubernetes` (#53)
+- Add ability to pass options to `Floe::Workflow::Runner` ([#48](https://github.com/ManageIQ/floe/pull/48))
+- Add kubeconfig file support to `Floe::Workflow::Runner::Kubernetes` ([#53](https://github.com/ManageIQ/floe/pull/53))
 
 ### Removed
-- Remove to_dot/to_svg code (#54)
+- Remove to_dot/to_svg code ([#54](https://github.com/ManageIQ/floe/pull/54))
 
 ### Fixed
-- Fixed default rake task to spec (#55)
+- Fixed default rake task to spec ([#55](https://github.com/ManageIQ/floe/pull/55))
 
 ## [0.1.1] - 2023-06-05
 ### Fixed
-- Fix States::Wait Path initializer arguments (#47)
+- Fix States::Wait Path initializer arguments ([#47](https://github.com/ManageIQ/floe/pull/47))
 
 ## [0.1.0] - 2023-03-13
 ### Added
