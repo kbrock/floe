@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.3] - 2023-07-28
+### Fixed
+- Fix storing next_state in Context ([#76])(https://github.com/ManageIQ/floe/pull/76)
+
 ## [0.2.2] - 2023-07-24
 ### Fixed
 - Don't pick up real KUBECONFIG for tests ([#73](https://github.com/ManageIQ/floe/pull/73))
