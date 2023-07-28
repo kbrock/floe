@@ -29,8 +29,10 @@ module Floe
       @states_by_name = @states.each_with_object({}) { |state, result| result[state.name] = state }
       start_at        = @payload["StartAt"]
 
-      current_state_name = context.state["Name"] || start_at
-      @current_state = @states_by_name[current_state_name]
+      context.state["Name"] ||= start_at
+
+      current_state_name = context.state["Name"]
+      @current_state     = @states_by_name[current_state_name]
 
       @status = current_state_name == start_at ? "pending" : current_state.status
     rescue JSON::ParserError => err
@@ -41,32 +43,30 @@ module Floe
       @status = "running" if @status == "pending"
       context.execution["StartTime"] ||= Time.now.utc
 
-      input = context.state["Output"] || context.execution["Input"].dup
+      context.state["Guid"]    = SecureRandom.uuid
+      context.state["Input"] ||= context.execution["Input"].dup
 
-      logger.info("Running state: [#{current_state.name}] with input [#{input}]...")
+      logger.info("Running state: [#{current_state.name}] with input [#{context.state["Input"]}]...")
 
-      context.state = {
-        "Guid"        => SecureRandom.uuid,
-        "EnteredTime" => Time.now.utc,
-        "Input"       => input,
-        "Name"        => current_state.name
-      }
+      context.state["EnteredTime"] = Time.now.utc
 
       tick = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      next_state, output = current_state.run!(input)
+      next_state, output = current_state.run!(context.state["Input"])
       tock = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       context.state["FinishedTime"] = Time.now.utc
       context.state["Duration"]     = (tock - tick) / 1_000_000.0
       context.state["Output"]       = output
 
-      logger.info("Running state: [#{current_state.name}] with input [#{input}]...Complete - next state: [#{next_state}] output: [#{output}]")
+      logger.info("Running state: [#{current_state.name}] with input [#{context["Input"]}]...Complete - next state: [#{next_state}] output: [#{output}]")
 
       context.states << context.state
 
       @status        = current_state.status
       @current_state = next_state && @states_by_name[next_state]
       @output        = output if end?
+
+      context.state = {"Name" => next_state, "Input" => output} unless end?
 
       self
     end
