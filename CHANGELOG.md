@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Fix PayloadTemplate value transformation rules ([#78])(https://github.com/ManageIQ/floe/pull/78)
 
 ## [0.2.3] - 2023-07-28
 ### Fixed
