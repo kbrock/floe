@@ -21,10 +21,11 @@ module Floe
           value.map { |val| interpolate_value_nested(val, context, inputs) }
         when Hash
           value.to_h do |key, val|
-            val = interpolate_value_nested(val, context, inputs)
-            key = key.gsub(/\.\$$/, "") if key.end_with?(".$")
-
-            [key, val]
+            if key.end_with?(".$")
+              [key.chomp(".$"), interpolate_value_nested(val, context, inputs)]
+            else
+              [key, val]
+            end
           end
         when String
           value.start_with?("$") ? Path.value(value, context, inputs) : value

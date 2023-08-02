@@ -3,11 +3,11 @@ RSpec.describe Floe::Workflow::PayloadTemplate do
 
   describe "#value" do
     context "with static values" do
-      let(:payload) { {"foo" => "bar"} }
+      let(:payload) { {"foo" => "bar", "bar" => "$.baz"} }
       let(:context) { {} }
 
       it "returns the original value" do
-        expect(subject.value(context)).to eq({"foo" => "bar"})
+        expect(subject.value(context)).to eq({"foo" => "bar", "bar" => "$.baz"})
       end
     end
 
