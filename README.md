@@ -36,6 +36,21 @@ bundle exec ruby exe/floe --workflow examples/workflow.asl --inputs='{"foo": 1}'
 bundle exec ruby exe/floe --workflow examples/workflow.asl --inputs='{"foo": 1}' --docker-runner kubernetes --docker-runner-options namespace=default server=https://k8s.example.com:6443 token=my-token
 ```
 
+If your workflow has `Credentials` you can provide a payload that will help resolve those credentials references at runtime.
+
+For example if your workflow had the following Credentials field with a JSON Path property:
+```json
+"Credentials": {
+  "RoleArn.$": "$.roleArn"
+}
+```
+
+You can provide that at runtime via the `--credentials` parameter:
+
+```
+bundle exec ruby exe/floe --workflow my-workflow.asl --credentials='{"roleArn": "arn:aws:iam::111122223333:role/LambdaRole"}'
+```
+
 ### Ruby Library
 
 ```ruby
