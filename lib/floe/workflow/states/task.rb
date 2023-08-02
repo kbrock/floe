@@ -13,6 +13,7 @@ module Floe
 
           @heartbeat_seconds = payload["HeartbeatSeconds"]
           @next              = payload["Next"]
+          @end               = !!payload["End"]
           @resource          = payload["Resource"]
           @timeout_seconds   = payload["TimeoutSeconds"]
           @retry             = payload["Retry"].to_a.map { |retrier| Retrier.new(retrier) }
@@ -33,7 +34,7 @@ module Floe
           _exit_status, results = runner.run!(resource, input, credentials&.value({}, workflow.credentials))
 
           output = process_output!(input, results)
-          [@next, output]
+          [@end ? nil : @next, output]
         rescue => err
           retrier = self.retry.detect { |r| (r.error_equals & [err.to_s, "States.ALL"]).any? }
           retry if retry!(retrier)
@@ -42,6 +43,14 @@ module Floe
           raise if catcher.nil?
 
           [catcher.next, output]
+        end
+
+        def status
+          @end ? "success" : "running"
+        end
+
+        def end?
+          @end
         end
 
         private

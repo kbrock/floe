@@ -23,6 +23,14 @@ module Floe
 
           [next_state, output]
         end
+
+        def status
+          "running"
+        end
+
+        def end?
+          false
+        end
       end
     end
   end

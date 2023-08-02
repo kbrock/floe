@@ -10,6 +10,7 @@ module Floe
           super
 
           @next        = payload["Next"]
+          @end         = !!payload["End"]
           @result      = payload["Result"]
 
           @parameters  = PayloadTemplate.new(payload["Parameters"]) if payload["Parameters"]
@@ -23,7 +24,15 @@ module Floe
           output = result_path.set(output, result) if result && result_path
           output = output_path.value(context, output)
 
-          [@next, output]
+          [@end ? nil : @next, output]
+        end
+
+        def status
+          @end ? "success" : "running"
+        end
+
+        def end?
+          @end
         end
       end
     end

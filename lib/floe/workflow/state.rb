@@ -25,21 +25,12 @@ module Floe
         @workflow = workflow
         @name     = name
         @payload  = payload
-        @end      = !!payload["End"]
         @type     = payload["Type"]
         @comment  = payload["Comment"]
       end
 
-      def end?
-        @end
-      end
-
       def context
         workflow.context
-      end
-
-      def status
-        end? ? "success" : "running"
       end
     end
   end

@@ -10,6 +10,7 @@ module Floe
           super
 
           @next    = payload["Next"]
+          @end     = !!payload["End"]
           @seconds = payload["Seconds"].to_i
 
           @input_path  = Path.new(payload.fetch("InputPath", "$"))
@@ -20,7 +21,15 @@ module Floe
           input = input_path.value(context, input)
           sleep(seconds)
           output = output_path.value(context, input)
-          [@next, output]
+          [@end ? nil : @next, output]
+        end
+
+        def status
+          @end ? "success" : "running"
+        end
+
+        def end?
+          @end
         end
       end
     end

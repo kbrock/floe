@@ -11,7 +11,6 @@ module Floe
 
           @cause = payload["Cause"]
           @error = payload["Error"]
-          @end   = true
         end
 
         def run!(input)
@@ -20,6 +19,10 @@ module Floe
 
         def status
           "errored"
+        end
+
+        def end?
+          true
         end
       end
     end
