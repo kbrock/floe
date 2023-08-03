@@ -304,4 +304,16 @@ RSpec.describe Floe::Workflow::States::Task do
       expect(state.end?).to be true
     end
   end
+
+  describe "#status" do
+    it "with a normal state" do
+      state = workflow.states_by_name["FirstState"]
+      expect(state.status).to eq("running")
+    end
+
+    it "with an end state" do
+      state = workflow.states_by_name["NextState"]
+      expect(state.status).to eq("success")
+    end
+  end
 end

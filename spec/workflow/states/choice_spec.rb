@@ -3,6 +3,10 @@ RSpec.describe Floe::Workflow::States::Choice do
   let(:state)    { workflow.states_by_name["ChoiceState"] }
   let(:inputs)   { {} }
 
+  it "#end?" do
+    expect(state.end?).to eq(false)
+  end
+
   describe "#run!" do
     let(:subject) { state.run!(inputs) }
 
@@ -29,5 +33,9 @@ RSpec.describe Floe::Workflow::States::Choice do
         expect(next_state).to eq("FailState")
       end
     end
+  end
+
+  it "#status" do
+    expect(state.status).to eq("running")
   end
 end
