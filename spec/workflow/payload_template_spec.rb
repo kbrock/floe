@@ -20,5 +20,15 @@ RSpec.describe Floe::Workflow::PayloadTemplate do
         expect(subject.value(context, inputs)).to eq({"foo" => "bar", "bar" => "baz"})
       end
     end
+
+    context "with nested dynamic values" do
+      let(:payload) { {"foo.$" => ["$.foo", "$$.bar"], "bar.$" => {"hello.$" => "$.greeting"}} }
+      let(:context) { {"bar" => "baz"} }
+      let(:inputs)  { {"foo" => "bar", "greeting" => "world"} }
+
+      it "returns the value from the inputs" do
+        expect(subject.value(context, inputs)).to eq({"foo" => ["bar", "baz"], "bar" => {"hello" => "world"}})
+      end
+    end
   end
 end
