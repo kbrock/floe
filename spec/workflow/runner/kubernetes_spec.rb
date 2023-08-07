@@ -34,6 +34,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), "default").and_return(RestClient::Response.new("hello, world!"))
       expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default")
 
+      expect(subject).to receive(:sleep).with(1)
       subject.run!("docker://hello-world:latest")
     end
 
@@ -47,6 +48,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), "default").and_return(RestClient::Response.new("hello, world!"))
       expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default")
 
+      expect(subject).to receive(:sleep).with(1)
       subject.run!("docker://hello-world:latest", {}, nil)
     end
 
@@ -63,6 +65,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), "default").and_return(RestClient::Response.new("hello, world!"))
       expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default")
 
+      expect(subject).to receive(:sleep).with(1)
       subject.run!("docker://hello-world:latest", {"FOO" => "BAR"})
     end
 
@@ -79,6 +82,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), "default").and_return(RestClient::Response.new("hello, world!"))
       expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default")
 
+      expect(subject).to receive(:sleep).with(1)
       subject.run!("docker://hello-world:latest", {"FOO" => 1})
     end
 
@@ -115,6 +119,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default")
       expect(kubeclient).to receive(:delete_secret).with(anything, "default")
 
+      expect(subject).to receive(:sleep).with(1)
       subject.run!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
     end
 
@@ -131,6 +136,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
         expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), namespace).and_return(RestClient::Response.new("hello, world!"))
         expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), namespace)
 
+        expect(subject).to receive(:sleep).with(1)
         subject.run!("docker://hello-world:latest")
       end
     end
