@@ -1,5 +1,6 @@
 RSpec.describe Floe::Workflow::Runner::Podman do
-  let(:subject) { described_class.new }
+  let(:subject)        { described_class.new(runner_options) }
+  let(:runner_options) { {} }
 
   describe "#run!" do
     it "raises an exception without a resource" do
@@ -28,6 +29,16 @@ RSpec.describe Floe::Workflow::Runner::Podman do
       stub_good_run("podman", :params => ["secret", "rm", anything])
 
       subject.run!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
+    end
+
+    context "with network=host" do
+      let(:runner_options) { {"network" => "host"} }
+
+      it "calls docker run with --net host" do
+        stub_good_run!("podman", :params => ["run", :rm, [:net, "host"], "hello-world:latest"])
+
+        subject.run!("docker://hello-world:latest")
+      end
     end
   end
 end

@@ -4,11 +4,13 @@ module Floe
   class Workflow
     class Runner
       class Docker < Floe::Workflow::Runner
-        def initialize(*)
+        def initialize(options = {})
           require "awesome_spawn"
           require "tempfile"
 
           super
+
+          @network = options.fetch("network", "bridge")
         end
 
         def run!(resource, env = {}, secrets = {})
@@ -16,7 +18,8 @@ module Floe
 
           image = resource.sub("docker://", "")
 
-          params = ["run", :rm, [:net, "host"]]
+          params  = ["run", :rm]
+          params += [[:net, "host"]] if network == "host"
           params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env
 
           secrets_file = nil
@@ -39,6 +42,10 @@ module Floe
         ensure
           secrets_file&.close!
         end
+
+        private
+
+        attr_reader :network
       end
     end
   end
