@@ -30,7 +30,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
       expect(kubeclient).to receive(:create_pod).with(expected_pod_spec)
       expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").and_return({"status" => {"phase" => "Running"}})
-      expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").twice.and_return({"status" => {"phase" => "Succeeded"}})
+      expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").and_return({"status" => {"phase" => "Succeeded"}})
       expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), "default").and_return(RestClient::Response.new("hello, world!"))
       expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default")
 
@@ -44,7 +44,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       expect(subject).not_to receive(:create_secret!)
       expect(kubeclient).to receive(:create_pod).with(expected_pod_spec)
       expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").and_return({"status" => {"phase" => "Running"}})
-      expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").twice.and_return({"status" => {"phase" => "Succeeded"}})
+      expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").and_return({"status" => {"phase" => "Succeeded"}})
       expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), "default").and_return(RestClient::Response.new("hello, world!"))
       expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default")
 
@@ -61,7 +61,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
       expect(kubeclient).to receive(:create_pod).with(expected_pod_spec)
       expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").and_return({"status" => {"phase" => "Running"}})
-      expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").twice.and_return({"status" => {"phase" => "Succeeded"}})
+      expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").and_return({"status" => {"phase" => "Succeeded"}})
       expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), "default").and_return(RestClient::Response.new("hello, world!"))
       expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default")
 
@@ -78,7 +78,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
       expect(kubeclient).to receive(:create_pod).with(expected_pod_spec)
       expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").and_return({"status" => {"phase" => "Running"}})
-      expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").twice.and_return({"status" => {"phase" => "Succeeded"}})
+      expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").and_return({"status" => {"phase" => "Succeeded"}})
       expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), "default").and_return(RestClient::Response.new("hello, world!"))
       expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default")
 
@@ -114,7 +114,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       expect(kubeclient).to receive(:create_secret).with(hash_including(:kind => "Secret", :type => "Opaque"))
       expect(kubeclient).to receive(:create_pod).with(expected_pod_spec)
       expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").and_return({"status" => {"phase" => "Running"}})
-      expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").twice.and_return({"status" => {"phase" => "Succeeded"}})
+      expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), "default").and_return({"status" => {"phase" => "Succeeded"}})
       expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), "default").and_return(RestClient::Response.new("hello, world!"))
       expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default")
       expect(kubeclient).to receive(:delete_secret).with(anything, "default")
@@ -132,7 +132,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
         expect(kubeclient).to receive(:create_pod).with(expected_pod_spec)
         expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), namespace).and_return({"status" => {"phase" => "Running"}})
-        expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), namespace).twice.and_return({"status" => {"phase" => "Succeeded"}})
+        expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), namespace).and_return({"status" => {"phase" => "Succeeded"}})
         expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), namespace).and_return(RestClient::Response.new("hello, world!"))
         expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), namespace)
 
@@ -197,7 +197,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
         allow(File).to receive(:read).with(kubeconfig_path).and_return(kubeconfig)
 
         allow(kubeclient).to receive(:create_pod)
-        allow(kubeclient).to receive(:get_pod).twice.and_return({"status" => {"phase" => "Succeeded"}})
+        allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Succeeded"}})
         allow(kubeclient).to receive(:get_pod_log).and_return(RestClient::Response.new("hello, world!"))
         allow(kubeclient).to receive(:delete_pod)
       end
@@ -252,7 +252,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
         expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => token}).and_return(kubeclient)
 
         allow(kubeclient).to receive(:create_pod)
-        allow(kubeclient).to receive(:get_pod).twice.and_return({"status" => {"phase" => "Succeeded"}})
+        allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Succeeded"}})
         allow(kubeclient).to receive(:get_pod_log).and_return(RestClient::Response.new("hello, world!"))
         allow(kubeclient).to receive(:delete_pod)
 
@@ -272,7 +272,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
         expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => token}).and_return(kubeclient)
 
         allow(kubeclient).to receive(:create_pod)
-        allow(kubeclient).to receive(:get_pod).twice.and_return({"status" => {"phase" => "Succeeded"}})
+        allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Succeeded"}})
         allow(kubeclient).to receive(:get_pod_log).and_return(RestClient::Response.new("hello, world!"))
         allow(kubeclient).to receive(:delete_pod)
 

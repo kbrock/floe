@@ -47,25 +47,19 @@ module Floe
 
           begin
             create_pod!(name, image, env, secret)
-            while running?(name)
-              sleep(1)
+            loop do
+              case pod_info(name).dig("status", "phase")
+              when "Pending", "Running"
+                sleep(1)
+              when "Succeeded"
+                return [0, output(name)]
+              else
+                return [1, output(name)]
+              end
             end
-
-            exit_status = success?(name) ? 0 : 1
-            results     = output(name)
-
-            [exit_status, results]
           ensure
             cleanup(name, secret)
           end
-        end
-
-        def running?(pod_name)
-          %w[Pending Running].include?(pod_info(pod_name).dig("status", "phase"))
-        end
-
-        def success?(pod_name)
-          pod_info(pod_name).dig("status", "phase") == "Succeeded"
         end
 
         def output(pod)
