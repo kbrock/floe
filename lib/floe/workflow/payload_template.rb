@@ -22,6 +22,10 @@ module Floe
         when Hash
           value.to_h do |key, val|
             if key.end_with?(".$")
+              if value.key?(key.chomp(".$"))
+                raise Floe::InvalidWorkflowError, "both #{key} and #{key.chomp(".$")} present"
+              end
+
               [key, parse_payload(val)]
             else
               [key, val]

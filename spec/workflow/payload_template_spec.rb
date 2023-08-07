@@ -19,6 +19,14 @@ RSpec.describe Floe::Workflow::PayloadTemplate do
       it "returns the value from the inputs" do
         expect(subject.value(context, inputs)).to eq({"foo" => "bar", "bar" => "baz"})
       end
+
+      context "with an invalid payload" do
+        let(:payload) { {"foo.$" => "$.foo", "foo" => "bar"} }
+
+        it "raises an exception" do
+          expect { subject }.to raise_error(Floe::InvalidWorkflowError, "both foo.$ and foo present")
+        end
+      end
     end
 
     context "with nested dynamic values" do
