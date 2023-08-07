@@ -4,31 +4,54 @@ module Floe
   class Workflow
     class PayloadTemplate
       def initialize(payload)
-        @payload = payload
+        @payload = parse_payload(payload)
       end
 
       def value(context, inputs = {})
-        interpolate_value_nested(payload, context, inputs)
+        interpolate_value(payload, context, inputs)
       end
 
       private
 
       attr_reader :payload
 
-      def interpolate_value_nested(value, context, inputs)
+      def parse_payload(value)
         case value
         when Array
-          value.map { |val| interpolate_value_nested(val, context, inputs) }
+          value.map { |val| parse_payload(val) }
         when Hash
           value.to_h do |key, val|
             if key.end_with?(".$")
-              [key.chomp(".$"), interpolate_value_nested(val, context, inputs)]
+              [key, parse_payload(val)]
             else
               [key, val]
             end
           end
         when String
-          value.start_with?("$") ? Path.value(value, context, inputs) : value
+          if value.start_with?("$")
+            Path.new(value)
+          else
+            value
+          end
+        else
+          value
+        end
+      end
+
+      def interpolate_value(value, context, inputs)
+        case value
+        when Array
+          value.map { |val| interpolate_value(val, context, inputs) }
+        when Hash
+          value.to_h do |key, val|
+            if key.end_with?(".$")
+              [key.chomp(".$"), interpolate_value(val, context, inputs)]
+            else
+              [key, val]
+            end
+          end
+        when Path
+          value.value(context, inputs)
         else
           value
         end
