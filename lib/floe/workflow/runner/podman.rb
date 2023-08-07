@@ -4,11 +4,13 @@ module Floe
   class Workflow
     class Runner
       class Podman < Floe::Workflow::Runner
-        def initialize(*)
+        def initialize(options = {})
           require "awesome_spawn"
           require "securerandom"
 
           super
+
+          @network = options.fetch("network", "bridge")
         end
 
         def run!(resource, env = {}, secrets = {})
@@ -16,7 +18,8 @@ module Floe
 
           image = resource.sub("docker://", "")
 
-          params = ["run", :rm]
+          params  = ["run", :rm]
+          params += [[:net, "host"]] if network == "host"
           params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env
 
           if secrets && !secrets.empty?
@@ -36,6 +39,10 @@ module Floe
         ensure
           AwesomeSpawn.run("podman", :params => ["secret", "rm", secret_guid]) if secret_guid
         end
+
+        private
+
+        attr_reader :network
       end
     end
   end

@@ -74,6 +74,18 @@ workflow.run!
 
 ### Docker Runner Options
 
+#### Docker
+
+Options supported by the Docker docker runner are:
+
+* `network` - What docker to connect the container to, defaults to `"bridge"`.  If you need access to host resources for development you can pass `network=host`.
+
+#### Podman
+
+Options supported by the podman docker runner are:
+
+* `network` - What docker to connect the container to, defaults to `"bridge"`.  If you need access to host resources for development you can pass `network=host`.
+
 #### Kubernetes
 
 Options supported by the kubernetes docker runner are:
