@@ -1,6 +1,6 @@
 RSpec.describe Floe::Workflow::ChoiceRule do
   describe "#true?" do
-    let(:subject) { described_class.true?(payload, context, input) }
+    let(:subject) { described_class.build(payload).true?(context, input) }
     let(:context) { {} }
 
     context "Boolean Expression" do
