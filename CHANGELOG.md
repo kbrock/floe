@@ -3,8 +3,14 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.3.0] - 2023-08-07
+### Added
+- Add --network=host option to Docker/Podman runners ([#81])(https://github.com/ManageIQ/floe/pull/81)
+
 ### Fixed
 - Fix PayloadTemplate value transformation rules ([#78])(https://github.com/ManageIQ/floe/pull/78)
+- Move end out of the root state node ([#80])(https://github.com/ManageIQ/floe/pull/80)
 
 ## [0.2.3] - 2023-07-28
 ### Fixed
@@ -48,7 +54,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/ManageIQ/floe/compare/v0.2.3...v0.3.0
+[0.2.3]: https://github.com/ManageIQ/floe/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/ManageIQ/floe/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/ManageIQ/floe/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ManageIQ/floe/compare/v0.1.1...v0.2.0
