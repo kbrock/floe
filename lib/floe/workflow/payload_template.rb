@@ -4,16 +4,17 @@ module Floe
   class Workflow
     class PayloadTemplate
       def initialize(payload)
-        @payload = parse_payload(payload)
+        @payload          = payload
+        @payload_template = parse_payload(payload)
       end
 
       def value(context, inputs = {})
-        interpolate_value(payload, context, inputs)
+        interpolate_value(payload_template, context, inputs)
       end
 
       private
 
-      attr_reader :payload
+      attr_reader :payload, :payload_template
 
       def parse_payload(value)
         case value
