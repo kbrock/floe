@@ -57,6 +57,7 @@ module Floe
       context.state["FinishedTime"] = Time.now.utc
       context.state["Duration"]     = tock - tick
       context.state["Output"]       = output
+      context.execution["EndTime"]  = Time.now.utc if next_state.nil?
 
       logger.info("Running state: [#{current_state.name}] with input [#{context["Input"]}]...Complete - next state: [#{next_state}] output: [#{output}]")
 
@@ -79,7 +80,7 @@ module Floe
     end
 
     def end?
-      current_state.nil?
+      !!context.execution["EndTime"]
     end
   end
 end
