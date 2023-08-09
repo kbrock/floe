@@ -4,7 +4,6 @@ module Floe
   class Workflow
     class PayloadTemplate
       def initialize(payload)
-        @payload          = payload
         @payload_template = parse_payload(payload)
       end
 
@@ -14,7 +13,7 @@ module Floe
 
       private
 
-      attr_reader :payload, :payload_template
+      attr_reader :payload_template
 
       def parse_payload(value)
         case value
