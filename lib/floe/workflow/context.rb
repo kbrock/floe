@@ -11,7 +11,7 @@ module Floe
             "Input" => input
           },
           "State"        => {},
-          "States"       => [],
+          "StateHistory" => [],
           "StateMachine" => {},
           "Task"         => {}
         }
@@ -29,8 +29,8 @@ module Floe
         @context["State"] = val
       end
 
-      def states
-        @context["States"]
+      def state_history
+        @context["StateHistory"]
       end
 
       def state_machine
