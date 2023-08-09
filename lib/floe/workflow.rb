@@ -14,7 +14,7 @@ module Floe
       end
     end
 
-    attr_reader :context, :credentials, :payload, :states, :states_by_name, :current_state, :start_at
+    attr_reader :context, :credentials, :payload, :states, :states_by_name, :start_at
 
     def initialize(payload, context = nil, credentials = {})
       payload     = JSON.parse(payload)     if payload.kind_of?(String)
@@ -30,9 +30,6 @@ module Floe
       @states_by_name = @states.each_with_object({}) { |state, result| result[state.name] = state }
 
       context.state["Name"] ||= start_at
-
-      current_state_name = context.state["Name"]
-      @current_state     = @states_by_name[current_state_name]
     rescue JSON::ParserError => err
       raise Floe::InvalidWorkflowError, err.message
     end
@@ -43,26 +40,26 @@ module Floe
       context.state["Guid"]    = SecureRandom.uuid
       context.state["Input"] ||= context.execution["Input"].dup
 
-      logger.info("Running state: [#{current_state.name}] with input [#{context.state["Input"]}]...")
+      logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...")
 
       context.state["EnteredTime"] = Time.now.utc
 
+      current_state = @states_by_name[context.state_name]
       tick = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      next_state, output = current_state.run!(context.state["Input"])
+      next_state, output = current_state.run!(context.input)
       tock = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       context.state["FinishedTime"] = Time.now.utc
       context.state["Duration"]     = tock - tick
       context.state["Output"]       = output
+      context.state["NextState"]    = next_state
       context.state["Error"]        = current_state.error if current_state.respond_to?(:error)
       context.state["Cause"]        = current_state.cause if current_state.respond_to?(:cause)
       context.execution["EndTime"]  = Time.now.utc if next_state.nil?
 
-      logger.info("Running state: [#{current_state.name}] with input [#{context["Input"]}]...Complete - next state: [#{next_state}] output: [#{output}]")
+      logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...Complete - next state: [#{context.next_state}] output: [#{context.output}]")
 
       context.state_history << context.state
-
-      @current_state = next_state && @states_by_name[next_state]
 
       context.state = {"Name" => next_state, "Input" => output} unless end?
 

@@ -58,6 +58,13 @@ RSpec.describe Floe::Workflow::Context do
     end
   end
 
+  describe "#input" do
+    it "started" do
+      ctx.state["Input"] = input
+      expect(ctx.input).to eq(input)
+    end
+  end
+
   describe "#output" do
     it "new context" do
       expect(ctx.output).to eq(nil)
@@ -66,6 +73,23 @@ RSpec.describe Floe::Workflow::Context do
     it "ended" do
       ctx.state["Output"] = input.dup
       expect(ctx.output).to eq(input)
+    end
+  end
+
+  describe "#state_name" do
+    it "first context" do
+      ctx.state["Name"] = "FirstState"
+
+      expect(ctx.state_name).to eq("FirstState")
+    end
+  end
+
+  describe "#next_state" do
+    it "first context" do
+      ctx.state["Name"] = "FirstState"
+      ctx.state["NextState"] = "MiddleState"
+
+      expect(ctx.next_state).to eq("MiddleState")
     end
   end
 

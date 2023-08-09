@@ -29,8 +29,8 @@ RSpec.describe Floe::Workflow do
       # state
       expect(ctx.state["EnteredTime"]).to be_within(1.second).of(now)
       expect(ctx.state["Guid"]).to be
-      expect(ctx.state["Name"]).to eq("FirstState")
-      expect(ctx.state["Input"]).to eq(input)
+      expect(ctx.state_name).to eq("FirstState")
+      expect(ctx.input).to eq(input)
       expect(ctx.output).to eq(input)
       expect(ctx.state["FinishedTime"]).to be_within(1.second).of(now)
       expect(ctx.state["Duration"]).to be <= 1
@@ -54,8 +54,8 @@ RSpec.describe Floe::Workflow do
       # state
       expect(ctx.state["EnteredTime"]).to be_within(1.second).of(now)
       expect(ctx.state["Guid"]).to be
-      expect(ctx.state["Name"]).to eq("FirstState")
-      expect(ctx.state["Input"]).to eq(input)
+      expect(ctx.state_name).to eq("FirstState")
+      expect(ctx.input).to eq(input)
       expect(ctx.output).to eq(input)
       expect(ctx.state["FinishedTime"]).to be_within(1.second).of(now)
       expect(ctx.state["Duration"]).to be <= 1

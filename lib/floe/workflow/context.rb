@@ -37,8 +37,20 @@ module Floe
         @context["State"]
       end
 
+      def input
+        state["Input"]
+      end
+
       def output
         state["Output"]
+      end
+
+      def state_name
+        state["Name"]
+      end
+
+      def next_state
+        state["NextState"]
       end
 
       def status
