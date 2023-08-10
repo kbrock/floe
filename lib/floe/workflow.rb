@@ -55,7 +55,7 @@ module Floe
       tock = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       context.state["FinishedTime"] = Time.now.utc
-      context.state["Duration"]     = (tock - tick) / 1_000_000.0
+      context.state["Duration"]     = tock - tick
       context.state["Output"]       = output
 
       logger.info("Running state: [#{current_state.name}] with input [#{context["Input"]}]...Complete - next state: [#{next_state}] output: [#{output}]")
