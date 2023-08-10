@@ -26,7 +26,7 @@ module Floe
             secret_guid = SecureRandom.uuid
             AwesomeSpawn.run!("podman", :params => ["secret", "create", secret_guid, "-"], :in_data => secrets.to_json)
 
-            params << [:e, "SECRETS=/run/secrets/#{secret_guid}"]
+            params << [:e, "_CREDENTIALS=/run/secrets/#{secret_guid}"]
             params << [:secret, secret_guid]
           end
 

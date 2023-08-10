@@ -25,7 +25,7 @@ RSpec.describe Floe::Workflow::Runner::Podman do
 
     it "passes a secrets volume to podman run" do
       stub_good_run!("podman", :params => ["secret", "create", anything, "-"], :in_data => {"luggage_password" => "12345"}.to_json)
-      stub_good_run!("podman", :params => ["run", :rm, [:e, "FOO=BAR"], [:e, a_string_including("SECRETS=")], [:secret, anything], "hello-world:latest"])
+      stub_good_run!("podman", :params => ["run", :rm, [:e, "FOO=BAR"], [:e, a_string_including("_CREDENTIALS=")], [:secret, anything], "hello-world:latest"])
       stub_good_run("podman", :params => ["secret", "rm", anything])
 
       subject.run!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})

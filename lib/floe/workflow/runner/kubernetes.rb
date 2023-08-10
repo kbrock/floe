@@ -119,7 +119,7 @@ module Floe
             ]
 
             spec[:spec][:containers][0][:env] << {
-              :name  => "SECRETS",
+              :name  => "_CREDENTIALS",
               :value => "/run/secrets/#{secret}/secret"
             }
 

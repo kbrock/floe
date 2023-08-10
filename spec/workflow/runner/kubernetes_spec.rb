@@ -96,8 +96,8 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
           :containers => [
             hash_including(
               :env          => [
-                {:name => "FOO",     :value => "BAR"},
-                {:name => "SECRETS", :value => a_string_including("/run/secrets/")}
+                {:name => "FOO",          :value => "BAR"},
+                {:name => "_CREDENTIALS", :value => a_string_including("/run/secrets/")}
               ],
               :volumeMounts => [
                 {
