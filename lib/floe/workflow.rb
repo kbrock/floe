@@ -60,7 +60,7 @@ module Floe
 
       logger.info("Running state: [#{current_state.name}] with input [#{context["Input"]}]...Complete - next state: [#{next_state}] output: [#{output}]")
 
-      context.states << context.state
+      context.state_history << context.state
 
       @status        = current_state.status
       @current_state = next_state && @states_by_name[next_state]
