@@ -29,7 +29,7 @@ module Floe
             secrets_file.write(secrets.to_json)
             secrets_file.flush
 
-            params << [:e, "SECRETS=/run/secrets"]
+            params << [:e, "_CREDENTIALS=/run/secrets"]
             params << [:v, "#{secrets_file.path}:/run/secrets:z"]
           end
 
