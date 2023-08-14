@@ -32,9 +32,7 @@ module Floe
       def parse_payload_hash(value)
         value.to_h do |key, val|
           if key.end_with?(".$")
-            if value.key?(key.chomp(".$"))
-              raise Floe::InvalidWorkflowError, "both #{key} and #{key.chomp(".$")} present"
-            end
+            check_key_conflicts(key, value)
 
             [key, parse_payload(val)]
           else
@@ -68,6 +66,12 @@ module Floe
           else
             [key, val]
           end
+        end
+      end
+
+      def check_key_conflicts(key, value)
+        if value.key?(key.chomp(".$"))
+          raise Floe::InvalidWorkflowError, "both #{key} and #{key.chomp(".$")} present"
         end
       end
     end
