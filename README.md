@@ -84,7 +84,20 @@ Options supported by the Docker docker runner are:
 
 Options supported by the podman docker runner are:
 
-* `network` - What docker to connect the container to, defaults to `"bridge"`.  If you need access to host resources for development you can pass `network=host`.
+* `identity=string` - path to SSH identity file, (CONTAINER_SSHKEY)
+* `log-level=string` - Log messages above specified level (trace, debug, info, warn, warning, error, fatal, panic)
+* `network=string` - What docker to connect the container to, defaults to `"bridge"`.  If you need access to host resources for development you can pass `network=host`.
+* `noout=boolean` - do not output to stdout
+* `root=string` - Path to the root directory in which data, including images, is stored
+* `runroot=string` - Path to the 'run directory' where all state information is stored
+* `runtime=string` - Path to the OCI-compatible binary used to run containers
+* `runtime-flag=stringArray` - add global flags for the container runtime
+* `storage-driver=string` - Select which storage driver is used to manage storage of images and containers
+* `storage-opt=stringArray` - Used to pass an option to the storage driver
+* `syslog=boolean` - Output logging information to syslog as well as the console
+* `tmpdir=string` - Path to the tmp directory for libpod state content
+* `transient-store=boolean` - Enable transient container storage
+* `volumepath=string` - Path to the volume directory in which volume data is stored
 
 #### Kubernetes
 
