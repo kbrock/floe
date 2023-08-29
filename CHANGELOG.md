@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.3.1] - 2023-08-29
 ### Added
 - Add more global podman runner options ([#90])(https://github.com/ManageIQ/floe/pull/90)
 
@@ -56,7 +58,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/ManageIQ/floe/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/ManageIQ/floe/compare/v0.2.3...v0.3.0
 [0.2.3]: https://github.com/ManageIQ/floe/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/ManageIQ/floe/compare/v0.2.1...v0.2.2
