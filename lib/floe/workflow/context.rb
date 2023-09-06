@@ -45,12 +45,20 @@ module Floe
         state["Output"]
       end
 
+      def output=(val)
+        state["Output"] = val
+      end
+
       def state_name
         state["Name"]
       end
 
       def next_state
         state["NextState"]
+      end
+
+      def next_state=(val)
+        state["NextState"] = val
       end
 
       def status

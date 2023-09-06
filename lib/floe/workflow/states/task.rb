@@ -26,6 +26,15 @@ module Floe
           @credentials       = PayloadTemplate.new(payload["Credentials"])    if payload["Credentials"]
         end
 
+        def run_async!(input)
+          input = input_path.value(context, input)
+          input = parameters.value(context, input) if parameters
+
+          runner = Floe::Workflow::Runner.for_resource(resource)
+          reference = runner.run_async!(resource, input, credentials&.value({}, workflow.credentials))
+          context.state["RunnerContext"] = reference
+        end
+
         def run!(input)
           input = input_path.value(context, input)
           input = parameters.value(context, input) if parameters
@@ -43,6 +52,29 @@ module Floe
           raise if catcher.nil?
 
           [catcher.next, output]
+        end
+
+        def status
+          @end ? "success" : "running"
+        end
+
+        def finish_async
+          input = context.state["Input"]
+          input = input_path.value(context, input)
+          input = parameters.value(context, input) if parameters
+
+          runner  = Floe::Workflow::Runner.for_resource(resource)
+          results = runner.output(context.state["RunnerContext"])
+
+          context.state["Output"] = process_output!(input, results)
+          context.next_state      = end? ? nil : @next
+          runner.cleanup(context.state["RunnerContext"])
+        end
+
+        def running?
+          runner = Floe::Workflow::Runner.for_resource(resource)
+          runner.status!(context.state["RunnerContext"])
+          runner.running?(context.state["RunnerContext"])
         end
 
         def end?

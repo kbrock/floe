@@ -17,11 +17,21 @@ module Floe
           @output_path = Path.new(payload.fetch("OutputPath", "$"))
         end
 
-        def run!(input)
+        def run_async!(input)
           input = input_path.value(context, input)
-          sleep(seconds)
-          output = output_path.value(context, input)
-          [@end ? nil : @next, output]
+
+          context.output     = output_path.value(context, input)
+          context.next_state = end? ? nil : @next
+        end
+
+        def running?
+          now = Time.now.utc
+          if now > (context.state["EnteredTime"] + @seconds)
+            context.state["FinishedTime"] = now
+            false
+          else
+            true
+          end
         end
 
         def end?

@@ -16,12 +16,17 @@ module Floe
           @output_path = Path.new(payload.fetch("OutputPath", "$"))
         end
 
-        def run!(input)
+        def run_async!(input)
           input      = input_path.value(context, input)
           next_state = choices.detect { |choice| choice.true?(context, input) }&.next || default
           output     = output_path.value(context, input)
 
-          [next_state, output]
+          context.next_state = next_state
+          context.output     = output
+        end
+
+        def running?
+          false
         end
 
         def end?
