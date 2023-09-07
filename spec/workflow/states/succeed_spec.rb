@@ -12,8 +12,4 @@ RSpec.describe Floe::Workflow::States::Succeed do
       expect(next_state).to be_nil
     end
   end
-
-  it "#status" do
-    expect(state.status).to eq("success")
-  end
 end

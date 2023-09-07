@@ -45,10 +45,6 @@ module Floe
           [catcher.next, output]
         end
 
-        def status
-          @end ? "success" : "running"
-        end
-
         def end?
           @end
         end

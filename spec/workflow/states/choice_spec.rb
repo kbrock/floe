@@ -34,8 +34,4 @@ RSpec.describe Floe::Workflow::States::Choice do
       end
     end
   end
-
-  it "#status" do
-    expect(state.status).to eq("running")
-  end
 end
