@@ -10,8 +10,4 @@ RSpec.describe Floe::Workflow::States::Fail do
     next_state, _output = state.run!({})
     expect(next_state).to eq(nil)
   end
-
-  it "#status" do
-    expect(state.status).to eq("errored")
-  end
 end

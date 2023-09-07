@@ -7,10 +7,15 @@ RSpec.describe Floe::Workflow do
     it "sets initial state" do
       input = {"input" => "value"}.freeze
 
-      workflow, _ctx = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
+      workflow, ctx = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
 
       expect(workflow.status).to eq("pending")
       expect(workflow.end?).to eq(false)
+
+      expect(ctx.status).to eq("pending")
+      expect(ctx.started?).to eq(false)
+      expect(ctx.running?).to eq(false)
+      expect(ctx.ended?).to eq(false)
     end
   end
 
@@ -26,35 +31,73 @@ RSpec.describe Floe::Workflow do
       expect(ctx.state["Guid"]).to be
       expect(ctx.state["Name"]).to eq("FirstState")
       expect(ctx.state["Input"]).to eq(input)
-      expect(ctx.state["Output"]).to eq(input)
+      expect(ctx.output).to eq(input)
       expect(ctx.state["FinishedTime"]).to be_within(1.second).of(now)
       expect(ctx.state["Duration"]).to be <= 1
+      expect(ctx.status).to eq("success")
 
       # execution
-      expect(ctx.execution["StartTime"]).to be_within(1.second).of(now)
-      # expect(ctx.execution["EndTime"]).to be_within(1.second).of(now)
+      expect(ctx.started?).to eq(true)
+      expect(ctx.running?).to eq(false)
+      expect(ctx.ended?).to eq(true)
 
       # final results
       expect(workflow.output).to eq(input)
       expect(workflow.status).to eq("success")
       expect(workflow.end?).to eq(true)
     end
+
+    it "sets execution variables for failure" do
+      workflow, ctx = make_workflow(input, {"FirstState" => {"Type" => "Fail", "Cause" => "Bad Stuff", "Error" => "Issue"}})
+      workflow.run!
+
+      # state
+      expect(ctx.state["EnteredTime"]).to be_within(1.second).of(now)
+      expect(ctx.state["Guid"]).to be
+      expect(ctx.state["Name"]).to eq("FirstState")
+      expect(ctx.state["Input"]).to eq(input)
+      expect(ctx.output).to eq(input)
+      expect(ctx.state["FinishedTime"]).to be_within(1.second).of(now)
+      expect(ctx.state["Duration"]).to be <= 1
+      expect(ctx.state["Cause"]).to eq("Bad Stuff")
+      expect(ctx.state["Error"]).to eq("Issue")
+      expect(ctx.status).to eq("failure")
+
+      # execution
+      expect(ctx.started?).to eq(true)
+      expect(ctx.running?).to eq(false)
+      expect(ctx.ended?).to eq(true)
+
+      # final results
+      expect(workflow.output).to eq(input)
+      expect(workflow.status).to eq("failure")
+      expect(workflow.end?).to eq(true)
+    end
   end
 
   describe "#step" do
-    it "runs a step" do
+    it "runs a success step" do
       input = {"input" => "value"}.freeze
 
-      workflow, _ctx = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
+      workflow, ctx = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
 
       expect(workflow.status).to eq("pending")
       expect(workflow.end?).to eq(false)
+      expect(ctx.status).to eq("pending")
+      expect(ctx.started?).to eq(false)
+      expect(ctx.running?).to eq(false)
+      expect(ctx.ended?).to eq(false)
 
       workflow.step
 
       expect(workflow.output).to eq(input)
       expect(workflow.status).to eq("success")
       expect(workflow.end?).to eq(true)
+      expect(ctx.output).to eq(input)
+      expect(ctx.status).to eq("success")
+      expect(ctx.started?).to eq(true)
+      expect(ctx.running?).to eq(false)
+      expect(ctx.ended?).to eq(true)
     end
   end
 

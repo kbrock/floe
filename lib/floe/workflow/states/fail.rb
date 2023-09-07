@@ -17,10 +17,6 @@ module Floe
           [nil, input]
         end
 
-        def status
-          "errored"
-        end
-
         def end?
           true
         end

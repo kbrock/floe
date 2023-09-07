@@ -14,10 +14,6 @@ module Floe
           [nil, input]
         end
 
-        def status
-          "success"
-        end
-
         def end?
           true
         end

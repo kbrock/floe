@@ -14,7 +14,7 @@ module Floe
       end
     end
 
-    attr_reader :context, :credentials, :output, :payload, :states, :states_by_name, :current_state, :status, :start_at
+    attr_reader :context, :credentials, :payload, :states, :states_by_name, :current_state, :start_at
 
     def initialize(payload, context = nil, credentials = {})
       payload     = JSON.parse(payload)     if payload.kind_of?(String)
@@ -33,14 +33,11 @@ module Floe
 
       current_state_name = context.state["Name"]
       @current_state     = @states_by_name[current_state_name]
-
-      @status = current_state_name == start_at ? "pending" : current_state.status
     rescue JSON::ParserError => err
       raise Floe::InvalidWorkflowError, err.message
     end
 
     def step
-      @status = "running" if @status == "pending"
       context.execution["StartTime"] ||= Time.now.utc
 
       context.state["Guid"]    = SecureRandom.uuid
@@ -57,15 +54,15 @@ module Floe
       context.state["FinishedTime"] = Time.now.utc
       context.state["Duration"]     = tock - tick
       context.state["Output"]       = output
+      context.state["Error"]        = current_state.error if current_state.respond_to?(:error)
+      context.state["Cause"]        = current_state.cause if current_state.respond_to?(:cause)
       context.execution["EndTime"]  = Time.now.utc if next_state.nil?
 
       logger.info("Running state: [#{current_state.name}] with input [#{context["Input"]}]...Complete - next state: [#{next_state}] output: [#{output}]")
 
       context.state_history << context.state
 
-      @status        = current_state.status
       @current_state = next_state && @states_by_name[next_state]
-      @output        = output if end?
 
       context.state = {"Name" => next_state, "Input" => output} unless end?
 
@@ -79,8 +76,16 @@ module Floe
       self
     end
 
+    def status
+      context.status
+    end
+
+    def output
+      context.output
+    end
+
     def end?
-      !!context.execution["EndTime"]
+      context.ended?
     end
   end
 end

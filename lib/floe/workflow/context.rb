@@ -21,8 +21,36 @@ module Floe
         @context["Execution"]
       end
 
+      def started?
+        execution.key?("StartTime")
+      end
+
+      def running?
+        started? && !ended?
+      end
+
+      def ended?
+        execution.key?("EndTime")
+      end
+
       def state
         @context["State"]
+      end
+
+      def output
+        state["Output"]
+      end
+
+      def status
+        if !started?
+          "pending"
+        elsif running?
+          "running"
+        elsif state["Error"]
+          "failure"
+        else
+          "success"
+        end
       end
 
       def state=(val)

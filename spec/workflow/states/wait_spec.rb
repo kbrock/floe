@@ -23,10 +23,4 @@ RSpec.describe Floe::Workflow::States::Pass do
       expect(next_state).to eq("NextState")
     end
   end
-
-  describe "#status" do
-    it "is non-terminal" do
-      expect(state.status).to eq("running")
-    end
-  end
 end

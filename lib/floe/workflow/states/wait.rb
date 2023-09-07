@@ -24,10 +24,6 @@ module Floe
           [@end ? nil : @next, output]
         end
 
-        def status
-          @end ? "success" : "running"
-        end
-
         def end?
           @end
         end
