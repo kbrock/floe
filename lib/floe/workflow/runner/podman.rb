@@ -31,26 +31,16 @@ module Floe
 
           image = resource.sub("docker://", "")
 
-          params  = ["run", :rm]
-          params += [[:net, "host"]] if @network == "host"
-          params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env
-
           if secrets && !secrets.empty?
-            secret_guid = SecureRandom.uuid
-            podman!("secret", "create", secret_guid, "-", :in_data => secrets.to_json)
-
-            params << [:e, "_CREDENTIALS=/run/secrets/#{secret_guid}"]
-            params << [:secret, secret_guid]
+            secret = create_secret(secrets)
+            env["_CREDENTIALS"] = "/run/secrets/#{secret}"
           end
 
-          params << image
+          output = run_container(image, env, secret)
 
-          logger.debug("Running podman: #{AwesomeSpawn.build_command_line("podman", params)}")
-          result = podman!(*params)
-
-          [result.exit_status, result.output]
+          [0, output]
         ensure
-          delete_secret(secret_guid) if secret_guid
+          delete_secret(secret) if secret
         end
 
         def run_async!(resource, env = {}, secrets = {})
@@ -58,29 +48,19 @@ module Floe
 
           image = resource.sub("docker://", "")
 
-          params = ["run", :detach]
-          params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env
-
           if secrets && !secrets.empty?
-            secret_guid = SecureRandom.uuid
-            podman!("secret", "create", secret_guid, "-", :in_data => secrets.to_json)
-
-            params << [:e, "_CREDENTIALS=/run/secrets/#{secret_guid}"]
-            params << [:secret, secret_guid]
+            secret = create_secret(secrets)
+            env["_CREDENTIALS"] = "/run/secrets/#{secret}"
           end
 
-          params << image
-
-          logger.debug("Running podman: #{AwesomeSpawn.build_command_line("podman", params)}")
-
           begin
-            container_id = podman!(*params).output
+            container_id = run_container(image, env, secret, :detached => true)
           rescue
-            cleanup(container_id, secret_guid)
+            cleanup(container_id, secret)
             raise
           end
 
-          [container_id, secret_guid]
+          [container_id, secret]
         end
 
         def cleanup(container_id, secret_guid)
@@ -102,6 +82,20 @@ module Floe
 
         private
 
+        def run_container(image, env, secret, detached: false)
+          params  = ["run"]
+          params << (detached ? :detach : :rm)
+          params += env.map { |k, v| [:e, "#{k}=#{v}"] }
+          params << [:net, "host"] if @network == "host"
+          params << [:secret, secret] if secret
+          params << image
+
+          logger.debug("Running podman: #{AwesomeSpawn.build_command_line("podman", params)}")
+
+          result = podman!(*params)
+          result.output
+        end
+
         def inspect_container(container_id)
           JSON.parse(podman!("inspect", container_id).output)
         end
@@ -110,6 +104,12 @@ module Floe
           podman!("rm", container_id)
         rescue
           nil
+        end
+
+        def create_secret(secrets)
+          secret_guid = SecureRandom.uuid
+          podman!("secret", "create", secret_guid, "-", :in_data => secrets.to_json)
+          secret_guid
         end
 
         def delete_secret(secret_guid)

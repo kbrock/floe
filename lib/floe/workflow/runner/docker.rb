@@ -18,27 +18,15 @@ module Floe
 
           image = resource.sub("docker://", "")
 
-          params  = ["run", :rm]
-          params += [[:net, "host"]] if network == "host"
-          params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env
-
           secrets_file = nil
-
           if secrets && !secrets.empty?
-            secrets_file = Tempfile.new
-            secrets_file.write(secrets.to_json)
-            secrets_file.flush
-
-            params << [:e, "_CREDENTIALS=/run/secrets"]
-            params << [:v, "#{secrets_file.path}:/run/secrets:z"]
+            secrets_file = create_secret(secrets)
+            env["_CREDENTIALS"] = "/run/secrets"
           end
 
-          params << image
+          output = run_container(image, env, secrets_file)
 
-          logger.debug("Running docker: #{AwesomeSpawn.build_command_line("docker", params)}")
-          result = AwesomeSpawn.run!("docker", :params => params)
-
-          [result.exit_status, result.output]
+          [0, output]
         ensure
           secrets_file&.close!
         end
@@ -48,27 +36,14 @@ module Floe
 
           image = resource.sub("docker://", "")
 
-          params = ["run", :detach]
-          params += [[:net, "host"]] if network == "host"
-          params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env
-
           secrets_file = nil
-
           if secrets && !secrets.empty?
-            secrets_file = Tempfile.new
-            secrets_file.write(secrets.to_json)
-            secrets_file.flush
-
-            params << [:e, "SECRETS=/run/secrets"]
-            params << [:v, "#{secrets_file.path}:/run/secrets:z"]
+            secrets_file = create_secret(secrets)
+            env["_CREDENTIALS"] = "/run/secrets"
           end
 
-          params << image
-
-          logger.debug("Running docker: #{AwesomeSpawn.build_command_line("docker", params)}")
-
           begin
-            container_id = docker!(*params).output
+            container_id = run_container(image, env, secrets_file, :detached => true)
           rescue
             cleanup(container_id, secrets_file)
             raise
@@ -98,6 +73,20 @@ module Floe
 
         attr_reader :network
 
+        def run_container(image, env, secrets_file, detached: false)
+          params  = ["run"]
+          params << (detached ? :detach : :rm)
+          params += env.map { |k, v| [:e, "#{k}=#{v}"] }
+          params << [:net, "host"] if @network == "host"
+          params << [:v, "#{secrets_file.path}:/run/secrets:z"] if secrets_file
+          params << image
+
+          logger.debug("Running docker: #{AwesomeSpawn.build_command_line("docker", params)}")
+
+          result = docker!(*params)
+          result.output
+        end
+
         def inspect_container(container_id)
           JSON.parse(docker!("inspect", container_id).output)
         end
@@ -106,6 +95,13 @@ module Floe
           docker!("rm", container_id)
         rescue
           nil
+        end
+
+        def create_secret(secrets)
+          secrets_file = Tempfile.new
+          secrets_file.write(secrets.to_json)
+          secrets_file.flush
+          secrets_file
         end
 
         def docker!(*params, **kwargs)

@@ -29,7 +29,7 @@ RSpec.describe Floe::Workflow::Runner::Docker do
     end
 
     it "passes a secrets volume to docker run" do
-      stub_good_run!("docker", :params => ["run", :detach, [:e, "FOO=BAR"], [:e, "SECRETS=/run/secrets"], [:v, a_string_including(":/run/secrets")], "hello-world:latest"], :output => container_id)
+      stub_good_run!("docker", :params => ["run", :detach, [:e, "FOO=BAR"], [:e, "_CREDENTIALS=/run/secrets"], [:v, a_string_including(":/run/secrets")], "hello-world:latest"], :output => container_id)
 
       subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
     end
