@@ -72,7 +72,7 @@ module Floe
           begin
             create_pod!(name, image, env, secret)
           rescue
-            delete_secret(secret) if secret
+            cleanup(name, secret)
             raise
           end
 

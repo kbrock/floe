@@ -70,7 +70,7 @@ module Floe
           begin
             container_id = docker!(*params).output
           rescue
-            secrets_file&.close!
+            cleanup(container_id, secrets_file)
             raise
           end
 
@@ -78,7 +78,7 @@ module Floe
         end
 
         def cleanup(container_id, secrets_file)
-          delete_container(container_id)
+          delete_container(container_id) if container_id
           secrets_file&.close!
         end
 

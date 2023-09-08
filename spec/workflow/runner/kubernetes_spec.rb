@@ -123,8 +123,8 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
     end
 
     it "cleans up secrets if running the pod fails" do
-      expect(subject).to receive(:delete_secret)
-
+      expect(kubeclient).to receive(:delete_secret)
+      expect(kubeclient).to receive(:delete_pod).and_raise(Kubeclient::HttpError.new(404, "Not Found", {}))
       expect(kubeclient).to receive(:create_secret).with(hash_including(:kind => "Secret", :type => "Opaque"))
       expect(kubeclient).to receive(:create_pod).and_raise(Kubeclient::HttpError.new(403, "Forbidden", {}))
 

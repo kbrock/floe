@@ -50,7 +50,7 @@ module Floe
 
           [result.exit_status, result.output]
         ensure
-          AwesomeSpawn.run("podman", :params => ["secret", "rm", secret_guid]) if secret_guid
+          delete_secret(secret_guid) if secret_guid
         end
 
         def run_async!(resource, env = {}, secrets = {})
@@ -76,7 +76,7 @@ module Floe
           begin
             container_id = podman!(*params).output
           rescue
-            podman!("secret", "rm", secret_guid) if secret_guid
+            cleanup(container_id, secret_guid)
             raise
           end
 
@@ -84,8 +84,8 @@ module Floe
         end
 
         def cleanup(container_id, secret_guid)
-          delete_container(container_id)
-          delete_secret(secret_guid) if secret_guid
+          delete_container(container_id) if container_id
+          delete_secret(secret_guid)     if secret_guid
         end
 
         def running?(container_id)
