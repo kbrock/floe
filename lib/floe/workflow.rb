@@ -12,6 +12,16 @@ module Floe
         payload = path_or_io.respond_to?(:read) ? path_or_io.read : File.read(path_or_io)
         new(payload, context, credentials)
       end
+
+      def wait(workflows, timeout: 5)
+        logger.info("checking #{workflows.count} workflows...")
+
+        ready = workflows.select(&:step_nonblock_ready?)
+
+        sleep(timeout) if ready.empty?
+        logger.info("checking #{workflows.count} workflows...Complete - #{ready.count} ready")
+        ready
+      end
     end
 
     attr_reader :context, :credentials, :payload, :states, :states_by_name, :start_at
@@ -47,16 +57,15 @@ module Floe
     end
 
     def run_async!
-      step_nonblock(:timeout => 0)
+      step_nonblock
       self
     end
 
-    def step_nonblock(timeout: 5)
+    def step_nonblock
       return Errno::EPERM if end?
-      step_nonblock_submit unless current_state.started?
 
-      result = step_nonblock_wait(:timeout => timeout)
-      return result if result == Errno::EAGAIN
+      step_nonblock_submit unless current_state.started?
+      return Errno::EAGAIN unless step_nonblock_ready?
 
       step_nonblock_finish
     end
