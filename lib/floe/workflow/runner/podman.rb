@@ -89,11 +89,11 @@ module Floe
         end
 
         def running?(container_id)
-          JSON.parse(podman!("inspect", container_id).output).first.dig("State", "Running")
+          inspect_container(container_id).first.dig("State", "Running")
         end
 
         def success?(container_id)
-          JSON.parse(podman!("inspect", container_id).output).first.dig("State", "ExitCode") == 0
+          inspect_container(container_id).first.dig("State", "ExitCode") == 0
         end
 
         def output(container_id)
@@ -101,6 +101,10 @@ module Floe
         end
 
         private
+
+        def inspect_container(container_id)
+          JSON.parse(podman!("inspect", container_id).output)
+        end
 
         def delete_container(container_id)
           podman!("rm", container_id)
