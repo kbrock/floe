@@ -1,12 +1,11 @@
 require 'active_support/time'
 
 RSpec.describe Floe::Workflow do
-  let(:now) { Time.now.utc }
+  let(:now)   { Time.now.utc }
+  let(:input) { {"input" => "value"}.freeze }
 
   describe "#new" do
     it "sets initial state" do
-      input = {"input" => "value"}.freeze
-
       workflow, ctx = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
 
       expect(workflow.status).to eq("pending")
@@ -20,7 +19,7 @@ RSpec.describe Floe::Workflow do
   end
 
   describe "#run!" do
-    let(:input) { {"input" => "value"}.freeze }
+
 
     it "sets execution variables for success" do
       workflow, ctx = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
@@ -77,7 +76,6 @@ RSpec.describe Floe::Workflow do
 
   describe "#step" do
     it "runs a success step" do
-      input = {"input" => "value"}.freeze
 
       workflow, ctx = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
 
