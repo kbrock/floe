@@ -52,7 +52,7 @@ module Floe
     end
 
     def step
-      loop until step_nonblock == 0
+      step_nonblock_wait until step_nonblock == 0
       self
     end
 
@@ -71,10 +71,14 @@ module Floe
     end
 
     def step_nonblock_wait(timeout: 5)
-      return 0 if step_nonblock_ready?
+      start = Time.now.utc
 
-      sleep(timeout) unless timeout.zero?
-      Errno::EAGAIN
+      loop do
+        return 0             if step_nonblock_ready?
+        return Errno::EAGAIN if timeout.zero? || Time.now.utc - start > timeout
+
+        sleep(1)
+      end
     end
 
     def step_nonblock_ready?
