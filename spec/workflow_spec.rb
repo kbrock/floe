@@ -73,9 +73,25 @@ RSpec.describe Floe::Workflow do
     end
   end
 
+  describe "#run_async!" do
+    it "starts the first state" do
+      workflow = make_workflow(input, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
+      workflow.run_async!
+
+      expect(context.started?).to eq(true)
+    end
+
+    it "doesn't wait for the state to finish" do
+      workflow = make_workflow(input, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
+      workflow.run_async!
+
+      expect(context.running?).to eq(true)
+      expect(context.ended?).to   eq(false)
+    end
+  end
+
   describe "#step" do
     it "runs a success step" do
-
       workflow = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
 
       expect(workflow.status).to eq("pending")
@@ -95,6 +111,111 @@ RSpec.describe Floe::Workflow do
       expect(context.started?).to eq(true)
       expect(context.running?).to eq(false)
       expect(context.ended?).to eq(true)
+    end
+  end
+
+  describe "#step_nonblock" do
+    context "with a workflow that hasn't started yet" do
+      it "starts the first step" do
+        workflow = make_workflow(input, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
+        workflow.step_nonblock
+
+        expect(workflow.status).to eq("running")
+        expect(workflow.end?).to   eq(false)
+      end
+    end
+
+    context "with a running state" do
+      it "returns Try again" do
+        workflow = make_workflow(input, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
+        expect(workflow.step_nonblock).to eq(Errno::EAGAIN)
+      end
+    end
+
+    context "with a state that has finished" do
+      it "completes the final tasks for a state" do
+        workflow = make_workflow(input, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
+
+        # Start the workflow
+        workflow.run_async!
+
+        # Mark the Wait state as having started 1 minute ago
+        context.state["EnteredTime"] = Time.now.utc - 60
+
+        # step_nonblock should return 0 and mark the workflow as completed
+        expect(workflow.step_nonblock).to eq(0)
+
+        expect(workflow.output).to eq(input)
+        expect(workflow.status).to eq("success")
+        expect(workflow.end?).to eq(true)
+        expect(context.output).to eq(input)
+        expect(context.status).to eq("success")
+        expect(context.started?).to eq(true)
+        expect(context.running?).to eq(false)
+        expect(context.ended?).to eq(true)
+      end
+    end
+
+    it "return Operation not permitted if workflow has ended" do
+      workflow = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
+
+      context.execution["EndTime"] = Time.now.utc
+
+      expect(workflow.step_nonblock).to eq(Errno::EPERM)
+    end
+  end
+
+  describe "#step_nonblock_wait" do
+    context "with a state that hasn't started yet" do
+      it "returns 0" do
+        workflow = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
+        expect(workflow.step_nonblock_wait).to eq(0)
+      end
+    end
+
+    context "with a state that has finished" do
+      it "return 0" do
+        context.state["EnteredTime"] = Time.now.utc
+        workflow = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
+        expect(workflow.current_state).to receive(:running?).and_return(false)
+        expect(workflow.step_nonblock_wait).to eq(0)
+      end
+    end
+
+    context "with a state that is running" do
+      it "returns Try again" do
+        context.state["EnteredTime"] = Time.now.utc
+        workflow = make_workflow(input, {"FirstState" => {"Type" => "Task"}})
+        expect(workflow.current_state).to receive(:running?).and_return(true)
+        expect(workflow.step_nonblock_wait(:timeout => 0)).to eq(Errno::EAGAIN)
+      end
+    end
+  end
+
+  describe "#step_nonblock_ready?" do
+    context "with a state that hasn't started yet" do
+      it "returns true" do
+        workflow = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
+        expect(workflow.step_nonblock_ready?).to be_truthy
+      end
+    end
+
+    context "with a state that has finished" do
+      it "return true" do
+        context.state["EnteredTime"] = Time.now.utc
+        workflow = make_workflow(input, {"FirstState" => {"Type" => "Succeed"}})
+        expect(workflow.current_state).to receive(:running?).and_return(false)
+        expect(workflow.step_nonblock_ready?).to be_truthy
+      end
+    end
+
+    context "with a state that is running" do
+      it "returns false" do
+        context.state["EnteredTime"] = Time.now.utc
+        workflow = make_workflow(input, {"FirstState" => {"Type" => "Task"}})
+        expect(workflow.current_state).to receive(:running?).and_return(true)
+        expect(workflow.step_nonblock_ready?).to be_falsey
+      end
     end
   end
 

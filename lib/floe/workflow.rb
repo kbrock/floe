@@ -70,6 +70,35 @@ module Floe
       step_nonblock_finish
     end
 
+    def step_nonblock_wait(timeout: 5)
+      return 0 if step_nonblock_ready?
+
+      sleep(timeout) unless timeout.zero?
+      Errno::EAGAIN
+    end
+
+    def step_nonblock_ready?
+      !current_state.started? || !current_state.running?
+    end
+
+    def status
+      context.status
+    end
+
+    def output
+      context.output
+    end
+
+    def end?
+      context.ended?
+    end
+
+    def current_state
+      @states_by_name[context.state_name]
+    end
+
+    private
+
     def step_nonblock_submit
       raise "State is already running" if current_state.started?
 
@@ -83,17 +112,6 @@ module Floe
       logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...")
 
       current_state.run_async!(context.state["Input"])
-    end
-
-    def step_nonblock_wait(timeout: 5)
-      return 0 if step_nonblock_ready?
-
-      sleep(timeout)
-      Errno::EAGAIN
-    end
-
-    def step_nonblock_ready?
-      !current_state.started? || !current_state.running?
     end
 
     def step_nonblock_finish
@@ -111,22 +129,6 @@ module Floe
       context.state = {"Name" => context.next_state, "Input" => context.output} unless end?
 
       0
-    end
-
-    def status
-      context.status
-    end
-
-    def output
-      context.output
-    end
-
-    def end?
-      context.ended?
-    end
-
-    def current_state
-      @states_by_name[context.state_name]
     end
   end
 end
