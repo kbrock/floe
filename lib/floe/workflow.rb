@@ -16,9 +16,16 @@ module Floe
       def wait(workflows, timeout: 5)
         logger.info("checking #{workflows.count} workflows...")
 
-        ready = workflows.select(&:step_nonblock_ready?)
+        start = Time.now.utc
+        ready = []
 
-        sleep(timeout) if ready.empty?
+        loop do
+          ready = workflows.select(&:step_nonblock_ready?)
+          break if timeout.zero? || Time.now.utc - start > timeout || !ready.empty?
+
+          sleep(1)
+        end
+
         logger.info("checking #{workflows.count} workflows...Complete - #{ready.count} ready")
         ready
       end
