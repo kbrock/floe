@@ -18,6 +18,13 @@ module Floe
           context.output     = input
         end
 
+        def finish
+          super
+
+          context.state["Error"] = error
+          context.state["Cause"] = cause
+        end
+
         def running?
           false
         end

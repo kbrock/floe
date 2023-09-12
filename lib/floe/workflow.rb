@@ -126,12 +126,9 @@ module Floe
     end
 
     def step_nonblock_finish
-      current_state.finish_async
-      context.state["FinishedTime"] = Time.now.utc
-      context.state["Duration"]     = context.state["FinishedTime"] - context.state["EnteredTime"]
-      context.state["Error"]        = current_state.error if current_state.respond_to?(:error)
-      context.state["Cause"]        = current_state.cause if current_state.respond_to?(:cause)
-      context.execution["EndTime"]  = Time.now.utc if context.next_state.nil?
+      current_state.finish
+      context.state["Duration"]    = context.state["FinishedTime"] - context.state["EnteredTime"]
+      context.execution["EndTime"] = Time.now.utc if context.next_state.nil?
 
       logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...Complete - next state: [#{context.next_state}] output: [#{context.output}]")
 

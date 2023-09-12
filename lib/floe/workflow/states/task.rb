@@ -58,7 +58,9 @@ module Floe
           @end ? "success" : "running"
         end
 
-        def finish_async
+        def finish
+          super
+
           input = context.state["Input"]
           input = input_path.value(context, input)
           input = parameters.value(context, input) if parameters

@@ -32,7 +32,7 @@ module Floe
       def run!(input)
         run_async!(input)
         sleep(1) while running?
-        finish_async
+        finish
         [context.next_state, context.output]
       end
 
@@ -40,7 +40,8 @@ module Floe
         raise NotImpelmentedError
       end
 
-      def finish_async
+      def finish
+        context.state["FinishedTime"] ||= Time.now.utc
       end
 
       def context
