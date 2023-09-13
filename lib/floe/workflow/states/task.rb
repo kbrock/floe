@@ -15,6 +15,7 @@ module Floe
           @next              = payload["Next"]
           @end               = !!payload["End"]
           @resource          = payload["Resource"]
+          @runner            = Floe::Workflow::Runner.for_resource(@resource)
           @timeout_seconds   = payload["TimeoutSeconds"]
           @retry             = payload["Retry"].to_a.map { |retrier| Retrier.new(retrier) }
           @catch             = payload["Catch"].to_a.map { |catcher| Catcher.new(catcher) }
@@ -30,28 +31,8 @@ module Floe
           input = input_path.value(context, input)
           input = parameters.value(context, input) if parameters
 
-          runner = Floe::Workflow::Runner.for_resource(resource)
-          reference = runner.run_async!(resource, input, credentials&.value({}, workflow.credentials))
-          context.state["RunnerContext"] = reference
-        end
-
-        def run!(input)
-          input = input_path.value(context, input)
-          input = parameters.value(context, input) if parameters
-
-          runner = Floe::Workflow::Runner.for_resource(resource)
-          runner_context = runner.run!(resource, input, credentials&.value({}, workflow.credentials))
-
-          output = process_output!(input, runner_context[:output])
-          [@end ? nil : @next, output]
-        rescue => err
-          retrier = self.retry.detect { |r| (r.error_equals & [err.to_s, "States.ALL"]).any? }
-          retry if retry!(retrier)
-
-          catcher = self.catch.detect { |c| (c.error_equals & [err.to_s, "States.ALL"]).any? }
-          raise if catcher.nil?
-
-          [catcher.next, output]
+          runner_context = runner.run_async!(resource, input, credentials&.value({}, workflow.credentials))
+          context.state["RunnerContext"] = runner_context
         end
 
         def status
@@ -61,20 +42,19 @@ module Floe
         def finish
           super
 
-          input = context.state["Input"]
-          input = input_path.value(context, input)
-          input = parameters.value(context, input) if parameters
-
-          runner  = Floe::Workflow::Runner.for_resource(resource)
           results = runner.output(context.state["RunnerContext"])
 
-          context.state["Output"] = process_output!(input, results)
-          context.next_state      = end? ? nil : @next
+          if success?
+            context.state["Output"] = process_output!(results)
+            context.next_state      = next_state
+          else
+            retry_state!(results) || catch_error!(results)
+          end
+        ensure
           runner.cleanup(context.state["RunnerContext"])
         end
 
         def running?
-          runner = Floe::Workflow::Runner.for_resource(resource)
           runner.status!(context.state["RunnerContext"])
           runner.running?(context.state["RunnerContext"])
         end
@@ -85,7 +65,22 @@ module Floe
 
         private
 
-        def retry!(retrier)
+        attr_reader :runner
+
+        def success?
+          runner.success?(context.state["RunnerContext"])
+        end
+
+        def find_retrier(error)
+          self.retry.detect { |r| (r.error_equals & [error, "States.ALL"]).any? }
+        end
+
+        def find_catcher(error)
+          self.catch.detect { |c| (c.error_equals & [error, "States.ALL"]).any? }
+        end
+
+        def retry_state!(error)
+          retrier = find_retrier(error)
           return if retrier.nil?
 
           # If a different retrier is hit reset the context
@@ -98,11 +93,26 @@ module Floe
 
           return if context["State"]["RetryCount"] > retrier.max_attempts
 
-          Kernel.sleep(retrier.sleep_duration(context["State"]["RetryCount"]))
+          # TODO: Kernel.sleep(retrier.sleep_duration(context["State"]["RetryCount"]))
+          context.next_state = context.state_name
           true
         end
 
-        def process_output!(output, results)
+        def catch_error!(error)
+          catcher = find_catcher(error)
+          raise error if catcher.nil?
+
+          context.next_state = catcher.next
+        end
+
+        def process_input(input)
+          input = input_path.value(context, input)
+          input = parameters.value(context, input) if parameters
+          input
+        end
+
+        def process_output!(results)
+          output = process_input(context.state["Input"])
           return output if results.nil?
           return if output_path.nil?
 
@@ -115,6 +125,10 @@ module Floe
           results = result_selector.value(context, results) if result_selector
           output  = result_path.set(output, results)
           output_path.value(context, output)
+        end
+
+        def next_state
+          end? ? nil : @next
         end
       end
     end

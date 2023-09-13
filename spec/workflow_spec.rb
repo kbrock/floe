@@ -185,7 +185,7 @@ RSpec.describe Floe::Workflow do
     context "with a state that is running" do
       it "returns Try again" do
         context.state["EnteredTime"] = Time.now.utc
-        workflow = make_workflow(input, {"FirstState" => {"Type" => "Task"}})
+        workflow = make_workflow(input, {"FirstState" => {"Type" => "Task", "Resource" => "docker://agrare/hello-world:latest"}})
         expect(workflow.current_state).to receive(:running?).and_return(true)
         expect(workflow.step_nonblock_wait(:timeout => 0)).to eq(Errno::EAGAIN)
       end
@@ -212,7 +212,7 @@ RSpec.describe Floe::Workflow do
     context "with a state that is running" do
       it "returns false" do
         context.state["EnteredTime"] = Time.now.utc
-        workflow = make_workflow(input, {"FirstState" => {"Type" => "Task"}})
+        workflow = make_workflow(input, {"FirstState" => {"Type" => "Task", "Resource" => "docker://agrare/hello-world:latest"}})
         expect(workflow.current_state).to receive(:running?).and_return(true)
         expect(workflow.step_nonblock_ready?).to be_falsey
       end
