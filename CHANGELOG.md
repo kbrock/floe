@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Add Workflow.wait, Workflow#step_nonblock, Workflow#step_nonblock_wait ([#92])(https://github.com/ManageIQ/floe/pull/92)
 
 ## [0.3.1] - 2023-08-29
 ### Added
