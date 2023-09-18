@@ -28,7 +28,7 @@ module Floe
 
           [0, output]
         ensure
-          secrets_file&.close!
+          cleanup(nil, secrets_file)
         end
 
         def run_async!(resource, env = {}, secrets = {})
@@ -54,7 +54,7 @@ module Floe
 
         def cleanup(container_id, secrets_file)
           delete_container(container_id) if container_id
-          secrets_file&.close!
+          File.unlink(secrets_file)      if secrets_file && File.exist?(secrets_file)
         end
 
         def running?(container_id)
@@ -78,7 +78,7 @@ module Floe
           params << (detached ? :detach : :rm)
           params += env.map { |k, v| [:e, "#{k}=#{v}"] }
           params << [:net, "host"] if @network == "host"
-          params << [:v, "#{secrets_file.path}:/run/secrets:z"] if secrets_file
+          params << [:v, "#{secrets_file}:/run/secrets:z"] if secrets_file
           params << image
 
           logger.debug("Running docker: #{AwesomeSpawn.build_command_line("docker", params)}")
@@ -100,8 +100,8 @@ module Floe
         def create_secret(secrets)
           secrets_file = Tempfile.new
           secrets_file.write(secrets.to_json)
-          secrets_file.flush
-          secrets_file
+          secrets_file.close
+          secrets_file.path
         end
 
         def docker!(*params, **kwargs)

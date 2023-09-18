@@ -118,22 +118,25 @@ RSpec.describe Floe::Workflow::Runner::Docker do
   end
 
   describe "#cleanup" do
-    let(:secrets_file) { double("Tempfile") }
+    let(:secrets_file) { "/tmp/secretfile" }
 
     it "deletes the container and secret" do
       stub_good_run!("docker", :params => ["rm", container_id])
-      expect(secrets_file).to receive(:close!)
+      expect(File).to receive(:exist?).with(secrets_file).and_return(true)
+      expect(File).to receive(:unlink).with(secrets_file)
       subject.cleanup(container_id, secrets_file)
     end
 
     it "doesn't delete the secret_file if not passed" do
       stub_good_run!("docker", :params => ["rm", container_id])
+      expect(File).not_to receive(:unlink).with(secrets_file)
       subject.cleanup(container_id, nil)
     end
 
     it "deletes the secrets file if deleting the container fails" do
       stub_bad_run!("docker", :params => ["rm", container_id])
-      expect(secrets_file).to receive(:close!)
+      expect(File).to receive(:exist?).with(secrets_file).and_return(true)
+      expect(File).to receive(:unlink).with(secrets_file)
       subject.cleanup(container_id, secrets_file)
     end
   end
