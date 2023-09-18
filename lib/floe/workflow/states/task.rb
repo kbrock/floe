@@ -31,9 +31,9 @@ module Floe
           input = parameters.value(context, input) if parameters
 
           runner = Floe::Workflow::Runner.for_resource(resource)
-          _exit_status, results = runner.run!(resource, input, credentials&.value({}, workflow.credentials))
+          runner_context = runner.run!(resource, input, credentials&.value({}, workflow.credentials))
 
-          output = process_output!(input, results)
+          output = process_output!(input, runner_context[:output])
           [@end ? nil : @next, output]
         rescue => err
           retrier = self.retry.detect { |r| (r.error_equals & [err.to_s, "States.ALL"]).any? }

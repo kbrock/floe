@@ -289,54 +289,66 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
     end
   end
 
+  describe "#status!" do
+    let(:runner_context) { {:container_ref => "my-pod"} }
+
+    it "updates the runner_context with container_state" do
+      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Pending"}})
+      subject.status!(runner_context)
+      expect(runner_context).to include(:container_state => {"phase" => "Pending"})
+    end
+
+    it "raises an exception when getting pod info fails" do
+      allow(kubeclient).to receive(:get_pod).and_raise(Kubeclient::ResourceNotFoundError.new(404, "Resource Not Found", {}))
+      expect { subject.status!(runner_context) }.to raise_error(Kubeclient::ResourceNotFoundError, /Resource Not Found/)
+    end
+  end
+
   describe "#running?" do
     it "returns true when phase is Pending" do
-      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Pending"}})
-      expect(subject.running?("my-pod")).to be_truthy
+      runner_context = {:container_ref => "my-pod", :container_state => {"phase" => "Pending"}}
+      expect(subject.running?(runner_context)).to be_truthy
     end
 
     it "returns true when phase is Running" do
-      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Running"}})
-      expect(subject.running?("my-pod")).to be_truthy
+      runner_context = {:container_ref => "my-pod", :container_state => {"phase" => "Running"}}
+      expect(subject.running?(runner_context)).to be_truthy
     end
 
     it "returns false when phase is Succeeded" do
-      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Succeeded"}})
-      expect(subject.running?("my-pod")).to be_falsey
+      runner_context = {:container_ref => "my-pod", :container_state => {"phase" => "Succeeded"}}
+      expect(subject.running?(runner_context)).to be_falsey
     end
   end
 
   describe "#success?" do
     it "returns false when phase is Pending" do
-      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Pending"}})
-      expect(subject.success?("my-pod")).to be_falsey
+      runner_context = {:container_ref => "my-pod", :container_state => {"phase" => "Pending"}}
+      expect(subject.success?(runner_context)).to be_falsey
     end
 
     it "returns false when phase is Running" do
-      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Running"}})
-      expect(subject.success?("my-pod")).to be_falsey
+      runner_context = {:container_ref => "my-pod", :container_state => {"phase" => "Running"}}
+      expect(subject.success?(runner_context)).to be_falsey
     end
 
     it "returns true when phase is Succeeded" do
-      allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Succeeded"}})
-      expect(subject.success?("my-pod")).to be_truthy
-    end
-
-    it "raises an exception when getting pod info fails" do
-      allow(kubeclient).to receive(:get_pod).and_raise(Kubeclient::ResourceNotFoundError.new(404, "Resource Not Found", {}))
-      expect { subject.success?("my-pod") }.to raise_error(Kubeclient::ResourceNotFoundError, /Resource Not Found/)
+      runner_context = {:container_ref => "my-pod", :container_state => {"phase" => "Succeeded"}}
+      expect(subject.success?(runner_context)).to be_truthy
     end
   end
 
   describe "#output" do
+    let(:runner_context) { {:container_ref => "my-pod"} }
+
     it "returns log output" do
       expect(kubeclient).to receive(:get_pod_log).with("my-pod", "default").and_return(RestClient::Response.new("hello, world!"))
-      expect(subject.output("my-pod")).to eq("hello, world!")
+      expect(subject.output(runner_context)).to eq("hello, world!")
     end
 
     it "raises an exception when getting pod logs fails" do
       allow(kubeclient).to receive(:get_pod_log).and_raise(Kubeclient::ResourceNotFoundError.new(404, "Resource Not Found", {}))
-      expect { subject.output("my-pod") }.to raise_error(Kubeclient::ResourceNotFoundError, /Resource Not Found/)
+      expect { subject.output(runner_context) }.to raise_error(Kubeclient::ResourceNotFoundError, /Resource Not Found/)
     end
   end
 
@@ -345,21 +357,21 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       expect(kubeclient).to receive(:delete_pod).with("my-pod", "default")
       expect(kubeclient).to receive(:delete_secret).with("my-secret", "default")
 
-      subject.cleanup("my-pod", "my-secret")
+      subject.cleanup({:container_ref => "my-pod", :secrets_ref => "my-secret"})
     end
 
     it "doesn't delete secret if none passed in" do
       expect(kubeclient).to receive(:delete_pod).with("my-pod", "default")
       expect(kubeclient).not_to receive(:delete_secret)
 
-      subject.cleanup("my-pod", nil)
+      subject.cleanup({:container_ref => "my-pod"})
     end
 
     it "deletes secret if pod deletion fails" do
       expect(kubeclient).to receive(:delete_pod).with("my-pod", "default").and_raise(Kubeclient::ResourceNotFoundError.new(404, "Resource Not Found", {}))
       expect(kubeclient).to receive(:delete_secret).with("my-secret", "default")
 
-      subject.cleanup("my-pod", "my-secret")
+      subject.cleanup({:container_ref => "my-pod", :secrets_ref => "my-secret"})
     end
   end
 end

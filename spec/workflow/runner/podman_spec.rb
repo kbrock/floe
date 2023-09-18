@@ -42,34 +42,48 @@ RSpec.describe Floe::Workflow::Runner::Podman do
     end
   end
 
+  describe "#status!" do
+    let(:runner_context) { {:container_ref => container_id} }
+
+    it "returns the updated container_state" do
+      stub_good_run!("podman", :params => ["inspect", container_id], :output => "[{\"State\": {\"Running\": true}}]")
+
+      subject.status!(runner_context)
+
+      expect(runner_context).to include(:container_state => {"Running" => true})
+    end
+  end
+
   describe "#running?" do
     it "retuns true when running" do
-      stub_good_run!("podman", :params => ["inspect", container_id], :output => "[{\"State\": {\"Running\": true}}]")
-      expect(subject.running?(container_id)).to be_truthy
+      runner_context = {:container_ref => container_id, :container_state => {"Running" => true}}
+      expect(subject.running?(runner_context)).to be_truthy
     end
 
     it "retuns false when not running" do
-      stub_good_run!("podman", :params => ["inspect", container_id], :output => "[{\"State\": {\"Running\": false, \"ExitCode\": 0}}]")
-      expect(subject.running?(container_id)).to be_falsey
+      runner_context = {:container_ref => container_id, :container_state => {"Running" => false, "ExitCode" => 0}}
+      expect(subject.running?(runner_context)).to be_falsey
     end
   end
 
   describe "#success?" do
     it "retuns true when successful" do
-      stub_good_run!("podman", :params => ["inspect", container_id], :output => "[{\"State\": {\"Running\": true, \"ExitCode\": 0}}]")
-      expect(subject.success?(container_id)).to be_truthy
+      runner_context = {:container_ref => container_id, :container_state => {"Running" => false, "ExitCode" => 0}}
+      expect(subject.success?(runner_context)).to be_truthy
     end
 
     it "retuns false when not successful" do
-      stub_good_run!("podman", :params => ["inspect", container_id], :output => "[{\"State\": {\"Running\": false, \"ExitCode\": 1}}]")
-      expect(subject.success?(container_id)).to be_falsey
+      runner_context = {:container_ref => container_id, :container_state => {"Running" => false, "ExitCode" => 1}}
+      expect(subject.success?(runner_context)).to be_falsey
     end
   end
 
   describe "#output" do
+    let(:runner_context) { {:container_ref => container_id} }
+
     it "returns log output" do
       stub_good_run!("podman", :params => ["logs", container_id], :output => "hello, world!")
-      expect(subject.output(container_id)).to eq("hello, world!")
+      expect(subject.output(runner_context)).to eq("hello, world!")
     end
   end
 
@@ -78,20 +92,20 @@ RSpec.describe Floe::Workflow::Runner::Podman do
       stub_good_run!("podman", :params => ["secret", "rm", "my-secret"])
       stub_good_run!("podman", :params => ["rm", container_id])
 
-      subject.cleanup(container_id, "my-secret")
+      subject.cleanup({:container_ref => container_id, :secrets_ref => "my-secret"})
     end
 
     it "doesn't delete the secret if one isn't passed in" do
       stub_good_run!("podman", :params => ["rm", container_id])
 
-      subject.cleanup(container_id, nil)
+      subject.cleanup({:container_ref => container_id})
     end
 
     it "deletes the secret if deleting the pod fails" do
       stub_good_run!("podman", :params => ["secret", "rm", "my-secret"])
       stub_bad_run!("podman", :params => ["rm", container_id])
 
-      subject.cleanup(container_id, "my-secret")
+      subject.cleanup({:container_ref => container_id, :secrets_ref => "my-secret"})
     end
 
     context "with docker runner options" do

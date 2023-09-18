@@ -81,39 +81,52 @@ RSpec.describe Floe::Workflow::Runner::Docker do
     end
   end
 
+  describe "#status!" do
+    it "returns the updated container_state" do
+      stub_good_run!("docker", :params => ["inspect", container_id], :output => "[{\"State\": {\"Running\": true}}]")
+      runner_context = {:container_ref => container_id}
+
+      subject.status!(runner_context)
+
+      expect(runner_context).to include(:container_state => {"Running" => true})
+    end
+  end
+
   describe "#running?" do
     it "returns true when running" do
-      stub_good_run!("docker", :params => ["inspect", container_id], :output => "[{\"State\": {\"Running\": true}}]")
-      expect(subject.running?(container_id)).to be_truthy
+      runner_context = {:container_ref => container_id, :container_state => {"Running" => true}}
+      expect(subject.running?(runner_context)).to be_truthy
     end
 
     it "returns false when completed" do
-      stub_good_run!("docker", :params => ["inspect", container_id], :output => "[{\"State\": {\"Running\": false, \"ExitCode\": 0}}]")
-      expect(subject.running?(container_id)).to be_falsey
+      runner_context = {:container_ref => container_id, :container_state => {"Running" => false, "ExitCode" => 0}}
+      expect(subject.running?(runner_context)).to be_falsey
     end
   end
 
   describe "#success?" do
     it "returns true when successful" do
-      stub_good_run!("docker", :params => ["inspect", container_id], :output => "[{\"State\": {\"Running\": false, \"ExitCode\": 0}}]")
-      expect(subject.success?(container_id)).to be_truthy
+      runner_context = {:container_ref => container_id, :container_state => {"Running" => false, "ExitCode" => 0}}
+      expect(subject.success?(runner_context)).to be_truthy
     end
 
     it "returns false when unsuccessful" do
-      stub_good_run!("docker", :params => ["inspect", container_id], :output => "[{\"State\": {\"Running\": false, \"ExitCode\": 1}}]")
-      expect(subject.success?(container_id)).to be_falsey
+      runner_context = {:container_ref => container_id, :container_state => {"Running" => false, "ExitCode" => 1}}
+      expect(subject.success?(runner_context)).to be_falsey
     end
   end
 
   describe "#output" do
+    let(:runner_context) { {:container_ref => container_id} }
+
     it "returns log output" do
       stub_good_run!("docker", :params => ["logs", container_id], :output => "hello, world!")
-      expect(subject.output(container_id)).to eq("hello, world!")
+      expect(subject.output(runner_context)).to eq("hello, world!")
     end
 
     it "raises an exception when getting pod logs fails" do
       stub_bad_run!("docker", :params => ["logs", container_id])
-      expect { subject.output(container_id) }.to raise_error(AwesomeSpawn::CommandResultError, /docker exit code: 1/)
+      expect { subject.output(runner_context) }.to raise_error(AwesomeSpawn::CommandResultError, /docker exit code: 1/)
     end
   end
 
@@ -124,20 +137,20 @@ RSpec.describe Floe::Workflow::Runner::Docker do
       stub_good_run!("docker", :params => ["rm", container_id])
       expect(File).to receive(:exist?).with(secrets_file).and_return(true)
       expect(File).to receive(:unlink).with(secrets_file)
-      subject.cleanup(container_id, secrets_file)
+      subject.cleanup({:container_ref => container_id, :secrets_ref => secrets_file})
     end
 
     it "doesn't delete the secret_file if not passed" do
       stub_good_run!("docker", :params => ["rm", container_id])
       expect(File).not_to receive(:unlink).with(secrets_file)
-      subject.cleanup(container_id, nil)
+      subject.cleanup({:container_ref => container_id})
     end
 
     it "deletes the secrets file if deleting the container fails" do
       stub_bad_run!("docker", :params => ["rm", container_id])
       expect(File).to receive(:exist?).with(secrets_file).and_return(true)
       expect(File).to receive(:unlink).with(secrets_file)
-      subject.cleanup(container_id, secrets_file)
+      subject.cleanup({:container_ref => container_id, :secrets_ref => secrets_file})
     end
   end
 end

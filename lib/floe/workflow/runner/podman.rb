@@ -38,7 +38,7 @@ module Floe
 
           output = run_container(image, env, secret)
 
-          [0, output]
+          {:exit_code => 0, :output => output}
         ensure
           delete_secret(secret) if secret
         end
@@ -49,35 +49,42 @@ module Floe
           image = resource.sub("docker://", "")
 
           if secrets && !secrets.empty?
-            secret = create_secret(secrets)
-            env["_CREDENTIALS"] = "/run/secrets/#{secret}"
+            secret_guid = create_secret(secrets)
+            env["_CREDENTIALS"] = "/run/secrets/#{secret_guid}"
           end
 
           begin
-            container_id = run_container(image, env, secret, :detached => true)
+            container_id = run_container(image, env, secret_guid, :detached => true)
           rescue
-            cleanup(container_id, secret)
+            cleanup({:container_ref => container_id, :secrets_ref => secret_guid})
             raise
           end
 
-          [container_id, secret]
+          {:container_ref => container_id, :secrets_ref => secret_guid}
         end
 
-        def cleanup(container_id, secret_guid)
+        def cleanup(runner_context)
+          container_id, secret_guid = runner_context.values_at(:container_ref, :secrets_ref)
+
           delete_container(container_id) if container_id
           delete_secret(secret_guid)     if secret_guid
         end
 
-        def running?(container_id)
-          inspect_container(container_id).first.dig("State", "Running")
+        def status!(runner_context)
+          runner_context[:container_state] = inspect_container(runner_context[:container_ref]).first&.dig("State")
         end
 
-        def success?(container_id)
-          inspect_container(container_id).first.dig("State", "ExitCode") == 0
+        def running?(runner_context)
+          runner_context.dig(:container_state, "Running")
         end
 
-        def output(container_id)
-          podman!("logs", container_id).output
+        def success?(runner_context)
+          runner_context.dig(:container_state, "ExitCode") == 0
+        end
+
+        def output(runner_context)
+          output = podman!("logs", runner_context[:container_ref]).output
+          runner_context[:output] = output
         end
 
         private

@@ -26,9 +26,9 @@ module Floe
 
           output = run_container(image, env, secrets_file)
 
-          [0, output]
+          {:exit_code => 0, :output => output}
         ensure
-          cleanup(nil, secrets_file)
+          cleanup({:secrets_ref => secrets_file})
         end
 
         def run_async!(resource, env = {}, secrets = {})
@@ -36,37 +36,45 @@ module Floe
 
           image = resource.sub("docker://", "")
 
-          secrets_file = nil
+          runner_context = {}
+
           if secrets && !secrets.empty?
-            secrets_file = create_secret(secrets)
+            runner_context[:secrets_ref] = create_secret(secrets)
             env["_CREDENTIALS"] = "/run/secrets"
           end
 
           begin
-            container_id = run_container(image, env, secrets_file, :detached => true)
+            runner_context[:container_ref] = run_container(image, env, runner_context[:secrets_ref], :detached => true)
           rescue
-            cleanup(container_id, secrets_file)
+            cleanup(runner_context)
             raise
           end
 
-          [container_id, secrets_file]
+          runner_context
         end
 
-        def cleanup(container_id, secrets_file)
+        def cleanup(runner_context)
+          container_id, secrets_file = runner_context.values_at(:container_ref, :secrets_ref)
+
           delete_container(container_id) if container_id
           File.unlink(secrets_file)      if secrets_file && File.exist?(secrets_file)
         end
 
-        def running?(container_id)
-          inspect_container(container_id).first.dig("State", "Running")
+        def status!(runner_context)
+          runner_context[:container_state] = inspect_container(runner_context[:container_ref]).first&.dig("State")
         end
 
-        def success?(container_id)
-          inspect_container(container_id).first.dig("State", "ExitCode") == 0
+        def running?(runner_context)
+          runner_context.dig(:container_state, "Running")
         end
 
-        def output(container_id)
-          docker!("logs", container_id).output
+        def success?(runner_context)
+          runner_context.dig(:container_state, "ExitCode") == 0
+        end
+
+        def output(runner_context)
+          output = docker!("logs", runner_context[:container_ref]).output
+          runner_context[:output] = output
         end
 
         private
