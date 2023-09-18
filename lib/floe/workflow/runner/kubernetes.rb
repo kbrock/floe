@@ -46,27 +46,69 @@ module Floe
           secret = create_secret!(secrets) if secrets && !secrets.empty?
 
           begin
+            runner_context = {:container_ref => name}
+
             create_pod!(name, image, env, secret)
             loop do
               case pod_info(name).dig("status", "phase")
               when "Pending", "Running"
                 sleep(1)
               when "Succeeded"
-                return [0, output(name)]
+                runner_context[:exit_code] = 0
+                output(runner_context)
+                break
               else
-                return [1, output(name)]
+                runner_context[:exit_code] = 0
+                output(runner_context)
+                break
               end
             end
+
+            runner_context
           ensure
-            cleanup(name, secret)
+            cleanup({:container_ref => name, :secrets_ref => secret})
           end
         end
 
-        def output(pod)
-          kubeclient.get_pod_log(pod, namespace).body
+        def run_async!(resource, env = {}, secrets = {})
+          raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
+
+          image  = resource.sub("docker://", "")
+          name   = pod_name(image)
+          secret = create_secret!(secrets) if secrets && !secrets.empty?
+
+          runner_context = {:container_ref => name, :secrets_ref => secret}
+
+          begin
+            create_pod!(name, image, env, secret)
+          rescue
+            cleanup(runner_context)
+            raise
+          end
+
+          runner_context
         end
 
-        def cleanup(pod, secret)
+        def status!(runner_context)
+          runner_context[:container_state] = pod_info(runner_context[:container_ref])["status"]
+        end
+
+        def running?(runner_context)
+          %w[Pending Running].include?(runner_context.dig(:container_state, "phase"))
+        end
+
+        def success?(runner_context)
+          runner_context.dig(:container_state, "phase") == "Succeeded"
+        end
+
+        def output(runner_context)
+          output = kubeclient.get_pod_log(runner_context[:container_ref], namespace).body
+          runner_context[:output] = output
+        end
+
+        def cleanup(runner_context)
+          pod, secret = runner_context.values_at(:container_ref, :secrets_ref)
+
           delete_pod(pod)       if pod
           delete_secret(secret) if secret
         end

@@ -31,29 +31,99 @@ module Floe
 
           image = resource.sub("docker://", "")
 
-          params  = ["run", :rm]
-          params += [[:net, "host"]] if @network == "host"
-          params += env.map { |k, v| [:e, "#{k}=#{v}"] } if env
-
           if secrets && !secrets.empty?
-            secret_guid = SecureRandom.uuid
-            podman!("secret", "create", secret_guid, "-", :in_data => secrets.to_json)
-
-            params << [:e, "_CREDENTIALS=/run/secrets/#{secret_guid}"]
-            params << [:secret, secret_guid]
+            secret = create_secret(secrets)
+            env["_CREDENTIALS"] = "/run/secrets/#{secret}"
           end
 
-          params << image
+          output = run_container(image, env, secret)
 
-          logger.debug("Running podman: #{AwesomeSpawn.build_command_line("podman", params)}")
-          result = podman!(*params)
-
-          [result.exit_status, result.output]
+          {:exit_code => 0, :output => output}
         ensure
-          AwesomeSpawn.run("podman", :params => ["secret", "rm", secret_guid]) if secret_guid
+          delete_secret(secret) if secret
+        end
+
+        def run_async!(resource, env = {}, secrets = {})
+          raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
+
+          image = resource.sub("docker://", "")
+
+          if secrets && !secrets.empty?
+            secret_guid = create_secret(secrets)
+            env["_CREDENTIALS"] = "/run/secrets/#{secret_guid}"
+          end
+
+          begin
+            container_id = run_container(image, env, secret_guid, :detached => true)
+          rescue
+            cleanup({:container_ref => container_id, :secrets_ref => secret_guid})
+            raise
+          end
+
+          {:container_ref => container_id, :secrets_ref => secret_guid}
+        end
+
+        def cleanup(runner_context)
+          container_id, secret_guid = runner_context.values_at(:container_ref, :secrets_ref)
+
+          delete_container(container_id) if container_id
+          delete_secret(secret_guid)     if secret_guid
+        end
+
+        def status!(runner_context)
+          runner_context[:container_state] = inspect_container(runner_context[:container_ref]).first&.dig("State")
+        end
+
+        def running?(runner_context)
+          runner_context.dig(:container_state, "Running")
+        end
+
+        def success?(runner_context)
+          runner_context.dig(:container_state, "ExitCode") == 0
+        end
+
+        def output(runner_context)
+          output = podman!("logs", runner_context[:container_ref]).output
+          runner_context[:output] = output
         end
 
         private
+
+        def run_container(image, env, secret, detached: false)
+          params  = ["run"]
+          params << (detached ? :detach : :rm)
+          params += env.map { |k, v| [:e, "#{k}=#{v}"] }
+          params << [:net, "host"] if @network == "host"
+          params << [:secret, secret] if secret
+          params << image
+
+          logger.debug("Running podman: #{AwesomeSpawn.build_command_line("podman", params)}")
+
+          result = podman!(*params)
+          result.output
+        end
+
+        def inspect_container(container_id)
+          JSON.parse(podman!("inspect", container_id).output)
+        end
+
+        def delete_container(container_id)
+          podman!("rm", container_id)
+        rescue
+          nil
+        end
+
+        def create_secret(secrets)
+          secret_guid = SecureRandom.uuid
+          podman!("secret", "create", secret_guid, "-", :in_data => secrets.to_json)
+          secret_guid
+        end
+
+        def delete_secret(secret_guid)
+          podman!("secret", "rm", secret_guid)
+        rescue
+          nil
+        end
 
         def podman!(*args, **kwargs)
           params = podman_global_options + args

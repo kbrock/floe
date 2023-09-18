@@ -18,6 +18,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
+            .and_return(:exit_code => 0, :output => "hello, world!")
 
           subject
         end
@@ -30,6 +31,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], {"bar" => "baz"}, nil)
+            .and_return(:exit_code => 0, :output => "hello, world!")
 
           subject
         end
@@ -42,6 +44,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], {"var1" => "baz"}, nil)
+            .and_return(:exit_code => 0, :output => "hello, world!")
 
           subject
         end
@@ -56,7 +59,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
-            .and_return([0, "{\"response\":[\"192.168.1.2\"],\"exit_code\":0}"])
+            .and_return(:exit_code => 0, :output => "{\"response\":[\"192.168.1.2\"],\"exit_code\":0}")
 
           _, results = subject
 
@@ -71,7 +74,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], input, nil)
-            .and_return([0, "[\"192.168.1.2\"]"])
+            .and_return(:exit_code => 0, :output => "[\"192.168.1.2\"]")
 
           _, results = subject
 
@@ -93,7 +96,7 @@ RSpec.describe Floe::Workflow::States::Task do
             expect(mock_runner)
               .to receive(:run!)
               .with(payload["Resource"], input, nil)
-              .and_return([0, "[\"192.168.1.2\"]"])
+              .and_return(:exit_code => 0, :output => "[\"192.168.1.2\"]")
 
             _, results = subject
 
@@ -112,7 +115,7 @@ RSpec.describe Floe::Workflow::States::Task do
             expect(mock_runner)
               .to receive(:run!)
               .with(payload["Resource"], input, nil)
-              .and_return([0, "[\"192.168.1.2\"]"])
+              .and_return(:exit_code => 0, :output => "[\"192.168.1.2\"]")
 
             _, results = subject
 
@@ -138,7 +141,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], input, nil)
-            .and_return([0])
+            .and_return(:exit_code => 0)
 
           _, results = subject
 
@@ -162,7 +165,7 @@ RSpec.describe Floe::Workflow::States::Task do
             expect(mock_runner)
               .to receive(:run!)
               .with(payload["Resource"], input, nil)
-              .and_return([0])
+              .and_return(:exit_code => 0)
             _, results = subject
 
             expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
@@ -201,7 +204,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], input, nil)
-            .and_return([0])
+            .and_return(:exit_code => 0)
           _, results = subject
 
           expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
@@ -220,7 +223,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run!)
             .with(payload["Resource"], input, nil)
-            .and_return([0])
+            .and_return(:exit_code => 0)
 
           _, results = subject
 

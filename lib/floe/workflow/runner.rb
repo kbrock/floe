@@ -30,7 +30,27 @@ module Floe
         end
       end
 
-      def run!(image, env = {}, secrets = {})
+      def run!(resource, env = {}, secrets = {})
+        raise NotImplementedError, "Must be implemented in a subclass"
+      end
+
+      def run_async!(_image, _env = {}, _secrets = {})
+        raise NotImplementedError, "Must be implemented in a subclass"
+      end
+
+      def running?(_ref)
+        raise NotImplementedError, "Must be implemented in a subclass"
+      end
+
+      def success?(_ref)
+        raise NotImplementedError, "Must be implemented in a subclass"
+      end
+
+      def output(_ref)
+        raise NotImplementedError, "Must be implemented in a subclass"
+      end
+
+      def cleanup(_ref, _secret)
         raise NotImplementedError, "Must be implemented in a subclass"
       end
     end

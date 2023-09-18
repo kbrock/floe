@@ -1,34 +1,111 @@
 RSpec.describe Floe::Workflow::Runner::Podman do
+  require "securerandom"
+
   let(:subject)        { described_class.new(runner_options) }
   let(:runner_options) { {} }
+  let(:container_id)   { SecureRandom.hex }
 
-  describe "#run!" do
+  describe "#run_async!" do
     it "raises an exception without a resource" do
-      expect { subject.run!(nil) }.to raise_error(ArgumentError, "Invalid resource")
+      expect { subject.run_async!(nil) }.to raise_error(ArgumentError, "Invalid resource")
     end
 
     it "raises an exception for an invalid resource uri" do
-      expect { subject.run!("arn:abcd:efgh") }.to raise_error(ArgumentError, "Invalid resource")
+      expect { subject.run_async!("arn:abcd:efgh") }.to raise_error(ArgumentError, "Invalid resource")
     end
 
     it "calls docker run with the image name" do
-      stub_good_run!("podman", :params => ["run", :rm, "hello-world:latest"])
+      stub_good_run!("podman", :params => ["run", :detach, "hello-world:latest"], :output => container_id)
 
-      subject.run!("docker://hello-world:latest")
+      subject.run_async!("docker://hello-world:latest")
     end
 
     it "passes environment variables to podman run" do
-      stub_good_run!("podman", :params => ["run", :rm, [:e, "FOO=BAR"], "hello-world:latest"])
+      stub_good_run!("podman", :params => ["run", :detach, [:e, "FOO=BAR"], "hello-world:latest"], :output => container_id)
 
-      subject.run!("docker://hello-world:latest", {"FOO" => "BAR"})
+      subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"})
     end
 
     it "passes a secrets volume to podman run" do
       stub_good_run!("podman", :params => ["secret", "create", anything, "-"], :in_data => {"luggage_password" => "12345"}.to_json)
-      stub_good_run!("podman", :params => ["run", :rm, [:e, "FOO=BAR"], [:e, a_string_including("_CREDENTIALS=")], [:secret, anything], "hello-world:latest"])
-      stub_good_run("podman", :params => ["secret", "rm", anything])
+      stub_good_run!("podman", :params => ["run", :detach, [:e, "FOO=BAR"], [:e, a_string_including("_CREDENTIALS=")], [:secret, anything], "hello-world:latest"], :output => container_id)
 
-      subject.run!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
+      subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
+    end
+
+    it "deletes the secret if running the container fails" do
+      stub_good_run!("podman", :params => ["secret", "create", anything, "-"], :in_data => {"luggage_password" => "12345"}.to_json)
+      stub_bad_run!("podman", :params => ["run", :detach, [:e, "FOO=BAR"], [:e, a_string_including("_CREDENTIALS=")], [:secret, anything], "hello-world:latest"])
+      stub_good_run!("podman", :params => ["secret", "rm", anything])
+
+      expect { subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"}) }.to raise_error(AwesomeSpawn::CommandResultError, /podman exit code: 1/)
+    end
+  end
+
+  describe "#status!" do
+    let(:runner_context) { {:container_ref => container_id} }
+
+    it "returns the updated container_state" do
+      stub_good_run!("podman", :params => ["inspect", container_id], :output => "[{\"State\": {\"Running\": true}}]")
+
+      subject.status!(runner_context)
+
+      expect(runner_context).to include(:container_state => {"Running" => true})
+    end
+  end
+
+  describe "#running?" do
+    it "retuns true when running" do
+      runner_context = {:container_ref => container_id, :container_state => {"Running" => true}}
+      expect(subject.running?(runner_context)).to be_truthy
+    end
+
+    it "retuns false when not running" do
+      runner_context = {:container_ref => container_id, :container_state => {"Running" => false, "ExitCode" => 0}}
+      expect(subject.running?(runner_context)).to be_falsey
+    end
+  end
+
+  describe "#success?" do
+    it "retuns true when successful" do
+      runner_context = {:container_ref => container_id, :container_state => {"Running" => false, "ExitCode" => 0}}
+      expect(subject.success?(runner_context)).to be_truthy
+    end
+
+    it "retuns false when not successful" do
+      runner_context = {:container_ref => container_id, :container_state => {"Running" => false, "ExitCode" => 1}}
+      expect(subject.success?(runner_context)).to be_falsey
+    end
+  end
+
+  describe "#output" do
+    let(:runner_context) { {:container_ref => container_id} }
+
+    it "returns log output" do
+      stub_good_run!("podman", :params => ["logs", container_id], :output => "hello, world!")
+      expect(subject.output(runner_context)).to eq("hello, world!")
+    end
+  end
+
+  describe "#cleanup" do
+    it "deletes the container and secret" do
+      stub_good_run!("podman", :params => ["secret", "rm", "my-secret"])
+      stub_good_run!("podman", :params => ["rm", container_id])
+
+      subject.cleanup({:container_ref => container_id, :secrets_ref => "my-secret"})
+    end
+
+    it "doesn't delete the secret if one isn't passed in" do
+      stub_good_run!("podman", :params => ["rm", container_id])
+
+      subject.cleanup({:container_ref => container_id})
+    end
+
+    it "deletes the secret if deleting the pod fails" do
+      stub_good_run!("podman", :params => ["secret", "rm", "my-secret"])
+      stub_bad_run!("podman", :params => ["rm", container_id])
+
+      subject.cleanup({:container_ref => container_id, :secrets_ref => "my-secret"})
     end
 
     context "with docker runner options" do
