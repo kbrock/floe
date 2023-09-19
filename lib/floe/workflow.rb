@@ -52,9 +52,7 @@ module Floe
     end
 
     def run!
-      until end?
-        step
-      end
+      step until end?
       self
     end
 
@@ -63,8 +61,8 @@ module Floe
       self
     end
 
-    def run_async!
-      step_nonblock
+    def run_nonblock
+      loop while step_nonblock == 0 && !end?
       self
     end
 

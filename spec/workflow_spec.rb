@@ -73,17 +73,17 @@ RSpec.describe Floe::Workflow do
     end
   end
 
-  describe "#run_async!" do
+  describe "#run_nonblock" do
     it "starts the first state" do
       workflow = make_workflow(input, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
-      workflow.run_async!
+      workflow.run_nonblock
 
       expect(context.started?).to eq(true)
     end
 
     it "doesn't wait for the state to finish" do
       workflow = make_workflow(input, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
-      workflow.run_async!
+      workflow.run_nonblock
 
       expect(context.running?).to eq(true)
       expect(context.ended?).to   eq(false)
@@ -137,7 +137,7 @@ RSpec.describe Floe::Workflow do
         workflow = make_workflow(input, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
 
         # Start the workflow
-        workflow.run_async!
+        workflow.run_nonblock
 
         # Mark the Wait state as having started 1 minute ago
         context.state["EnteredTime"] = Time.now.utc - 60

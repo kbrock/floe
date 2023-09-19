@@ -81,19 +81,14 @@ would block will return `Errno::EAGAIN`.
 require 'floe'
 
 workflow = Floe::Workflow.load("workflow.asl")
-workflow.run_async!
 
-until workflow.end?
-  loop while workflow.step_nonblock == 0 # Step through the workflow while it would not block
-  break
-end
+# Step through the workflow while it would not block
+workflow.run_nonblock
 
 # Go off and do some other task
 
-until workflow.end?
-  loop while workflow.step_nonblock == 0 # Continue stepping until the workflow is finished
-  break
-end
+# Continue stepping until the workflow is finished
+workflow.run_nonblock
 ```
 
 You can also use the `Floe::Workflow.wait` class method to wait on multiple workflows
