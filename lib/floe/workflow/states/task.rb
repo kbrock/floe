@@ -27,7 +27,7 @@ module Floe
           @credentials       = PayloadTemplate.new(payload["Credentials"])    if payload["Credentials"]
         end
 
-        def run_async!(input)
+        def start(input)
           input = input_path.value(context, input)
           input = parameters.value(context, input) if parameters
 

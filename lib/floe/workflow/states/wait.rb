@@ -17,7 +17,7 @@ module Floe
           @output_path = Path.new(payload.fetch("OutputPath", "$"))
         end
 
-        def run_async!(input)
+        def start(input)
           input = input_path.value(context, input)
 
           context.output     = output_path.value(context, input)

@@ -8,9 +8,9 @@ RSpec.describe Floe::Workflow::States::Pass do
     end
   end
 
-  describe "#run_async!" do
+  describe "#start" do
     it "transitions to the next state" do
-      state.run_async!({})
+      state.start({})
 
       expect(workflow.context.next_state).to eq("NextState")
     end

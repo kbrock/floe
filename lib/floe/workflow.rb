@@ -69,7 +69,7 @@ module Floe
     def step_nonblock
       return Errno::EPERM if end?
 
-      step_nonblock_submit unless current_state.started?
+      step_nonblock_start unless current_state.started?
       return Errno::EAGAIN unless step_nonblock_ready?
 
       step_nonblock_finish
@@ -108,7 +108,7 @@ module Floe
 
     private
 
-    def step_nonblock_submit
+    def step_nonblock_start
       raise "State is already running" if current_state.started?
 
       start_time = Time.now.utc
@@ -120,7 +120,7 @@ module Floe
 
       logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...")
 
-      current_state.run_async!(context.state["Input"])
+      current_state.start(context.state["Input"])
     end
 
     def step_nonblock_finish

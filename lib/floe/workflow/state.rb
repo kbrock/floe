@@ -30,13 +30,13 @@ module Floe
       end
 
       def run!(input)
-        run_async!(input)
+        start(input)
         sleep(1) while running?
         finish
         [context.next_state, context.output]
       end
 
-      def run_async!(*)
+      def start(_input)
         raise NotImpelmentedError
       end
 

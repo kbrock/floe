@@ -10,7 +10,7 @@ module Floe
           super
         end
 
-        def run_async!(input)
+        def start(input)
           context.next_state = nil
           context.output     = input
         end

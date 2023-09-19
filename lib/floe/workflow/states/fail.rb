@@ -13,7 +13,7 @@ module Floe
           @error = payload["Error"]
         end
 
-        def run_async!(input)
+        def start(input)
           context.state["Error"] = error
           context.state["Cause"] = cause
           context.next_state     = nil
