@@ -14,15 +14,10 @@ module Floe
         end
 
         def run_async!(input)
-          context.next_state = nil
-          context.output     = input
-        end
-
-        def finish
-          super
-
           context.state["Error"] = error
           context.state["Cause"] = cause
+          context.next_state     = nil
+          context.output         = input
         end
 
         def running?
