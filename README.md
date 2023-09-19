@@ -56,7 +56,7 @@ bundle exec ruby exe/floe --workflow my-workflow.asl --credentials='{"roleArn": 
 ```ruby
 require 'floe'
 
-workflow = Floe::Workflow.load(File.read("workflow.asl"))
+workflow = Floe::Workflow.load("workflow.asl")
 workflow.run!
 ```
 
@@ -68,8 +68,49 @@ Floe::Workflow::Runner.docker_runner = Floe::Workflow::Runner::Podman.new
 # Or
 Floe::Workflow::Runner.docker_runner = Floe::Workflow::Runner::Kubernetes.new("namespace" => "default", "server" => "https://k8s.example.com:6443", "token" => "my-token")
 
-workflow = Floe::Workflow.load(File.read("workflow.asl"))
+workflow = Floe::Workflow.load("workflow.asl")
 workflow.run!
+```
+
+### Non-Blocking Workflow Execution
+
+It is also possible to step through a workflow without blocking, and any state which
+would block will return `Errno::EAGAIN`.
+
+```ruby
+require 'floe'
+
+workflow = Floe::Workflow.load("workflow.asl")
+
+# Step through the workflow while it would not block
+workflow.run_nonblock
+
+# Go off and do some other task
+
+# Continue stepping until the workflow is finished
+workflow.run_nonblock
+```
+
+You can also use the `Floe::Workflow.wait` class method to wait on multiple workflows
+and return all that are ready to be stepped through.
+
+```ruby
+require 'floe'
+
+workflow1 = Floe::Workflow.load("workflow1.asl")
+workflow2 = Floe::Workflow.load("workflow2.asl")
+
+running_workflows = [workflow1, workflow2]
+until running_workflows.empty?
+  # Wait for any of the running workflows to be ready (up to the timeout)
+  ready_workflows = Floe::Workflow.wait(running_workflows)
+  # Step through the ready workflows until they would block
+  ready_workflows.each do |workflow|
+    loop while workflow.step_nonblock == 0
+  end
+  # Remove any finished workflows from the list of running_workflows
+  running_workflows.reject!(&:end?)
+end
 ```
 
 ### Docker Runner Options

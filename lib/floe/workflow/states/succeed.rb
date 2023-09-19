@@ -10,8 +10,13 @@ module Floe
           super
         end
 
-        def run!(input)
-          [nil, input]
+        def start(input)
+          context.next_state = nil
+          context.output     = input
+        end
+
+        def running?
+          false
         end
 
         def end?

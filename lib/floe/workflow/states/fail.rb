@@ -13,8 +13,15 @@ module Floe
           @error = payload["Error"]
         end
 
-        def run!(input)
-          [nil, input]
+        def start(input)
+          context.state["Error"] = error
+          context.state["Cause"] = cause
+          context.next_state     = nil
+          context.output         = input
+        end
+
+        def running?
+          false
         end
 
         def end?

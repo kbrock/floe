@@ -29,8 +29,31 @@ module Floe
         @comment  = payload["Comment"]
       end
 
+      def run!(input)
+        start(input)
+        sleep(1) while running?
+        finish
+        [context.next_state, context.output]
+      end
+
+      def start(_input)
+        raise NotImpelmentedError
+      end
+
+      def finish
+        context.state["FinishedTime"] ||= Time.now.utc
+      end
+
       def context
         workflow.context
+      end
+
+      def started?
+        context.state.key?("EnteredTime")
+      end
+
+      def finished?
+        context.state.key?("FinishedTime")
       end
     end
   end

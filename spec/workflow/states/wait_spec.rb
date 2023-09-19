@@ -8,19 +8,31 @@ RSpec.describe Floe::Workflow::States::Pass do
     end
   end
 
-  describe "#run!" do
-    it "sleeps for the requested amount of time" do
-      expect(state).to receive(:sleep).with(state.seconds)
+  describe "#start" do
+    it "transitions to the next state" do
+      state.start({})
 
-      state.run!({})
+      expect(workflow.context.next_state).to eq("NextState")
+    end
+  end
+
+  describe "#running?" do
+    before { workflow.context.state["EnteredTime"] = entered_time }
+
+    context "before the sleep has finished" do
+      let(:entered_time) { Time.now.utc }
+
+      it "returns true" do
+        expect(state.running?).to be_truthy
+      end
     end
 
-    it "transitions to the next state" do
-      # skip the actual sleep
-      expect(state).to receive(:sleep).with(state.seconds)
+    context "after the sleep has finished" do
+      let(:entered_time) { Time.now.utc - 10 }
 
-      next_state, _output = state.run!({})
-      expect(next_state).to eq("NextState")
+      it "returns false" do
+        expect(state.running?).to be_falsey
+      end
     end
   end
 end
