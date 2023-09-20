@@ -166,7 +166,6 @@ RSpec.describe Floe::Workflow::States::Task do
             expect(mock_runner).to receive("output").once.and_return("States.Timeout")
             expect(mock_runner)
               .to receive(:run_async!)
-              .twice
               .with(payload["Resource"], input, nil)
 
             state.run!(input)
@@ -188,7 +187,6 @@ RSpec.describe Floe::Workflow::States::Task do
         it "raises if the number of retries is greater than MaxAttempts" do
           expect(mock_runner)
             .to receive(:run_async!)
-            .twice
             .with(payload["Resource"], input, nil)
 
           state.run!(input)
@@ -211,7 +209,6 @@ RSpec.describe Floe::Workflow::States::Task do
         it "retries if any error is raised" do
           expect(mock_runner)
             .to receive(:run_async!)
-            .twice
             .with(payload["Resource"], input, nil)
           expect(mock_runner).to receive("output").once.and_return("ABORT!")
           expect(mock_runner).to receive("output").once.and_return(output)

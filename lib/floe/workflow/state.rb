@@ -29,11 +29,8 @@ module Floe
         @comment  = payload["Comment"]
       end
 
-      def run!(input)
-        start(input)
-        sleep(1) while running?
-        finish
-        [context.next_state, context.output]
+      def run!(_input = nil)
+        run_wait until run_nonblock! == 0
       end
 
       def run_wait(timeout: 5)
