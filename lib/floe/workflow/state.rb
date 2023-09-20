@@ -52,6 +52,10 @@ module Floe
         context.state.key?("EnteredTime")
       end
 
+      def ready?
+        !started? || !running?
+      end
+
       def finished?
         context.state.key?("FinishedTime")
       end

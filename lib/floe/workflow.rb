@@ -90,7 +90,7 @@ module Floe
     end
 
     def step_nonblock_ready?
-      !current_state.started? || !current_state.running?
+      current_state.ready?
     end
 
     def status
