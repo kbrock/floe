@@ -73,22 +73,11 @@ module Floe
       return Errno::EPERM if end?
 
       step_next
-
-      step_nonblock_start unless current_state.started?
-      return Errno::EAGAIN unless step_nonblock_ready?
-
-      step_nonblock_finish
+      current_state.run_nonblock!
     end
 
     def step_nonblock_wait(timeout: 5)
-      start = Time.now.utc
-
-      loop do
-        return 0             if step_nonblock_ready?
-        return Errno::EAGAIN if timeout.zero? || Time.now.utc - start > timeout
-
-        sleep(1)
-      end
+      current_state.run_wait(:timeout => timeout)
     end
 
     def step_nonblock_ready?
@@ -112,14 +101,6 @@ module Floe
     end
 
     private
-
-    def step_nonblock_start
-      current_state.start(context.input)
-    end
-
-    def step_nonblock_finish
-      current_state.finish
-    end
 
     def step_next
       context.state = {"Name" => context.next_state, "Input" => context.output} if context.next_state

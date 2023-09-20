@@ -36,6 +36,24 @@ module Floe
         [context.next_state, context.output]
       end
 
+      def run_wait(timeout: 5)
+        start = Time.now.utc
+
+        loop do
+          return 0             if ready?
+          return Errno::EAGAIN if timeout.zero? || Time.now.utc - start > timeout
+
+          sleep(1)
+        end
+      end
+
+      def run_nonblock!
+        start(context.input) unless started?
+        return Errno::EAGAIN unless ready?
+
+        finish
+      end
+
       def start(_input)
         start_time = Time.now.utc.iso8601
 
