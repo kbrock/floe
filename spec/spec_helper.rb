@@ -50,6 +50,22 @@ RSpec.configure do |config|
   end
   config.include AwesomeSpawn::SpecHelper, :uses_awesome_spawn => true
   config.before(:each, :uses_awesome_spawn) { disable_spawning }
+
+  # factory methods
+
+  def make_workflow(ctx, payload, creds: {})
+    Floe::Workflow.new(make_payload(payload), ctx, creds)
+  end
+
+  def make_payload(states)
+    start_at ||= states.keys.first
+
+    {
+      "Comment" => "Sample",
+      "StartAt" => start_at,
+      "States"  => states
+    }
+  end
 end
 
 require "floe"

@@ -1,18 +1,18 @@
 RSpec.describe Floe::Workflow::States::Task do
-  let(:workflow) { Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl"), context) }
-  let(:context)  { Floe::Workflow::Context.new(:input => input) }
   let(:input)    { {} }
+  let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
+  # TODO: use make_workflow with payload
+  let(:workflow) { Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl"), ctx) }
 
   describe "#run" do
     let(:mock_runner) { double("Floe::Workflow::Runner") }
     let(:input)       { {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}} }
     let(:state)       { described_class.new(workflow, "Task", payload) }
-    let(:subject)     { state.run!(input) }
     let(:success)     { true }
     let(:output)      { nil }
 
     before do
-      context.state["Input"] = input
+      ctx.state["Input"] = input
       allow(Floe::Workflow::Runner).to receive(:for_resource).and_return(mock_runner)
       allow(mock_runner).to receive(:status!).and_return({})
       allow(mock_runner).to receive(:running?).and_return(false)
@@ -31,7 +31,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
             .and_return(:exit_code => 0, :output => "hello, world!")
 
-          subject
+          state.run!(input)
         end
       end
 
@@ -44,7 +44,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .with(payload["Resource"], {"bar" => "baz"}, nil)
             .and_return(:exit_code => 0, :output => "hello, world!")
 
-          subject
+          state.run!(input)
         end
       end
 
@@ -57,7 +57,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .with(payload["Resource"], {"var1" => "baz"}, nil)
             .and_return(:exit_code => 0, :output => "hello, world!")
 
-          subject
+          state.run!(input)
         end
       end
     end
@@ -72,9 +72,9 @@ RSpec.describe Floe::Workflow::States::Task do
             .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
           expect(mock_runner).to receive(:output).and_return("{\"response\":[\"192.168.1.2\"],\"exit_code\":0}")
 
-          _, results = subject
+          state.run!(input)
 
-          expect(results).to eq("foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}, "ip_addrs" => ["192.168.1.2"])
+          expect(ctx.output).to eq("foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}, "ip_addrs" => ["192.168.1.2"])
         end
       end
 
@@ -87,9 +87,9 @@ RSpec.describe Floe::Workflow::States::Task do
             .with(payload["Resource"], input, nil)
           expect(mock_runner).to receive(:output).and_return("[\"192.168.1.2\"]")
 
-          _, results = subject
+          state.run!(input)
 
-          expect(results).to eq(
+          expect(ctx.output).to eq(
             "foo"      => {"bar" => "baz"},
             "bar"      => {"baz" => "foo"},
             "ip_addrs" => ["192.168.1.2"]
@@ -109,9 +109,9 @@ RSpec.describe Floe::Workflow::States::Task do
               .with(payload["Resource"], input, nil)
             expect(mock_runner).to receive(:output).and_return("[\"192.168.1.2\"]")
 
-            _, results = subject
+            state.run!(input)
 
-            expect(results).to eq(
+            expect(ctx.output).to eq(
               "foo"  => {"bar" => "baz"},
               "bar"  => {"baz" => "foo"},
               "data" => {"ip_addrs" => ["192.168.1.2"]}
@@ -128,9 +128,9 @@ RSpec.describe Floe::Workflow::States::Task do
               .with(payload["Resource"], input, nil)
             expect(mock_runner).to receive(:output).and_return("[\"192.168.1.2\"]")
 
-            _, results = subject
+            state.run!(input)
 
-            expect(results).to eq("ip_addrs" => ["192.168.1.2"])
+            expect(ctx.output).to eq("ip_addrs" => ["192.168.1.2"])
           end
         end
       end
@@ -150,11 +150,11 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          subject
+          state.run!(input)
 
-          expect(context.next_state).to          eq(context.state_name)
-          expect(context.state["Retrier"]).to    eq(["States.Timeout"])
-          expect(context.state["RetryCount"]).to eq(1)
+          expect(ctx.next_state).to          eq(ctx.state_name)
+          expect(ctx.state["Retrier"]).to    eq(["States.Timeout"])
+          expect(ctx.state["RetryCount"]).to eq(1)
         end
 
         context "with multiple retriers" do
@@ -171,17 +171,17 @@ RSpec.describe Floe::Workflow::States::Task do
 
             state.run!(input)
 
-            expect(context.next_state).to          eq(context.state_name)
-            expect(context.state["Retrier"]).to    eq(["States.Timeout"])
-            expect(context.state["RetryCount"]).to eq(1)
+            expect(ctx.next_state).to          eq(ctx.state_name)
+            expect(ctx.state["Retrier"]).to    eq(["States.Timeout"])
+            expect(ctx.state["RetryCount"]).to eq(1)
 
             expect(mock_runner).to receive(:output).once.and_return("Exception")
 
             state.run!(input)
 
-            expect(context.next_state).to          eq(context.state_name)
-            expect(context.state["Retrier"]).to    eq(["Exception"])
-            expect(context.state["RetryCount"]).to eq(1)
+            expect(ctx.next_state).to          eq(ctx.state_name)
+            expect(ctx.state["Retrier"]).to    eq(["Exception"])
+            expect(ctx.state["RetryCount"]).to eq(1)
           end
         end
 
@@ -201,7 +201,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .with(payload["Resource"], input, nil)
           expect(mock_runner).to receive(:output).once.and_return("Exception")
 
-          expect { subject }.to raise_error(RuntimeError, "Exception")
+          expect { state.run!(input) }.to raise_error(RuntimeError, "Exception")
         end
       end
 
@@ -217,9 +217,9 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner).to receive(:output).once.and_return(output)
 
           state.run!(input)
-          _, results = state.run!(input)
+          state.run!(input)
 
-          expect(results).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
+          expect(ctx.output).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
         end
       end
 
@@ -233,11 +233,11 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          next_state, _ = subject
+          state.run!(input)
 
-          expect(next_state).to                  eq(context.state_name)
-          expect(context.state["Retrier"]).to    eq(["States.Timeout"])
-          expect(context.state["RetryCount"]).to eq(1)
+          expect(ctx.next_state).to          eq(ctx.state_name)
+          expect(ctx.state["Retrier"]).to    eq(["States.Timeout"])
+          expect(ctx.state["RetryCount"]).to eq(1)
         end
 
         it "invokes the Catch if no retriers match" do
@@ -246,9 +246,9 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          next_state, _ = subject
+          state.run!(input)
 
-          expect(next_state).to eq("FailState")
+          expect(ctx.next_state).to eq("FailState")
         end
       end
     end
@@ -265,9 +265,9 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          next_state, _ = subject
+          state.run!(input)
 
-          expect(next_state).to eq("FirstState")
+          expect(ctx.next_state).to eq("FirstState")
         end
 
         it "raises if the exception isn't caught" do
@@ -276,7 +276,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          expect { subject }.to raise_error(RuntimeError, "Exception")
+          expect { state.run!(input) }.to raise_error(RuntimeError, "Exception")
         end
       end
 
@@ -289,9 +289,9 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          next_state, _ = subject
+          state.run!(input)
 
-          expect(next_state).to eq("FirstState")
+          expect(ctx.next_state).to eq("FirstState")
         end
 
         it "catches the exception and transits to the next state" do
@@ -300,9 +300,9 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          next_state, _ = subject
+          state.run!(input)
 
-          expect(next_state).to eq("FailState")
+          expect(ctx.next_state).to eq("FailState")
         end
       end
     end
