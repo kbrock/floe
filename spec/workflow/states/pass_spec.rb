@@ -1,19 +1,35 @@
 RSpec.describe Floe::Workflow::States::Pass do
-  let(:workflow) { Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl")) }
-  let(:state)    { workflow.states_by_name["PassState"] }
+  let(:input)    { {} }
+  let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
+  let(:state)    { workflow.current_state }
+  let(:workflow) do
+    make_workflow(
+      ctx, {
+        "PassState"    => {
+          "Type"       => "Pass",
+          "Result"     => {
+            "foo" => "bar",
+            "bar" => "baz"
+          },
+          "ResultPath" => "$.result",
+          "Next"       => "SuccessState"
+        },
+        "SuccessState" => {"Type" => "Succeed"}
+      }
+    )
+  end
 
   describe "#end?" do
     it "is non-terminal" do
       expect(state.end?).to eq(false)
     end
-    # TODO: test @end
   end
 
   describe "#run!" do
     it "sets the result to the result path" do
-      next_state, output = state.run!({})
-      expect(output["result"]).to include(state.result)
-      expect(next_state).to eq("WaitState")
+      state.run!(ctx.input)
+      expect(ctx.output["result"]).to include({"foo" => "bar", "bar" => "baz"})
+      expect(ctx.next_state).to eq("SuccessState")
     end
   end
 end

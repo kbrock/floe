@@ -1,6 +1,8 @@
 RSpec.describe Floe::Workflow::States::Succeed do
-  let(:workflow) { Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl")) }
-  let(:state)    { workflow.states_by_name["SuccessState"] }
+  let(:input)    { {} }
+  let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
+  let(:state)    { workflow.current_state }
+  let(:workflow) { make_workflow(ctx, {"SuccessState" => {"Type" => "Succeed"}}) }
 
   it "#end?" do
     expect(state.end?).to be true
@@ -8,8 +10,8 @@ RSpec.describe Floe::Workflow::States::Succeed do
 
   describe "#run!" do
     it "has no next" do
-      next_state, _output = state.run!({})
-      expect(next_state).to be_nil
+      state.run!(input)
+      expect(ctx.next_state).to eq(nil)
     end
   end
 end

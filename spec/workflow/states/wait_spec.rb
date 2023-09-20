@@ -1,6 +1,8 @@
 RSpec.describe Floe::Workflow::States::Pass do
-  let(:workflow) { Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl")) }
-  let(:state)    { workflow.states_by_name["WaitState"] }
+  let(:input)    { {} }
+  let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
+  let(:state)    { workflow.current_state }
+  let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "Seconds" => 1, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
   describe "#end?" do
     it "is non-terminal" do
@@ -12,7 +14,7 @@ RSpec.describe Floe::Workflow::States::Pass do
     it "transitions to the next state" do
       state.start({})
 
-      expect(workflow.context.next_state).to eq("NextState")
+      expect(workflow.context.next_state).to eq("SuccessState")
     end
   end
 

@@ -1,13 +1,27 @@
 RSpec.describe Floe::Workflow::States::Fail do
-  let(:workflow) { Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl")) }
-  let(:state)    { workflow.states_by_name["FailState"] }
+  let(:input)    { {} }
+  let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
+  let(:state)    { workflow.current_state }
+  let(:workflow) do
+    make_workflow(
+      ctx, {
+        "FailState" => {
+          "Type"  => "Fail",
+          "Error" => "FailStateError",
+          "Cause" => "No Matches!"
+        }
+      }
+    )
+  end
 
   it "#end?" do
     expect(state.end?).to be true
   end
 
   it "#run!" do
-    next_state, _output = state.run!({})
-    expect(next_state).to eq(nil)
+    state.run!(input)
+    expect(ctx.next_state).to eq(nil)
+    expect(ctx.state["Error"]).to eq("FailStateError")
+    expect(ctx.state["Cause"]).to eq("No Matches!")
   end
 end
