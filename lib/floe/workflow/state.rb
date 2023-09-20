@@ -37,7 +37,13 @@ module Floe
       end
 
       def start(_input)
-        raise NotImpelmentedError
+        start_time = Time.now.utc.iso8601
+
+        context.execution["StartTime"] ||= start_time
+        context.state["Guid"]            = SecureRandom.uuid
+        context.state["EnteredTime"]     = start_time
+
+        logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...")
       end
 
       def finish

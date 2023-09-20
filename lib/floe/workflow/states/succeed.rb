@@ -11,6 +11,7 @@ module Floe
         end
 
         def start(input)
+          super
           context.next_state = nil
           context.output     = input
         end

@@ -14,6 +14,7 @@ module Floe
         end
 
         def start(input)
+          super
           context.state["Error"] = error
           context.state["Cause"] = cause
           context.next_state     = nil

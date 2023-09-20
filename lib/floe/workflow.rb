@@ -114,17 +114,7 @@ module Floe
     private
 
     def step_nonblock_start
-      raise "State is already running" if current_state.started?
-
-      start_time = Time.now.utc.iso8601
-
-      context.execution["StartTime"] ||= start_time
-      context.state["Guid"]            = SecureRandom.uuid
-      context.state["EnteredTime"]     = start_time
-
-      logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...")
-
-      current_state.start(context.state["Input"])
+      current_state.start(context.input)
     end
 
     def step_nonblock_finish

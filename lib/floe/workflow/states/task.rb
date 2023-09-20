@@ -28,6 +28,7 @@ module Floe
         end
 
         def start(input)
+          super
           input = input_path.value(context, input)
           input = parameters.value(context, input) if parameters
 
