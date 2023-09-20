@@ -46,7 +46,10 @@ module Floe
       @states         = payload["States"].to_a.map { |name, state| State.build!(self, name, state) }
       @states_by_name = @states.each_with_object({}) { |state, result| result[state.name] = state }
 
-      context.state["Name"] ||= start_at
+      unless context.state.key?("Name")
+        context.state["Name"] = start_at
+        context.state["Input"] = context.execution["Input"].dup
+      end
     rescue JSON::ParserError => err
       raise Floe::InvalidWorkflowError, err.message
     end
@@ -114,7 +117,6 @@ module Floe
       start_time = Time.now.utc
 
       context.execution["StartTime"] ||= start_time
-      context.state["Input"]         ||= context.execution["Input"].dup
       context.state["Guid"]            = SecureRandom.uuid
       context.state["EnteredTime"]     = start_time
 
