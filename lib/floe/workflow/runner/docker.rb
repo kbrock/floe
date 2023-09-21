@@ -26,9 +26,9 @@ module Floe
 
           output = run_container(image, env, secrets_file)
 
-          {:exit_code => 0, :output => output}
+          {"exit_code" => 0, "output" => output}
         ensure
-          cleanup({:secrets_ref => secrets_file})
+          cleanup({"secrets_ref" => secrets_file})
         end
 
         def run_async!(resource, env = {}, secrets = {})
@@ -39,12 +39,12 @@ module Floe
           runner_context = {}
 
           if secrets && !secrets.empty?
-            runner_context[:secrets_ref] = create_secret(secrets)
+            runner_context["secrets_ref"] = create_secret(secrets)
             env["_CREDENTIALS"] = "/run/secrets"
           end
 
           begin
-            runner_context[:container_ref] = run_container(image, env, runner_context[:secrets_ref], :detached => true)
+            runner_context["container_ref"] = run_container(image, env, runner_context["secrets_ref"], :detached => true)
           rescue
             cleanup(runner_context)
             raise
@@ -54,27 +54,27 @@ module Floe
         end
 
         def cleanup(runner_context)
-          container_id, secrets_file = runner_context.values_at(:container_ref, :secrets_ref)
+          container_id, secrets_file = runner_context.values_at("container_ref", "secrets_ref")
 
           delete_container(container_id) if container_id
           File.unlink(secrets_file)      if secrets_file && File.exist?(secrets_file)
         end
 
         def status!(runner_context)
-          runner_context[:container_state] = inspect_container(runner_context[:container_ref]).first&.dig("State")
+          runner_context["container_state"] = inspect_container(runner_context["container_ref"]).first&.dig("State")
         end
 
         def running?(runner_context)
-          runner_context.dig(:container_state, "Running")
+          runner_context.dig("container_state", "Running")
         end
 
         def success?(runner_context)
-          runner_context.dig(:container_state, "ExitCode") == 0
+          runner_context.dig("container_state", "ExitCode") == 0
         end
 
         def output(runner_context)
-          output = docker!("logs", runner_context[:container_ref]).output
-          runner_context[:output] = output
+          output = docker!("logs", runner_context["container_ref"]).output
+          runner_context["output"] = output
         end
 
         private
