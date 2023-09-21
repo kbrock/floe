@@ -53,11 +53,7 @@ module Floe
               case pod_info(name).dig("status", "phase")
               when "Pending", "Running"
                 sleep(1)
-              when "Succeeded"
-                runner_context["exit_code"] = 0
-                output(runner_context)
-                break
-              else
+              else # also "Succeeded"
                 runner_context["exit_code"] = 0
                 output(runner_context)
                 break
