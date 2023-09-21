@@ -32,13 +32,13 @@ RSpec.describe Floe::Workflow do
       workflow.run!
 
       # state
-      expect(ctx.state["EnteredTime"]).to be_within(1.second).of(now)
+      expect(Time.parse(ctx.state["EnteredTime"])).to be_within(1.second).of(now)
+      expect(Time.parse(ctx.state["FinishedTime"])).to be_within(1.second).of(now)
       expect(ctx.state["Guid"]).to be
       expect(ctx.state_name).to eq("FirstState")
       expect(ctx.input).to eq(input)
       expect(ctx.output).to eq(input)
-      expect(ctx.state["FinishedTime"]).to be_within(1.second).of(now)
-      expect(ctx.state["Duration"]).to be <= 1
+      expect(ctx.state["Duration"].to_f).to be <= 1
       expect(ctx.status).to eq("success")
 
       # execution
@@ -57,13 +57,13 @@ RSpec.describe Floe::Workflow do
       workflow.run!
 
       # state
-      expect(ctx.state["EnteredTime"]).to be_within(1.second).of(now)
+      expect(Time.parse(ctx.state["EnteredTime"])).to be_within(1.second).of(now)
+      expect(Time.parse(ctx.state["FinishedTime"])).to be_within(1.second).of(now)
       expect(ctx.state["Guid"]).to be
       expect(ctx.state_name).to eq("FirstState")
       expect(ctx.input).to eq(input)
       expect(ctx.output).to eq(input)
-      expect(ctx.state["FinishedTime"]).to be_within(1.second).of(now)
-      expect(ctx.state["Duration"]).to be <= 1
+      expect(ctx.state["Duration"].to_f).to be <= 1
       expect(ctx.state["Cause"]).to eq("Bad Stuff")
       expect(ctx.state["Error"]).to eq("Issue")
       expect(ctx.status).to eq("failure")
@@ -147,7 +147,7 @@ RSpec.describe Floe::Workflow do
         workflow.run_nonblock
 
         # Mark the Wait state as having started 1 minute ago
-        ctx.state["EnteredTime"] = Time.now.utc - 60
+        ctx.state["EnteredTime"] = (Time.now.utc - 60).iso8601
 
         # step_nonblock should return 0 and mark the workflow as completed
         expect(workflow.step_nonblock).to eq(0)
@@ -182,7 +182,7 @@ RSpec.describe Floe::Workflow do
 
     context "with a state that has finished" do
       it "return 0" do
-        ctx.state["EnteredTime"] = Time.now.utc
+        ctx.state["EnteredTime"] = Time.now.utc.iso8601
         workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Succeed"}})
         expect(workflow.current_state).to receive(:running?).and_return(false)
         expect(workflow.step_nonblock_wait).to eq(0)
@@ -191,7 +191,7 @@ RSpec.describe Floe::Workflow do
 
     context "with a state that is running" do
       it "returns Try again" do
-        ctx.state["EnteredTime"] = Time.now.utc
+        ctx.state["EnteredTime"] = Time.now.utc.iso8601
         workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Task", "Resource" => "docker://agrare/hello-world:latest"}})
         expect(workflow.current_state).to receive(:running?).and_return(true)
         expect(workflow.step_nonblock_wait(:timeout => 0)).to eq(Errno::EAGAIN)
@@ -209,7 +209,7 @@ RSpec.describe Floe::Workflow do
 
     context "with a state that has finished" do
       it "return true" do
-        ctx.state["EnteredTime"] = Time.now.utc
+        ctx.state["EnteredTime"] = Time.now.utc.iso8601
         workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Succeed"}})
         expect(workflow.current_state).to receive(:running?).and_return(false)
         expect(workflow.step_nonblock_ready?).to be_truthy
@@ -218,7 +218,7 @@ RSpec.describe Floe::Workflow do
 
     context "with a state that is running" do
       it "returns false" do
-        ctx.state["EnteredTime"] = Time.now.utc
+        ctx.state["EnteredTime"] = Time.now.utc.iso8601
         workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Task", "Resource" => "docker://agrare/hello-world:latest"}})
         expect(workflow.current_state).to receive(:running?).and_return(true)
         expect(workflow.step_nonblock_ready?).to be_falsey

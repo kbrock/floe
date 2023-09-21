@@ -26,8 +26,8 @@ module Floe
 
         def running?
           now = Time.now.utc
-          if now > (context.state["EnteredTime"] + @seconds)
-            context.state["FinishedTime"] = now
+          if now > (Time.parse(context.state["EnteredTime"]) + @seconds)
+            context.state["FinishedTime"] = now.iso8601
             false
           else
             true

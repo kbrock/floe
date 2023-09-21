@@ -114,7 +114,7 @@ module Floe
     def step_nonblock_start
       raise "State is already running" if current_state.started?
 
-      start_time = Time.now.utc
+      start_time = Time.now.utc.iso8601
 
       context.execution["StartTime"] ||= start_time
       context.state["Guid"]            = SecureRandom.uuid
@@ -127,8 +127,12 @@ module Floe
 
     def step_nonblock_finish
       current_state.finish
-      context.state["Duration"]    = context.state["FinishedTime"] - context.state["EnteredTime"]
-      context.execution["EndTime"] = Time.now.utc if context.next_state.nil?
+
+      entered_time  = Time.parse(context.state["EnteredTime"])
+      finished_time = Time.parse(context.state["FinishedTime"])
+
+      context.state["Duration"]    = finished_time - entered_time
+      context.execution["EndTime"] = Time.now.utc.iso8601 if context.next_state.nil?
 
       logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...Complete - next state: [#{context.next_state}] output: [#{context.output}]")
 

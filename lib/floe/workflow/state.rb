@@ -41,7 +41,7 @@ module Floe
       end
 
       def finish
-        context.state["FinishedTime"] ||= Time.now.utc
+        context.state["FinishedTime"] ||= Time.now.utc.iso8601
       end
 
       def context

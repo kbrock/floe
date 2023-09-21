@@ -19,7 +19,7 @@ RSpec.describe Floe::Workflow::States::Pass do
   end
 
   describe "#running?" do
-    before { workflow.context.state["EnteredTime"] = entered_time }
+    before { workflow.context.state["EnteredTime"] = entered_time.iso8601 }
 
     context "before the sleep has finished" do
       let(:entered_time) { Time.now.utc }
