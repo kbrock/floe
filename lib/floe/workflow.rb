@@ -72,6 +72,8 @@ module Floe
     def step_nonblock
       return Errno::EPERM if end?
 
+      step_next
+
       step_nonblock_start unless current_state.started?
       return Errno::EAGAIN unless step_nonblock_ready?
 
@@ -138,9 +140,11 @@ module Floe
 
       context.state_history << context.state
 
-      context.state = {"Name" => context.next_state, "Input" => context.output} unless end?
-
       0
+    end
+
+    def step_next
+      context.state = {"Name" => context.next_state, "Input" => context.output} if context.next_state
     end
   end
 end
