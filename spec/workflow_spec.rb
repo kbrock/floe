@@ -170,6 +170,41 @@ RSpec.describe Floe::Workflow do
 
       expect(workflow.step_nonblock).to eq(Errno::EPERM)
     end
+
+    it "takes 2 steps" do
+      workflow = make_workflow(
+        ctx, {
+          "FirstState"  => {"Type" => "Pass", "Next" => "SecondState"},
+          "SecondState" => {"Type" => "Succeed"}
+        }
+      )
+
+      expect(ctx.status).to eq("pending")
+      expect(ctx.started?).to eq(false)
+      expect(ctx.running?).to eq(false)
+      expect(ctx.ended?).to eq(false)
+
+      workflow.step_nonblock
+
+      expect(ctx.status).to eq("running")
+
+      # execution
+      expect(ctx.started?).to eq(true)
+      expect(ctx.running?).to eq(true)
+      expect(ctx.ended?).to eq(false)
+
+      # second step
+
+      workflow.step_nonblock
+
+      expect(ctx.state_name).to eq("SecondState")
+      expect(ctx.status).to eq("success")
+
+      # execution
+      expect(ctx.started?).to eq(true)
+      expect(ctx.running?).to eq(false)
+      expect(ctx.ended?).to eq(true)
+    end
   end
 
   describe "#step_nonblock_wait" do
