@@ -38,7 +38,7 @@ module Floe
 
           output = run_container(image, env, secret)
 
-          {:exit_code => 0, :output => output}
+          {"exit_code" => 0, :output => output}
         ensure
           delete_secret(secret) if secret
         end
@@ -56,35 +56,35 @@ module Floe
           begin
             container_id = run_container(image, env, secret_guid, :detached => true)
           rescue
-            cleanup({:container_ref => container_id, :secrets_ref => secret_guid})
+            cleanup({"container_ref" => container_id, "secrets_ref" => secret_guid})
             raise
           end
 
-          {:container_ref => container_id, :secrets_ref => secret_guid}
+          {"container_ref" => container_id, "secrets_ref" => secret_guid}
         end
 
         def cleanup(runner_context)
-          container_id, secret_guid = runner_context.values_at(:container_ref, :secrets_ref)
+          container_id, secret_guid = runner_context.values_at("container_ref", "secrets_ref")
 
           delete_container(container_id) if container_id
           delete_secret(secret_guid)     if secret_guid
         end
 
         def status!(runner_context)
-          runner_context[:container_state] = inspect_container(runner_context[:container_ref]).first&.dig("State")
+          runner_context["container_state"] = inspect_container(runner_context["container_ref"]).first&.dig("State")
         end
 
         def running?(runner_context)
-          runner_context.dig(:container_state, "Running")
+          runner_context.dig("container_state", "Running")
         end
 
         def success?(runner_context)
-          runner_context.dig(:container_state, "ExitCode") == 0
+          runner_context.dig("container_state", "ExitCode") == 0
         end
 
         def output(runner_context)
-          output = podman!("logs", runner_context[:container_ref]).output
-          runner_context[:output] = output
+          output = podman!("logs", runner_context["container_ref"]).output
+          runner_context["output"] = output
         end
 
         private

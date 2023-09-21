@@ -46,7 +46,7 @@ module Floe
           secret = create_secret!(secrets) if secrets && !secrets.empty?
 
           begin
-            runner_context = {:container_ref => name}
+            runner_context = {"container_ref" => name}
 
             create_pod!(name, image, env, secret)
             loop do
@@ -54,11 +54,11 @@ module Floe
               when "Pending", "Running"
                 sleep(1)
               when "Succeeded"
-                runner_context[:exit_code] = 0
+                runner_context["exit_code"] = 0
                 output(runner_context)
                 break
               else
-                runner_context[:exit_code] = 0
+                runner_context["exit_code"] = 0
                 output(runner_context)
                 break
               end
@@ -66,7 +66,7 @@ module Floe
 
             runner_context
           ensure
-            cleanup({:container_ref => name, :secrets_ref => secret})
+            cleanup({"container_ref" => name, "secrets_ref" => secret})
           end
         end
 
@@ -77,7 +77,7 @@ module Floe
           name   = pod_name(image)
           secret = create_secret!(secrets) if secrets && !secrets.empty?
 
-          runner_context = {:container_ref => name, :secrets_ref => secret}
+          runner_context = {"container_ref" => name, "secrets_ref" => secret}
 
           begin
             create_pod!(name, image, env, secret)
@@ -90,24 +90,24 @@ module Floe
         end
 
         def status!(runner_context)
-          runner_context[:container_state] = pod_info(runner_context[:container_ref])["status"]
+          runner_context["container_state"] = pod_info(runner_context["container_ref"])["status"]
         end
 
         def running?(runner_context)
-          %w[Pending Running].include?(runner_context.dig(:container_state, "phase"))
+          %w[Pending Running].include?(runner_context.dig("container_state", "phase"))
         end
 
         def success?(runner_context)
-          runner_context.dig(:container_state, "phase") == "Succeeded"
+          runner_context.dig("container_state", "phase") == "Succeeded"
         end
 
         def output(runner_context)
-          output = kubeclient.get_pod_log(runner_context[:container_ref], namespace).body
-          runner_context[:output] = output
+          output = kubeclient.get_pod_log(runner_context["container_ref"], namespace).body
+          runner_context["output"] = output
         end
 
         def cleanup(runner_context)
-          pod, secret = runner_context.values_at(:container_ref, :secrets_ref)
+          pod, secret = runner_context.values_at("container_ref", "secrets_ref")
 
           delete_pod(pod)       if pod
           delete_secret(secret) if secret

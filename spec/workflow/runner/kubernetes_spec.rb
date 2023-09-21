@@ -290,12 +290,12 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
   end
 
   describe "#status!" do
-    let(:runner_context) { {:container_ref => "my-pod"} }
+    let(:runner_context) { {"container_ref" => "my-pod"} }
 
     it "updates the runner_context with container_state" do
       allow(kubeclient).to receive(:get_pod).and_return({"status" => {"phase" => "Pending"}})
       subject.status!(runner_context)
-      expect(runner_context).to include(:container_state => {"phase" => "Pending"})
+      expect(runner_context).to include("container_state" => {"phase" => "Pending"})
     end
 
     it "raises an exception when getting pod info fails" do
@@ -306,40 +306,40 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
   describe "#running?" do
     it "returns true when phase is Pending" do
-      runner_context = {:container_ref => "my-pod", :container_state => {"phase" => "Pending"}}
+      runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Pending"}}
       expect(subject.running?(runner_context)).to be_truthy
     end
 
     it "returns true when phase is Running" do
-      runner_context = {:container_ref => "my-pod", :container_state => {"phase" => "Running"}}
+      runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Running"}}
       expect(subject.running?(runner_context)).to be_truthy
     end
 
     it "returns false when phase is Succeeded" do
-      runner_context = {:container_ref => "my-pod", :container_state => {"phase" => "Succeeded"}}
+      runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Succeeded"}}
       expect(subject.running?(runner_context)).to be_falsey
     end
   end
 
   describe "#success?" do
     it "returns false when phase is Pending" do
-      runner_context = {:container_ref => "my-pod", :container_state => {"phase" => "Pending"}}
+      runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Pending"}}
       expect(subject.success?(runner_context)).to be_falsey
     end
 
     it "returns false when phase is Running" do
-      runner_context = {:container_ref => "my-pod", :container_state => {"phase" => "Running"}}
+      runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Running"}}
       expect(subject.success?(runner_context)).to be_falsey
     end
 
     it "returns true when phase is Succeeded" do
-      runner_context = {:container_ref => "my-pod", :container_state => {"phase" => "Succeeded"}}
+      runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Succeeded"}}
       expect(subject.success?(runner_context)).to be_truthy
     end
   end
 
   describe "#output" do
-    let(:runner_context) { {:container_ref => "my-pod"} }
+    let(:runner_context) { {"container_ref" => "my-pod"} }
 
     it "returns log output" do
       expect(kubeclient).to receive(:get_pod_log).with("my-pod", "default").and_return(RestClient::Response.new("hello, world!"))
@@ -357,21 +357,21 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       expect(kubeclient).to receive(:delete_pod).with("my-pod", "default")
       expect(kubeclient).to receive(:delete_secret).with("my-secret", "default")
 
-      subject.cleanup({:container_ref => "my-pod", :secrets_ref => "my-secret"})
+      subject.cleanup({"container_ref" => "my-pod", "secrets_ref" => "my-secret"})
     end
 
     it "doesn't delete secret if none passed in" do
       expect(kubeclient).to receive(:delete_pod).with("my-pod", "default")
       expect(kubeclient).not_to receive(:delete_secret)
 
-      subject.cleanup({:container_ref => "my-pod"})
+      subject.cleanup({"container_ref" => "my-pod"})
     end
 
     it "deletes secret if pod deletion fails" do
       expect(kubeclient).to receive(:delete_pod).with("my-pod", "default").and_raise(Kubeclient::ResourceNotFoundError.new(404, "Resource Not Found", {}))
       expect(kubeclient).to receive(:delete_secret).with("my-secret", "default")
 
-      subject.cleanup({:container_ref => "my-pod", :secrets_ref => "my-secret"})
+      subject.cleanup({"container_ref" => "my-pod", "secrets_ref" => "my-secret"})
     end
   end
 end
