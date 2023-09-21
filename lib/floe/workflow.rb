@@ -119,18 +119,6 @@ module Floe
 
     def step_nonblock_finish
       current_state.finish
-
-      entered_time  = Time.parse(context.state["EnteredTime"])
-      finished_time = Time.parse(context.state["FinishedTime"])
-
-      context.state["Duration"]    = finished_time - entered_time
-      context.execution["EndTime"] = Time.now.utc.iso8601 if context.next_state.nil?
-
-      logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...Complete - next state: [#{context.next_state}] output: [#{context.output}]")
-
-      context.state_history << context.state
-
-      0
     end
 
     def step_next

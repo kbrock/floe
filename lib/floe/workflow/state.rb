@@ -47,7 +47,19 @@ module Floe
       end
 
       def finish
-        context.state["FinishedTime"] ||= Time.now.utc.iso8601
+        finished_time     = Time.now.utc
+        finished_time_iso = finished_time.iso8601
+        entered_time      = Time.parse(context.state["EnteredTime"])
+
+        context.state["FinishedTime"] ||= finished_time_iso
+        context.state["Duration"]       = finished_time - entered_time
+        context.execution["EndTime"]    = finished_time_iso if context.next_state.nil?
+
+        logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...Complete - next state: [#{context.next_state}] output: [#{context.output}]")
+
+        context.state_history << context.state
+
+        0
       end
 
       def context
