@@ -28,6 +28,7 @@ module Floe
         end
 
         def start(input)
+          super
           input = input_path.value(context, input)
           input = parameters.value(context, input) if parameters
 
@@ -40,8 +41,6 @@ module Floe
         end
 
         def finish
-          super
-
           results = runner.output(context.state["RunnerContext"])
 
           if success?
@@ -50,6 +49,8 @@ module Floe
           else
             retry_state!(results) || catch_error!(results)
           end
+
+          super
         ensure
           runner.cleanup(context.state["RunnerContext"])
         end

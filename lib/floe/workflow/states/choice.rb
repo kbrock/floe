@@ -17,6 +17,7 @@ module Floe
         end
 
         def start(input)
+          super
           input      = input_path.value(context, input)
           next_state = choices.detect { |choice| choice.true?(context, input) }&.next || default
           output     = output_path.value(context, input)

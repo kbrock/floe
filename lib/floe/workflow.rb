@@ -72,21 +72,12 @@ module Floe
     def step_nonblock
       return Errno::EPERM if end?
 
-      step_nonblock_start unless current_state.started?
-      return Errno::EAGAIN unless step_nonblock_ready?
-
-      step_nonblock_finish
+      step_next
+      current_state.run_nonblock!
     end
 
     def step_nonblock_wait(timeout: 5)
-      start = Time.now.utc
-
-      loop do
-        return 0             if step_nonblock_ready?
-        return Errno::EAGAIN if timeout.zero? || Time.now.utc - start > timeout
-
-        sleep(1)
-      end
+      current_state.run_wait(:timeout => timeout)
     end
 
     def step_nonblock_ready?
@@ -111,36 +102,8 @@ module Floe
 
     private
 
-    def step_nonblock_start
-      raise "State is already running" if current_state.started?
-
-      start_time = Time.now.utc.iso8601
-
-      context.execution["StartTime"] ||= start_time
-      context.state["Guid"]            = SecureRandom.uuid
-      context.state["EnteredTime"]     = start_time
-
-      logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...")
-
-      current_state.start(context.state["Input"])
-    end
-
-    def step_nonblock_finish
-      current_state.finish
-
-      entered_time  = Time.parse(context.state["EnteredTime"])
-      finished_time = Time.parse(context.state["FinishedTime"])
-
-      context.state["Duration"]    = finished_time - entered_time
-      context.execution["EndTime"] = Time.now.utc.iso8601 if context.next_state.nil?
-
-      logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...Complete - next state: [#{context.next_state}] output: [#{context.output}]")
-
-      context.state_history << context.state
-
-      context.state = {"Name" => context.next_state, "Input" => context.output} unless end?
-
-      0
+    def step_next
+      context.state = {"Name" => context.next_state, "Input" => context.output} if context.next_state
     end
   end
 end
