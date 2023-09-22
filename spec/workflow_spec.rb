@@ -74,7 +74,7 @@ RSpec.describe Floe::Workflow do
       expect(ctx.ended?).to eq(true)
 
       # final results
-      expect(workflow.output).to eq(input)
+      expect(workflow.output).to eq(input) # TODO: think Cause and Error should be here
       expect(workflow.status).to eq("failure")
       expect(workflow.end?).to eq(true)
     end
@@ -193,6 +193,8 @@ RSpec.describe Floe::Workflow do
       expect(ctx.running?).to eq(true)
       expect(ctx.ended?).to eq(false)
 
+      expect(workflow.output).to be_nil
+
       # second step
 
       workflow.step_nonblock
@@ -204,6 +206,8 @@ RSpec.describe Floe::Workflow do
       expect(ctx.started?).to eq(true)
       expect(ctx.running?).to eq(false)
       expect(ctx.ended?).to eq(true)
+
+      expect(workflow.output).to eq(input)
     end
   end
 
