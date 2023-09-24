@@ -4,7 +4,7 @@ require 'logger'
 
 module Floe
   class NullLogger < Logger
-    def initialize(*)
+    def initialize(*) # rubocop:disable Lint/MissingSuper
     end
 
     def add(*_args, &_block)

@@ -5,6 +5,7 @@ module Floe
     module States
       class Parallel < Floe::Workflow::State
         def initialize(*)
+          super
           raise NotImplementedError
         end
       end
