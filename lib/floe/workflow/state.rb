@@ -92,6 +92,25 @@ module Floe
       def finished?
         context.state.key?("FinishedTime")
       end
+
+      private
+
+      # Use a payload value or hardcoded path.
+      #
+      # @param [Context] context     context
+      # @param [Hash|String] input   state input
+      # @param [Object] value        hardcoded value from the payload
+      # @param [Path|Nil] value_path path to the value
+      # @yield [String]              block to convert path fetched string into proper datatype
+      # @returns [Object]            value derived from hardcoded value or path
+      def value_or_path(context, input, value = nil, path:)
+        if path
+          value = path.value(context, input)
+          block_given? ? yield(value) : value
+        else
+          value
+        end
+      end
     end
   end
 end
