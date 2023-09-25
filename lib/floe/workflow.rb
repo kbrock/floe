@@ -89,7 +89,7 @@ module Floe
     end
 
     def output
-      context.output
+      context.output if end?
     end
 
     def end?
