@@ -51,27 +51,27 @@ module Floe
           raise "No such variable [#{variable}]" if value.nil? && !%w[IsNull IsPresent].include?(compare_key)
         end
 
-        def is_null?(value)
+        def is_null?(value) # rubocop:disable Naming/PredicateName
           value.nil?
         end
 
-        def is_present?(value)
+        def is_present?(value) # rubocop:disable Naming/PredicateName
           !value.nil?
         end
 
-        def is_numeric?(value)
+        def is_numeric?(value) # rubocop:disable Naming/PredicateName
           value.kind_of?(Integer) || value.kind_of?(Float)
         end
 
-        def is_string?(value)
+        def is_string?(value) # rubocop:disable Naming/PredicateName
           value.kind_of?(String)
         end
 
-        def is_boolean?(value)
+        def is_boolean?(value) # rubocop:disable Naming/PredicateName
           [true, false].include?(value)
         end
 
-        def is_timestamp?(value)
+        def is_timestamp?(value) # rubocop:disable Naming/PredicateName
           require "date"
 
           DateTime.rfc3339(value)

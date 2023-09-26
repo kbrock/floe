@@ -34,8 +34,4 @@ Gem::Specification.new do |spec|
   spec.add_dependency "kubeclient", "~>4.7"
   spec.add_dependency "more_core_extensions"
   spec.add_dependency "optimist", "~>3.0"
-
-  spec.add_development_dependency "manageiq-style"
-  spec.add_development_dependency "rspec"
-  spec.add_development_dependency "rubocop"
 end
