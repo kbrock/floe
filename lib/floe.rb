@@ -32,6 +32,7 @@ require_relative "floe/workflow/states/task"
 require_relative "floe/workflow/states/wait"
 
 require "jsonpath"
+require "time"
 
 module Floe
   class Error < StandardError; end
