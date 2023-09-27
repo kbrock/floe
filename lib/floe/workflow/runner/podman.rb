@@ -83,7 +83,7 @@ module Floe
         end
 
         def output(runner_context)
-          output = podman!("logs", runner_context["container_ref"]).output
+          output = podman!("logs", runner_context["container_ref"], :combined_output => true).output
           runner_context["output"] = output
         end
 

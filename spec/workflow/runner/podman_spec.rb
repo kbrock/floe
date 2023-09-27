@@ -82,7 +82,7 @@ RSpec.describe Floe::Workflow::Runner::Podman do
     let(:runner_context) { {"container_ref" => container_id} }
 
     it "returns log output" do
-      stub_good_run!("podman", :params => ["logs", container_id], :output => "hello, world!")
+      stub_good_run!("podman", :params => ["logs", container_id], :combined_output => true, :output => "hello, world!")
       expect(subject.output(runner_context)).to eq("hello, world!")
     end
   end
