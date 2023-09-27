@@ -120,12 +120,12 @@ RSpec.describe Floe::Workflow::Runner::Docker do
     let(:runner_context) { {"container_ref" => container_id} }
 
     it "returns log output" do
-      stub_good_run!("docker", :params => ["logs", container_id], :output => "hello, world!")
+      stub_good_run!("docker", :params => ["logs", container_id], :combined_output => true, :output => "hello, world!")
       expect(subject.output(runner_context)).to eq("hello, world!")
     end
 
     it "raises an exception when getting pod logs fails" do
-      stub_bad_run!("docker", :params => ["logs", container_id])
+      stub_bad_run!("docker", :params => ["logs", container_id], :combined_output => true)
       expect { subject.output(runner_context) }.to raise_error(AwesomeSpawn::CommandResultError, /docker exit code: 1/)
     end
   end
