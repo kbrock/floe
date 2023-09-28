@@ -27,10 +27,59 @@ RSpec.describe Floe::Workflow::States::Pass do
       end
 
       it "is not running after finished" do
-        state.start(ctx.input)
-        Timecop.travel(Time.now.utc + 10) do
-          expect(state.running?).to be_falsey
+        Timecop.travel(Time.now.utc - 10) do
+          state.start(ctx.input)
         end
+        expect(state.running?).to be_falsey
+      end
+    end
+
+    context "with secondsPath" do
+      let(:input)    { {"expire" => "1"} }
+      let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "SecondsPath" => "$.expire", "Next" => "SuccessState"}}) }
+      it "is running? before finished" do
+        state.start(ctx.input)
+        expect(state.running?).to be_truthy
+      end
+
+      it "is not running after finished" do
+        Timecop.travel(Time.now.utc - 10) do
+          state.start(ctx.input)
+        end
+        expect(state.running?).to be_falsey
+      end
+    end
+
+    context "with timestamp" do
+      let(:expiry) { Time.now.utc + 1 }
+      let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "Timestamp" => expiry.iso8601, "Next" => "SuccessState"}}) }
+      it "is running? before finished" do
+        state.start(ctx.input)
+        expect(state.running?).to be_truthy
+      end
+
+      it "is not running after finished" do
+        Timecop.travel(Time.now.utc - 10) do
+          state.start(ctx.input)
+        end
+        expect(state.running?).to be_falsey
+      end
+    end
+
+    context "with timestamp" do
+      let(:expiry) { Time.now.utc + 1 }
+      let(:input) { {"expire" => expiry.iso8601} }
+      let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "TimestampPath" => "$.expire", "Next" => "SuccessState"}}) }
+      it "is running? before finished" do
+        state.start(ctx.input)
+        expect(state.running?).to be_truthy
+      end
+
+      it "is not running after finished" do
+        Timecop.travel(Time.now.utc - 10) do
+          state.start(ctx.input)
+        end
+        expect(state.running?).to be_falsey
       end
     end
   end
