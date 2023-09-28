@@ -15,7 +15,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
     allow(kubeclient).to receive(:discover)
   end
 
-  describe "#run!" do
+  describe "#run_async!" do
     it "raises an exception without a resource" do
       expect { subject.run_async!(nil) }.to raise_error(ArgumentError, "Invalid resource")
     end
@@ -26,20 +26,18 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
     it "calls kubectl run with the image name" do
       expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_including("hello-world-"), :namespace => "default"})
-      stub_kubernetes_run(:spec => expected_pod_spec, :status => 2)
+      stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      expect(subject).to receive(:sleep).with(1)
-      subject.run!("docker://hello-world:latest")
+      subject.run_async!("docker://hello-world:latest")
     end
 
     it "doesn't create a secret if Credentials is nil" do
       expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_including("hello-world-"), :namespace => "default"})
 
       expect(subject).not_to receive(:create_secret!)
-      stub_kubernetes_run(:spec => expected_pod_spec, :status => 2)
+      stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      expect(subject).to receive(:sleep).with(1)
-      subject.run!("docker://hello-world:latest", {}, nil)
+      subject.run_async!("docker://hello-world:latest", {}, nil)
     end
 
     it "passes environment variables to kubectl run" do
@@ -49,10 +47,9 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
         )
       )
 
-      stub_kubernetes_run(:spec => expected_pod_spec, :status => 2)
+      stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      expect(subject).to receive(:sleep).with(1)
-      subject.run!("docker://hello-world:latest", {"FOO" => "BAR"})
+      subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"})
     end
 
     it "passes integer environment variables to kubectl run as strings" do
@@ -62,10 +59,9 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
         )
       )
 
-      stub_kubernetes_run(:spec => expected_pod_spec, :status => 2)
+      stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      expect(subject).to receive(:sleep).with(1)
-      subject.run!("docker://hello-world:latest", {"FOO" => 1})
+      subject.run_async!("docker://hello-world:latest", {"FOO" => 1})
     end
 
     it "passes a secrets volume to kubectl run" do
@@ -94,11 +90,9 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       )
 
       expect(kubeclient).to receive(:create_secret).with(hash_including(:kind => "Secret", :type => "Opaque"))
-      stub_kubernetes_run(:spec => expected_pod_spec, :status => 2)
-      expect(kubeclient).to receive(:delete_secret).with(anything, "default")
+      stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      expect(subject).to receive(:sleep).with(1)
-      subject.run!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
+      subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
     end
 
     it "cleans up secrets if running the pod fails" do
@@ -116,10 +110,9 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       it "calls kubectl run with the image name" do
         expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_including("hello-world-"), :namespace => namespace})
 
-        stub_kubernetes_run(:spec => expected_pod_spec, :namespace => namespace, :status => 2)
+        stub_kubernetes_run(:spec => expected_pod_spec, :namespace => namespace, :status => false, :cleanup => false)
 
-        expect(subject).to receive(:sleep).with(1)
-        subject.run!("docker://hello-world:latest")
+        subject.run_async!("docker://hello-world:latest")
       end
     end
 
@@ -184,9 +177,9 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
         it "uses the kubeconfig values" do
           expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "my-token"}).and_return(kubeclient)
-          stub_kubernetes_run(:status => 1)
+          stub_kubernetes_run(:status => false, :cleanup => false)
 
-          subject.run!("docker://hello-world:latest")
+          subject.run_async!("docker://hello-world:latest")
         end
       end
 
@@ -195,9 +188,9 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
         it "prefers the provided options values over the kubeconfig file" do
           expect(Kubeclient::Client).to receive(:new).with("https://my-other-kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "my-other-token"})
-          stub_kubernetes_run(:status => 1)
+          stub_kubernetes_run(:status => false, :cleanup => false)
 
-          subject.run!("docker://hello-world:latest")
+          subject.run_async!("docker://hello-world:latest")
         end
       end
 
@@ -207,9 +200,9 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
         it "uses the kubeconfig values" do
           expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "my-token"})
-          stub_kubernetes_run(:status => 1)
+          stub_kubernetes_run(:status => false, :cleanup => false)
 
-          subject.run!("docker://hello-world:latest")
+          subject.run_async!("docker://hello-world:latest")
         end
       end
 
@@ -218,9 +211,9 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
         it "uses the values from the kubeconfig context" do
           expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "foo"})
-          stub_kubernetes_run(:status => 1)
+          stub_kubernetes_run(:status => false, :cleanup => false)
 
-          subject.run!("docker://hello-world:latest")
+          subject.run_async!("docker://hello-world:latest")
         end
       end
     end
@@ -231,9 +224,9 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
 
       it "calls kubectl run with the image name" do
         expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => token}).and_return(kubeclient)
-        stub_kubernetes_run(:status => 1)
+        stub_kubernetes_run(:status => false, :cleanup => false)
 
-        subject.run!("docker://hello-world:latest")
+        subject.run_async!("docker://hello-world:latest")
       end
     end
 
@@ -247,9 +240,9 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
         expect(File).to receive(:read).with(token_file).and_return(token)
 
         expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => token}).and_return(kubeclient)
-        stub_kubernetes_run(:status => 1)
+        stub_kubernetes_run(:status => false, :cleanup => false)
 
-        subject.run!("docker://hello-world:latest")
+        subject.run_async!("docker://hello-world:latest")
       end
     end
   end
