@@ -13,23 +13,6 @@ module Floe
           @network = options.fetch("network", "bridge")
         end
 
-        def run!(resource, env = {}, secrets = {})
-          raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
-
-          image = resource.sub("docker://", "")
-
-          secrets_file = nil
-          if secrets && !secrets.empty?
-            secrets_file = create_secret(secrets)
-          end
-
-          output = run_container(image, env, secrets_file)
-
-          {"exit_code" => 0, "output" => output}
-        ensure
-          cleanup({"secrets_ref" => secrets_file})
-        end
-
         def run_async!(resource, env = {}, secrets = {})
           raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
 
@@ -42,7 +25,7 @@ module Floe
           end
 
           begin
-            runner_context["container_ref"] = run_container(image, env, runner_context["secrets_ref"], :detached => true)
+            runner_context["container_ref"] = run_container(image, env, runner_context["secrets_ref"])
           rescue
             cleanup(runner_context)
             raise
@@ -79,9 +62,9 @@ module Floe
 
         attr_reader :network
 
-        def run_container(image, env, secrets_file, detached: false)
+        def run_container(image, env, secrets_file)
           params  = ["run"]
-          params << (detached ? :detach : :rm)
+          params << :detach
           params += env.map { |k, v| [:e, "#{k}=#{v}"] }
           params << [:e, "_CREDENTIALS=/run/secrets"] if secrets_file
           params << [:net, "host"] if @network == "host"
