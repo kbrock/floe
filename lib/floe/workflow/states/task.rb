@@ -114,7 +114,7 @@ module Floe
         end
 
         def process_output!(results)
-          output = process_input(context.state["Input"])
+          output = context.input.dup
           return output if results.nil?
           return if output_path.nil?
 
