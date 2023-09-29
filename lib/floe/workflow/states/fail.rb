@@ -9,19 +9,24 @@ module Floe
         def initialize(workflow, name, payload)
           super
 
-          @cause = payload["Cause"]
-          @error = payload["Error"]
+          @cause      = payload["Cause"]
+          @error      = payload["Error"]
+          @cause_path = Path.new(payload["CausePath"]) if payload["CausePath"]
+          @error_path = Path.new(payload["ErrorPath"]) if payload["ErrorPath"]
         end
 
         def start(input)
           super
           context.next_state = nil
+          # TODO: support intrinsic functions here
+          # see https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-fail-state.html
+          #     https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-intrinsic-functions.html#asl-intrsc-func-generic
           context.output     = {
-            "Error" => error,
-            "Cause" => cause
-          }
-          context.state["Error"] = error
-          context.state["Cause"] = cause
+            "Error" => value_or_path(context, input, error, :path => @error_path),
+            "Cause" => value_or_path(context, input, cause, :path => @cause_path)
+          }.compact
+          context.state["Error"] = context.output["Error"]
+          context.state["Cause"] = context.output["Cause"]
         end
 
         def running?
