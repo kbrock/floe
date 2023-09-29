@@ -104,6 +104,7 @@ module Floe
           raise error if catcher.nil?
 
           context.next_state = catcher.next
+          context.output     = catcher.result_path.set(context.input, {"Error" => error})
         end
 
         def process_input(input)
