@@ -62,7 +62,7 @@ RSpec.describe Floe::Workflow do
       expect(ctx.state["Guid"]).to be
       expect(ctx.state_name).to eq("FirstState")
       expect(ctx.input).to eq(input)
-      expect(ctx.output).to eq(input)
+      expect(ctx.output).to eq({"Cause" => "Bad Stuff", "Error" => "Issue"})
       expect(ctx.state["Duration"].to_f).to be <= 1
       expect(ctx.state["Cause"]).to eq("Bad Stuff")
       expect(ctx.state["Error"]).to eq("Issue")
@@ -74,7 +74,7 @@ RSpec.describe Floe::Workflow do
       expect(ctx.ended?).to eq(true)
 
       # final results
-      expect(workflow.output).to eq(input) # TODO: think Cause and Error should be here
+      expect(workflow.output).to eq({"Cause" => "Bad Stuff", "Error" => "Issue"})
       expect(workflow.status).to eq("failure")
       expect(workflow.end?).to eq(true)
     end

@@ -15,10 +15,13 @@ module Floe
 
         def start(input)
           super
+          context.next_state = nil
+          context.output     = {
+            "Error" => error,
+            "Cause" => cause
+          }
           context.state["Error"] = error
           context.state["Cause"] = cause
-          context.next_state     = nil
-          context.output         = input
         end
 
         def running?
