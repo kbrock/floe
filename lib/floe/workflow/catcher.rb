@@ -10,7 +10,7 @@ module Floe
 
         @error_equals = payload["ErrorEquals"]
         @next         = payload["Next"]
-        @result_path  = payload.fetch("ResultPath", "$")
+        @result_path  = ReferencePath.new(payload.fetch("ResultPath", "$"))
       end
     end
   end

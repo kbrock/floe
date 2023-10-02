@@ -104,6 +104,7 @@ module Floe
           raise error if catcher.nil?
 
           context.next_state = catcher.next
+          context.output     = catcher.result_path.set(context.input, {"Error" => error})
         end
 
         def process_input(input)
@@ -113,7 +114,7 @@ module Floe
         end
 
         def process_output!(results)
-          output = process_input(context.state["Input"])
+          output = context.input.dup
           return output if results.nil?
           return if output_path.nil?
 
