@@ -12,28 +12,25 @@ RSpec.describe Floe::Workflow::States::Pass do
 
   describe "#start" do
     it "transitions to the next state" do
-      state.start({})
+      state.start(ctx.input)
 
-      expect(workflow.context.next_state).to eq("SuccessState")
+      expect(ctx.next_state).to eq("SuccessState")
     end
   end
 
   describe "#running?" do
-    before { workflow.context.state["EnteredTime"] = entered_time.iso8601 }
-
-    context "before the sleep has finished" do
-      let(:entered_time) { Time.now.utc }
-
-      it "returns true" do
+    context "with seconds" do
+      let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "Seconds" => 1, "Next" => "SuccessState"}}) }
+      it "is running before finished" do
+        state.start(ctx.input)
         expect(state.running?).to be_truthy
       end
-    end
 
-    context "after the sleep has finished" do
-      let(:entered_time) { Time.now.utc - 10 }
-
-      it "returns false" do
-        expect(state.running?).to be_falsey
+      it "is not running after finished" do
+        state.start(ctx.input)
+        Timecop.travel(Time.now.utc + 10) do
+          expect(state.running?).to be_falsey
+        end
       end
     end
   end
