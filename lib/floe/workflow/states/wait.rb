@@ -23,16 +23,11 @@ module Floe
 
           context.output     = output_path.value(context, input)
           context.next_state = end? ? nil : @next
+          wait(:seconds => @seconds)
         end
 
         def running?
-          now = Time.now.utc
-          if now > (Time.parse(context.state["EnteredTime"]) + @seconds)
-            context.state["FinishedTime"] = now.iso8601
-            false
-          else
-            true
-          end
+          waiting?
         end
 
         def end?

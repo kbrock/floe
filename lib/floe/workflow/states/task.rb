@@ -58,6 +58,8 @@ module Floe
         end
 
         def running?
+          return true if waiting?
+
           runner.status!(context.state["RunnerContext"])
           runner.running?(context.state["RunnerContext"])
         end
@@ -96,7 +98,7 @@ module Floe
 
           return if context["State"]["RetryCount"] > retrier.max_attempts
 
-          # TODO: Kernel.sleep(retrier.sleep_duration(context["State"]["RetryCount"]))
+          wait(:seconds => retrier.sleep_duration(context["State"]["RetryCount"]))
           context.next_state = context.state_name
           true
         end
