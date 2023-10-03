@@ -63,6 +63,30 @@ RSpec.describe Floe::Workflow::States::Task do
     end
 
     describe "Output" do
+      let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest"} }
+
+      it "uses the last line as output if it is JSON" do
+        expect(mock_runner)
+          .to receive(:run_async!)
+          .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
+        expect(mock_runner).to receive("output").and_return("ABCD\nHELLO\n{\"response\":[\"192.168.1.2\"]}")
+
+        state.run!(input)
+
+        expect(ctx.output).to eq("foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}, "response" => ["192.168.1.2"])
+      end
+
+      it "returns nil if the output isn't JSON" do
+        expect(mock_runner)
+          .to receive(:run_async!)
+          .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
+        expect(mock_runner).to receive("output").and_return("HELLO")
+
+        state.run!(input)
+
+        expect(ctx.output).to eq("foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"})
+      end
+
       context "ResultSelector" do
         let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "ResultSelector" => {"ip_addrs.$" => "$.response"}} }
 
@@ -70,7 +94,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run_async!)
             .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
-          expect(mock_runner).to receive("output").and_return("{\"response\":[\"192.168.1.2\"],\"exit_code\":0}")
+          expect(mock_runner).to receive("output").and_return("ABCD\nHELLO\n{\"response\":[\"192.168.1.2\"],\"exit_code\":0}")
 
           state.run!(input)
 
@@ -143,7 +167,7 @@ RSpec.describe Floe::Workflow::States::Task do
       context "with specific errors" do
         let(:retriers) { [{"ErrorEquals" => ["States.Timeout"], "MaxAttempts" => 1}] }
         let(:success)  { false }
-        let(:output)   { "States.Timeout" }
+        let(:output)   { {"Error" => "States.Timeout"}.to_json }
 
         it "retries if that error is raised" do
           expect(mock_runner)

@@ -29,10 +29,10 @@ module Floe
 
         def start(input)
           super
-          input = input_path.value(context, input)
-          input = parameters.value(context, input) if parameters
 
+          input          = process_input(input)
           runner_context = runner.run_async!(resource, input, credentials&.value({}, workflow.credentials))
+
           context.state["RunnerContext"] = runner_context
         end
 
@@ -41,13 +41,15 @@ module Floe
         end
 
         def finish
-          results = runner.output(context.state["RunnerContext"])
+          output = runner.output(context.state["RunnerContext"])
 
           if success?
-            context.state["Output"] = process_output!(results)
+            output = parse_output(output)
+            context.state["Output"] = process_output!(output)
             context.next_state      = next_state
           else
-            retry_state!(results) || catch_error!(results) || fail_workflow!(results)
+            error = parse_error(output)
+            retry_state!(error) || catch_error!(error) || fail_workflow!(error)
           end
 
           super
@@ -81,7 +83,7 @@ module Floe
         end
 
         def retry_state!(error)
-          retrier = find_retrier(error)
+          retrier = find_retrier(error["Error"]) if error
           return if retrier.nil?
 
           # If a different retrier is hit reset the context
@@ -100,17 +102,17 @@ module Floe
         end
 
         def catch_error!(error)
-          catcher = find_catcher(error)
+          catcher = find_catcher(error["Error"]) if error
           return if catcher.nil?
 
           context.next_state = catcher.next
-          context.output     = catcher.result_path.set(context.input, {"Error" => error})
+          context.output     = catcher.result_path.set(context.input, error)
           true
         end
 
         def fail_workflow!(error)
           context.next_state     = nil
-          context.output         = {"Error" => error}.compact
+          context.output         = {"Error" => error["Error"], "Cause" => error["Cause"]}.compact
           context.state["Error"] = context.output["Error"]
         end
 
@@ -120,16 +122,26 @@ module Floe
           input
         end
 
+        def parse_error(output)
+          return if output.nil?
+
+          JSON.parse(output)
+        rescue JSON::ParserError
+          {"Error" => output}
+        end
+
+        def parse_output(output)
+          return if output.nil?
+
+          JSON.parse(output.split("\n").last)
+        rescue JSON::ParserError
+          nil
+        end
+
         def process_output!(results)
           output = context.input.dup
           return output if results.nil?
           return if output_path.nil?
-
-          begin
-            results = JSON.parse(results)
-          rescue JSON::ParserError
-            results = {"results" => results}
-          end
 
           results = result_selector.value(context, results) if result_selector
           output  = result_path.set(output, results)
