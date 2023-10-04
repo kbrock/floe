@@ -47,7 +47,7 @@ module Floe
             context.state["Output"] = process_output!(results)
             context.next_state      = next_state
           else
-            retry_state!(results) || catch_error!(results)
+            retry_state!(results) || catch_error!(results) || fail_workflow!(results)
           end
 
           super
@@ -101,10 +101,17 @@ module Floe
 
         def catch_error!(error)
           catcher = find_catcher(error)
-          raise error if catcher.nil?
+          return if catcher.nil?
 
           context.next_state = catcher.next
           context.output     = catcher.result_path.set(context.input, {"Error" => error})
+          true
+        end
+
+        def fail_workflow!(error)
+          context.next_state     = nil
+          context.output         = {"Error" => error}.compact
+          context.state["Error"] = context.output["Error"]
         end
 
         def process_input(input)
