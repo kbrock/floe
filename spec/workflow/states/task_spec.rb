@@ -161,7 +161,7 @@ RSpec.describe Floe::Workflow::States::Task do
     end
 
     describe "Retry" do
-      let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Retry" => retriers} }
+      let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Retry" => retriers, "TimeoutSeconds" => 2} }
       before { allow(Kernel).to receive(:sleep).and_return(0) }
 
       context "with specific errors" do
@@ -173,6 +173,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
+            .and_return({"container_ref" => "abc"})
 
           state.run!(input)
 
