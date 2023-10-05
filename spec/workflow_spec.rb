@@ -142,10 +142,9 @@ RSpec.describe Floe::Workflow do
         workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
 
         # Start the workflow
-        workflow.run_nonblock
-
-        # Mark the Wait state as having started 1 minute ago
-        ctx.state["EnteredTime"] = (Time.now.utc - 60).iso8601
+        Timecop.travel(Time.now.utc - 60) do
+          workflow.run_nonblock
+        end
 
         # step_nonblock should return 0 and mark the workflow as completed
         expect(workflow.step_nonblock).to eq(0)

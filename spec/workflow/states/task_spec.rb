@@ -191,6 +191,7 @@ RSpec.describe Floe::Workflow::States::Task do
             expect(mock_runner)
               .to receive(:run_async!)
               .with(payload["Resource"], input, nil)
+            expect(state).to receive(:wait).twice.with(:seconds => 2)
 
             state.run!(input)
 
@@ -212,6 +213,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
+          expect(state).to receive(:wait).with(:seconds => 2)
 
           2.times { state.run!(input) }
 

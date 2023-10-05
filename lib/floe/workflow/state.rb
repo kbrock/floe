@@ -111,6 +111,21 @@ module Floe
           value
         end
       end
+
+      def wait(seconds: nil, time: nil)
+        context.state["WaitUntil"] =
+          if seconds
+            (Time.parse(context.state["EnteredTime"]) + seconds).iso8601
+          elsif time.kind_of?(String)
+            time
+          else
+            time.iso8601
+          end
+      end
+
+      def waiting?
+        context.state["WaitUntil"] && Time.now.utc <= Time.parse(context.state["WaitUntil"])
+      end
     end
   end
 end

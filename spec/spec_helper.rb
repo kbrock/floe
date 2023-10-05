@@ -69,6 +69,7 @@ RSpec.configure do |config|
 end
 
 require "floe"
-
 require "pathname"
+require "timecop"
+
 GEM_ROOT = Pathname.new(__dir__).join("..").expand_path
