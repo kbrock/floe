@@ -5,7 +5,8 @@ module Floe
     class Runner
       include Logging
 
-      TYPES = %w[docker podman kubernetes].freeze
+      TYPES         = %w[docker podman kubernetes].freeze
+      OUTPUT_MARKER = "__FLOE_OUTPUT__\n"
 
       def initialize(_options = {})
       end
