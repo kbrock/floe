@@ -1,5 +1,3 @@
-require 'active_support/time'
-
 RSpec.describe Floe::Workflow do
   let(:now)   { Time.now.utc }
   let(:input) { {"input" => "value"}.freeze }
@@ -32,8 +30,8 @@ RSpec.describe Floe::Workflow do
       workflow.run!
 
       # state
-      expect(Time.parse(ctx.state["EnteredTime"])).to be_within(1.second).of(now)
-      expect(Time.parse(ctx.state["FinishedTime"])).to be_within(1.second).of(now)
+      expect(Time.parse(ctx.state["EnteredTime"])).to be_within(1).of(now)
+      expect(Time.parse(ctx.state["FinishedTime"])).to be_within(1).of(now)
       expect(ctx.state["Guid"]).to be
       expect(ctx.state_name).to eq("FirstState")
       expect(ctx.input).to eq(input)
@@ -57,8 +55,8 @@ RSpec.describe Floe::Workflow do
       workflow.run!
 
       # state
-      expect(Time.parse(ctx.state["EnteredTime"])).to be_within(1.second).of(now)
-      expect(Time.parse(ctx.state["FinishedTime"])).to be_within(1.second).of(now)
+      expect(Time.parse(ctx.state["EnteredTime"])).to be_within(1).of(now)
+      expect(Time.parse(ctx.state["FinishedTime"])).to be_within(1).of(now)
       expect(ctx.state["Guid"]).to be
       expect(ctx.state_name).to eq("FirstState")
       expect(ctx.input).to eq(input)
