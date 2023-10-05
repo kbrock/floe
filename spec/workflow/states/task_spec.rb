@@ -184,22 +184,29 @@ RSpec.describe Floe::Workflow::States::Task do
           end
         end
 
-        it "raises if the number of retries is greater than MaxAttempts" do
+        it "fails the workflow if the number of retries is greater than MaxAttempts" do
           expect(mock_runner)
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          state.run!(input)
-          expect { state.run!(input) }.to raise_error(RuntimeError, "States.Timeout")
+          2.times { state.run!(input) }
+
+          expect(ctx.next_state).to     be_nil
+          expect(ctx.status).to         eq("failure")
+          expect(ctx.state["Error"]).to eq("States.Timeout")
         end
 
-        it "raises if the exception isn't caught" do
+        it "fails the workflow if the exception isn't caught" do
           expect(mock_runner)
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
           expect(mock_runner).to receive("output").once.and_return("Exception")
 
-          expect { state.run!(input) }.to raise_error(RuntimeError, "Exception")
+          state.run!(input)
+
+          expect(ctx.next_state).to     be_nil
+          expect(ctx.status).to         eq("failure")
+          expect(ctx.state["Error"]).to eq("Exception")
         end
       end
 
@@ -273,7 +280,11 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          expect { state.run!(input) }.to raise_error(RuntimeError, "Exception")
+          state.run!(input)
+
+          expect(ctx.next_state).to be_nil
+          expect(ctx.status).to     eq("failure")
+          expect(ctx.output).to     eq({"Error" => "Exception"})
         end
       end
 
