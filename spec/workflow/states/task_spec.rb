@@ -10,7 +10,6 @@ RSpec.describe Floe::Workflow::States::Task do
     let(:container_ref) { "container-d" }
 
     before do
-      ctx.state["Input"] = input
       allow(Floe::Workflow::Runner).to receive(:for_resource).and_return(mock_runner)
       allow(mock_runner).to receive(:status!).and_return({})
       allow(mock_runner).to receive(:running?).and_return(false)
