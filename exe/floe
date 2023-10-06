@@ -37,3 +37,4 @@ workflow = Floe::Workflow.load(opts[:workflow], context, opts[:credentials])
 workflow.run!
 
 puts workflow.output.inspect
+exit workflow.status == "success" ? 0 : 1
