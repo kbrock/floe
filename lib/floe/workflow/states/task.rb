@@ -127,7 +127,7 @@ module Floe
         def parse_error(output)
           return if output.nil?
 
-          JSON.parse(output)
+          JSON.parse(output.split("\n").last)
         rescue JSON::ParserError
           {"Error" => output}
         end
