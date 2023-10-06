@@ -4,12 +4,13 @@ RSpec.describe Floe::Workflow::States::Task do
   # TODO: use make_workflow with payload
   let(:workflow) { Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl"), ctx) }
 
-  describe "#run" do
+  describe "#run_async!" do
     let(:mock_runner) { double("Floe::Workflow::Runner") }
     let(:input)       { {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}} }
     let(:state)       { described_class.new(workflow, "Task", payload) }
     let(:success)     { true }
     let(:output)      { nil }
+    let(:container_ref) { "container-id" }
 
     before do
       ctx.state["Input"] = input
@@ -29,9 +30,9 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run_async!)
             .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
-            .and_return("exit_code" => 0, "output" => "hello, world!")
+            .and_return({"container_ref" => container_ref})
 
-          state.run!(input)
+          state.run_nonblock!
         end
       end
 
@@ -42,9 +43,9 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run_async!)
             .with(payload["Resource"], {"bar" => "baz"}, nil)
-            .and_return("exit_code" => 0, "output" => "hello, world!")
+            .and_return({"container_ref" => container_ref})
 
-          state.run!(input)
+          state.run_nonblock!
         end
       end
 
@@ -55,9 +56,9 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run_async!)
             .with(payload["Resource"], {"var1" => "baz"}, nil)
-            .and_return("exit_code" => 0, "output" => "hello, world!")
+            .and_return({"container_ref" => container_ref})
 
-          state.run!(input)
+          state.run_nonblock!
         end
       end
     end
@@ -71,7 +72,7 @@ RSpec.describe Floe::Workflow::States::Task do
           .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
         expect(mock_runner).to receive("output").and_return("ABCD\nHELLO\n{\"response\":[\"192.168.1.2\"]}")
 
-        state.run!(input)
+        state.run_nonblock!
 
         expect(ctx.output).to eq("foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}, "response" => ["192.168.1.2"])
       end
@@ -82,7 +83,7 @@ RSpec.describe Floe::Workflow::States::Task do
           .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
         expect(mock_runner).to receive("output").and_return("HELLO")
 
-        state.run!(input)
+        state.run_nonblock!
 
         expect(ctx.output).to eq("foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"})
       end
@@ -96,7 +97,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
           expect(mock_runner).to receive("output").and_return("ABCD\nHELLO\n{\"response\":[\"192.168.1.2\"],\"exit_code\":0}")
 
-          state.run!(input)
+          state.run_nonblock!
 
           expect(ctx.output).to eq("foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}, "ip_addrs" => ["192.168.1.2"])
         end
@@ -111,7 +112,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .with(payload["Resource"], input, nil)
           expect(mock_runner).to receive("output").and_return("[\"192.168.1.2\"]")
 
-          state.run!(input)
+          state.run_nonblock!
 
           expect(ctx.output).to eq(
             "foo"      => {"bar" => "baz"},
@@ -133,7 +134,7 @@ RSpec.describe Floe::Workflow::States::Task do
               .with(payload["Resource"], input, nil)
             expect(mock_runner).to receive("output").and_return("[\"192.168.1.2\"]")
 
-            state.run!(input)
+            state.run_nonblock!
 
             expect(ctx.output).to eq(
               "foo"  => {"bar" => "baz"},
@@ -152,7 +153,7 @@ RSpec.describe Floe::Workflow::States::Task do
               .with(payload["Resource"], input, nil)
             expect(mock_runner).to receive("output").and_return("[\"192.168.1.2\"]")
 
-            state.run!(input)
+            state.run_nonblock!
 
             expect(ctx.output).to eq("ip_addrs" => ["192.168.1.2"])
           end
@@ -173,9 +174,9 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner)
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
-            .and_return({"container_ref" => "abc"})
+            .and_return({"container_ref" => container_ref})
 
-          state.run!(input)
+          state.run_nonblock!
 
           expect(ctx.next_state).to          eq(ctx.state_name)
           expect(ctx.state["Retrier"]).to    eq(["States.Timeout"])
@@ -194,7 +195,7 @@ RSpec.describe Floe::Workflow::States::Task do
               .with(payload["Resource"], input, nil)
             expect(state).to receive(:wait).twice.with(:seconds => 2)
 
-            state.run!(input)
+            state.run_nonblock!
 
             expect(ctx.next_state).to          eq(ctx.state_name)
             expect(ctx.state["Retrier"]).to    eq(["States.Timeout"])
@@ -202,7 +203,7 @@ RSpec.describe Floe::Workflow::States::Task do
 
             expect(mock_runner).to receive("output").once.and_return("Exception")
 
-            state.run!(input)
+            state.run_nonblock!
 
             expect(ctx.next_state).to          eq(ctx.state_name)
             expect(ctx.state["Retrier"]).to    eq(["Exception"])
@@ -216,7 +217,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .with(payload["Resource"], input, nil)
           expect(state).to receive(:wait).with(:seconds => 2)
 
-          2.times { state.run!(input) }
+          2.times { state.run_nonblock! }
 
           expect(ctx.next_state).to     be_nil
           expect(ctx.status).to         eq("failure")
@@ -229,7 +230,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .with(payload["Resource"], input, nil)
           expect(mock_runner).to receive("output").once.and_return("Exception")
 
-          state.run!(input)
+          state.run_nonblock!
 
           expect(ctx.next_state).to     be_nil
           expect(ctx.status).to         eq("failure")
@@ -247,8 +248,8 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner).to receive("output").once.and_return("ABORT!")
           expect(mock_runner).to receive("output").once.and_return(output)
 
-          state.run!(input)
-          state.run!(input)
+          state.run_nonblock!
+          state.run_nonblock!
 
           expect(ctx.output).to eq("bar" => {"baz"=>"foo"}, "foo" => {"bar"=>"baz"})
         end
@@ -264,7 +265,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          state.run!(input)
+          state.run_nonblock!
 
           expect(ctx.next_state).to          eq(ctx.state_name)
           expect(ctx.state["Retrier"]).to    eq(["States.Timeout"])
@@ -277,7 +278,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          state.run!(input)
+          state.run_nonblock!
 
           expect(ctx.next_state).to eq("FailState")
         end
@@ -296,7 +297,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          state.run!(input)
+          state.run_nonblock!
 
           expect(ctx.next_state).to eq("FirstState")
         end
@@ -307,7 +308,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          state.run!(input)
+          state.run_nonblock!
 
           expect(ctx.next_state).to be_nil
           expect(ctx.status).to     eq("failure")
@@ -324,7 +325,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          state.run!(input)
+          state.run_nonblock!
 
           expect(ctx.next_state).to eq("FirstState")
         end
@@ -335,7 +336,7 @@ RSpec.describe Floe::Workflow::States::Task do
             .to receive(:run_async!)
             .with(payload["Resource"], input, nil)
 
-          state.run!(input)
+          state.run_nonblock!
 
           expect(ctx.next_state).to eq("FailState")
         end
