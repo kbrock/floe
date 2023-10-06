@@ -1,7 +1,7 @@
 RSpec.describe Floe::Workflow::States::Task do
   let(:input)    { {} }
   let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
-  # TODO: use make_workflow with payload
+  let(:resource) { "docker://hello-world:latest" }
   let(:workflow) { Floe::Workflow.load(GEM_ROOT.join("examples/workflow.asl"), ctx) }
 
   describe "#run_async!" do
@@ -24,12 +24,12 @@ RSpec.describe Floe::Workflow::States::Task do
 
     describe "Input" do
       context "with no InputPath" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest"} }
+        let(:payload) { {"Type" => "Task", "Resource" => resource} }
 
         it "passes the whole context to the resource" do
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
+            .with(resource, {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
             .and_return({"container_ref" => container_ref})
 
           state.run_nonblock!
@@ -37,12 +37,12 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "with an InputPath" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "InputPath" => "$.foo"} }
+        let(:payload) { {"Type" => "Task", "Resource" => resource, "InputPath" => "$.foo"} }
 
         it "filters the context passed to the resource" do
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], {"bar" => "baz"}, nil)
+            .with(resource, {"bar" => "baz"}, nil)
             .and_return({"container_ref" => container_ref})
 
           state.run_nonblock!
@@ -50,12 +50,12 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "with Parameters" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Parameters" => {"var1.$" => "$.foo.bar"}} }
+        let(:payload) { {"Type" => "Task", "Resource" => resource, "Parameters" => {"var1.$" => "$.foo.bar"}} }
 
         it "passes the interpolated parameters to the resource" do
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], {"var1" => "baz"}, nil)
+            .with(resource, {"var1" => "baz"}, nil)
             .and_return({"container_ref" => container_ref})
 
           state.run_nonblock!
@@ -64,12 +64,12 @@ RSpec.describe Floe::Workflow::States::Task do
     end
 
     describe "Output" do
-      let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest"} }
+      let(:payload) { {"Type" => "Task", "Resource" => resource} }
 
       it "uses the last line as output if it is JSON" do
         expect(mock_runner)
           .to receive(:run_async!)
-          .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
+          .with(resource, {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
         expect(mock_runner).to receive("output").and_return("ABCD\nHELLO\n{\"response\":[\"192.168.1.2\"]}")
 
         state.run_nonblock!
@@ -80,7 +80,7 @@ RSpec.describe Floe::Workflow::States::Task do
       it "returns nil if the output isn't JSON" do
         expect(mock_runner)
           .to receive(:run_async!)
-          .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
+          .with(resource, {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
         expect(mock_runner).to receive("output").and_return("HELLO")
 
         state.run_nonblock!
@@ -89,12 +89,12 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "ResultSelector" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "ResultSelector" => {"ip_addrs.$" => "$.response"}} }
+        let(:payload) { {"Type" => "Task", "Resource" => resource, "ResultSelector" => {"ip_addrs.$" => "$.response"}} }
 
         it "filters the results" do
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
+            .with(resource, {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
           expect(mock_runner).to receive("output").and_return("ABCD\nHELLO\n{\"response\":[\"192.168.1.2\"],\"exit_code\":0}")
 
           state.run_nonblock!
@@ -104,12 +104,12 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "ResultPath" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "ResultPath" => "$.ip_addrs"} }
+        let(:payload) { {"Type" => "Task", "Resource" => resource, "ResultPath" => "$.ip_addrs"} }
 
         it "inserts the response into the input" do
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], input, nil)
+            .with(resource, input, nil)
           expect(mock_runner).to receive("output").and_return("[\"192.168.1.2\"]")
 
           state.run_nonblock!
@@ -123,7 +123,7 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "OutputPath" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "ResultPath" => "$.data.ip_addrs", "OutputPath" => output_path} }
+        let(:payload) { {"Type" => "Task", "Resource" => resource, "ResultPath" => "$.data.ip_addrs", "OutputPath" => output_path} }
 
         context "with the default '$'" do
           let(:output_path) { "$" }
@@ -131,7 +131,7 @@ RSpec.describe Floe::Workflow::States::Task do
           it "returns the entire input as the output" do
             expect(mock_runner)
               .to receive(:run_async!)
-              .with(payload["Resource"], input, nil)
+              .with(resource, input, nil)
             expect(mock_runner).to receive("output").and_return("[\"192.168.1.2\"]")
 
             state.run_nonblock!
@@ -150,7 +150,7 @@ RSpec.describe Floe::Workflow::States::Task do
           it "filters the output" do
             expect(mock_runner)
               .to receive(:run_async!)
-              .with(payload["Resource"], input, nil)
+              .with(resource, input, nil)
             expect(mock_runner).to receive("output").and_return("[\"192.168.1.2\"]")
 
             state.run_nonblock!
@@ -162,7 +162,7 @@ RSpec.describe Floe::Workflow::States::Task do
     end
 
     describe "Retry" do
-      let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Retry" => retriers, "TimeoutSeconds" => 2} }
+      let(:payload) { {"Type" => "Task", "Resource" => resource, "Retry" => retriers, "TimeoutSeconds" => 2} }
       before { allow(Kernel).to receive(:sleep).and_return(0) }
 
       context "with specific errors" do
@@ -173,7 +173,7 @@ RSpec.describe Floe::Workflow::States::Task do
         it "retries if that error is raised" do
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], input, nil)
+            .with(resource, input, nil)
             .and_return({"container_ref" => container_ref})
 
           state.run_nonblock!
@@ -192,7 +192,7 @@ RSpec.describe Floe::Workflow::States::Task do
             expect(mock_runner).to receive("output").once.and_return("States.Timeout")
             expect(mock_runner)
               .to receive(:run_async!)
-              .with(payload["Resource"], input, nil)
+              .with(resource, input, nil)
             expect(state).to receive(:wait).twice.with(:seconds => 2)
 
             state.run_nonblock!
@@ -214,7 +214,7 @@ RSpec.describe Floe::Workflow::States::Task do
         it "fails the workflow if the number of retries is greater than MaxAttempts" do
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], input, nil)
+            .with(resource, input, nil)
           expect(state).to receive(:wait).with(:seconds => 2)
 
           2.times { state.run_nonblock! }
@@ -227,7 +227,7 @@ RSpec.describe Floe::Workflow::States::Task do
         it "fails the workflow if the exception isn't caught" do
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], input, nil)
+            .with(resource, input, nil)
           expect(mock_runner).to receive("output").once.and_return("Exception")
 
           state.run_nonblock!
@@ -244,7 +244,7 @@ RSpec.describe Floe::Workflow::States::Task do
         it "retries if any error is raised" do
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], input, nil)
+            .with(resource, input, nil)
           expect(mock_runner).to receive("output").once.and_return("ABORT!")
           expect(mock_runner).to receive("output").once.and_return(output)
 
@@ -256,14 +256,14 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "with a Catch" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Retry" => [{"ErrorEquals" => ["States.Timeout"]}], "Catch" => [{"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}]} }
+        let(:payload) { {"Type" => "Task", "Resource" => resource, "Retry" => [{"ErrorEquals" => ["States.Timeout"]}], "Catch" => [{"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}]} }
         let(:success) { false }
 
         it "retry preceeds catch" do
           expect(mock_runner).to receive("output").once.and_return("States.Timeout")
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], input, nil)
+            .with(resource, input, nil)
 
           state.run_nonblock!
 
@@ -276,7 +276,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner).to receive("output").once.and_return("Exception")
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], input, nil)
+            .with(resource, input, nil)
 
           state.run_nonblock!
 
@@ -289,13 +289,13 @@ RSpec.describe Floe::Workflow::States::Task do
       let(:success) { false }
 
       context "with specific errors" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Catch" => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}]} }
+        let(:payload) { {"Type" => "Task", "Resource" => resource, "Catch" => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}]} }
 
         it "catches the exception" do
           expect(mock_runner).to receive("output").and_return("States.Timeout")
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], input, nil)
+            .with(resource, input, nil)
 
           state.run_nonblock!
 
@@ -306,7 +306,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner).to receive("output").and_return("Exception")
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], input, nil)
+            .with(resource, input, nil)
 
           state.run_nonblock!
 
@@ -317,13 +317,13 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "with a State.ALL catcher" do
-        let(:payload) { {"Type" => "Task", "Resource" => "docker://hello-world:latest", "Catch" => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}, {"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}]} }
+        let(:payload) { {"Type" => "Task", "Resource" => resource, "Catch" => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}, {"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}]} }
 
         it "catches a more specific exception" do
           expect(mock_runner).to receive("output").and_return("States.Timeout")
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], input, nil)
+            .with(resource, input, nil)
 
           state.run_nonblock!
 
@@ -334,7 +334,7 @@ RSpec.describe Floe::Workflow::States::Task do
           expect(mock_runner).to receive("output").and_return("Exception")
           expect(mock_runner)
             .to receive(:run_async!)
-            .with(payload["Resource"], input, nil)
+            .with(resource, input, nil)
 
           state.run_nonblock!
 
