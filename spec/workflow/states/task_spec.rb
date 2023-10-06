@@ -160,7 +160,6 @@ RSpec.describe Floe::Workflow::States::Task do
 
     describe "Retry" do
       let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Retry" => retriers, "TimeoutSeconds" => 2}}) }
-      before { allow(Kernel).to receive(:sleep).and_return(0) }
 
       context "with specific errors" do
         let(:retriers) { [{"ErrorEquals" => ["States.Timeout"], "MaxAttempts" => 1}] }
