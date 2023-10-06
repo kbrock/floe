@@ -5,6 +5,7 @@ module Floe
     class Context
       def initialize(context = nil, input: {})
         context = JSON.parse(context) if context.kind_of?(String)
+        input = JSON.parse(input) if input.kind_of?(String)
 
         @context = context || {
           "Execution"    => {
