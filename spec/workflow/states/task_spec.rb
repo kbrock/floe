@@ -74,6 +74,21 @@ RSpec.describe Floe::Workflow::States::Task do
         expect(ctx.output).to eq("foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}, "response" => ["192.168.1.2"])
       end
 
+      context "with an error" do
+        let(:success) { false }
+
+        it "uses the last error line as output if it is JSON" do
+          expect(mock_runner)
+            .to receive(:run_async!)
+            .with(resource, {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
+          expect(mock_runner).to receive("output").and_return("ABCD\nHELLO\n{\"Error\":\"Custom Error\"}")
+
+          workflow.current_state.run_nonblock!
+
+          expect(ctx.output).to eq({"Error" => "Custom Error"})
+        end
+      end
+
       it "returns nil if the output isn't JSON" do
         expect(mock_runner)
           .to receive(:run_async!)
