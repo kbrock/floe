@@ -21,7 +21,6 @@ module Floe
           secrets_file = nil
           if secrets && !secrets.empty?
             secrets_file = create_secret(secrets)
-            env["_CREDENTIALS"] = "/run/secrets"
           end
 
           output = run_container(image, env, secrets_file)
@@ -40,7 +39,6 @@ module Floe
 
           if secrets && !secrets.empty?
             runner_context["secrets_ref"] = create_secret(secrets)
-            env["_CREDENTIALS"] = "/run/secrets"
           end
 
           begin
@@ -85,6 +83,7 @@ module Floe
           params  = ["run"]
           params << (detached ? :detach : :rm)
           params += env.map { |k, v| [:e, "#{k}=#{v}"] }
+          params << [:e, "_CREDENTIALS=/run/secrets"] if secrets_file
           params << [:net, "host"] if @network == "host"
           params << [:v, "#{secrets_file}:/run/secrets:z"] if secrets_file
           params << image
