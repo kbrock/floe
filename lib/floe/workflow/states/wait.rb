@@ -28,10 +28,7 @@ module Floe
 
           context.output     = output_path.value(context, input)
           context.next_state = end? ? nil : @next
-          wait(
-            :seconds => value_or_path(context, input, @seconds, :path => @seconds_path, &:to_i),
-            :time    => value_or_path(context, input, @timestamp, :path => @timestamp_path)
-          )
+          please_hold(input)
         end
 
         def running?
@@ -40,6 +37,15 @@ module Floe
 
         def end?
           @end
+        end
+
+        private
+
+        def please_hold(input)
+          wait(
+            :seconds => @seconds_path ? @seconds_path.value(context, input).to_i : @seconds,
+            :time    => @timestamp_path ? @timestamp_path.value(context, input) : @timestamp
+          )
         end
       end
     end
