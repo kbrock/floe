@@ -4,6 +4,17 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2023-10-06
+### Added
+- Add Fail#CausePath and Fail#ErrorPath ([#110](https://github.com/ManageIQ/floe/pull/110))
+- Add Task#Retrier incremental backoff and Wait#Timestamp ([#100](https://github.com/ManageIQ/floe/pull/100))
+
+### Fixed
+- Combine stdout and stderr for docker and podman runners ([#104](https://github.com/ManageIQ/floe/pull/104))
+- Don't raise an exception on task failure ([#115](https://github.com/ManageIQ/floe/pull/115))
+- Fix task output handling ([#112](https://github.com/ManageIQ/floe/pull/112))
+- Fix Context#input not JSON parsed ([#122](https://github.com/ManageIQ/floe/pull/122))
+
 ## [0.4.0] - 2023-09-26
 ### Added
 - Add ability to run workflows asynchronously ([#52](https://github.com/ManageIQ/floe/pull/92))
@@ -63,7 +74,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/ManageIQ/floe/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/ManageIQ/floe/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/ManageIQ/floe/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/ManageIQ/floe/compare/v0.2.3...v0.3.0
