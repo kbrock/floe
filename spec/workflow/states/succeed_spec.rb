@@ -8,9 +8,9 @@ RSpec.describe Floe::Workflow::States::Succeed do
     expect(state.end?).to be true
   end
 
-  describe "#run!" do
+  describe "#run_nonblock!" do
     it "has no next" do
-      state.run!(input)
+      state.run_nonblock!
       expect(ctx.next_state).to eq(nil)
     end
   end

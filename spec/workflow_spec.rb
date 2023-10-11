@@ -95,7 +95,7 @@ RSpec.describe Floe::Workflow do
     end
   end
 
-  describe "#step" do
+  describe "#step_nonblock" do
     it "runs a success step" do
       workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Succeed"}})
 
@@ -106,7 +106,7 @@ RSpec.describe Floe::Workflow do
       expect(ctx.running?).to eq(false)
       expect(ctx.ended?).to eq(false)
 
-      workflow.step
+      workflow.step_nonblock
 
       expect(workflow.output).to eq(input)
       expect(workflow.status).to eq("success")
@@ -117,9 +117,7 @@ RSpec.describe Floe::Workflow do
       expect(ctx.running?).to eq(false)
       expect(ctx.ended?).to eq(true)
     end
-  end
 
-  describe "#step_nonblock" do
     context "with a workflow that hasn't started yet" do
       it "starts the first step" do
         workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})

@@ -25,9 +25,9 @@ RSpec.describe Floe::Workflow::States::Pass do
     end
   end
 
-  describe "#run!" do
+  describe "#run_nonblock!" do
     it "sets the result to the result path" do
-      state.run!(ctx.input)
+      state.run_nonblock!
       expect(ctx.output["result"]).to include({"foo" => "bar", "bar" => "baz"})
       expect(ctx.next_state).to eq("SuccessState")
     end
