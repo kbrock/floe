@@ -129,7 +129,7 @@ module Floe
 
           JSON.parse(output.split("\n").last)
         rescue JSON::ParserError
-          {"Error" => output}
+          {"Error" => output.chomp}
         end
 
         def parse_output(output)
