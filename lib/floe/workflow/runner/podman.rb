@@ -26,22 +26,6 @@ module Floe
           @volumepath      = options["volumepath"]
         end
 
-        def run!(resource, env = {}, secrets = {})
-          raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
-
-          image = resource.sub("docker://", "")
-
-          if secrets && !secrets.empty?
-            secret = create_secret(secrets)
-          end
-
-          output = run_container(image, env, secret)
-
-          {"exit_code" => 0, :output => output}
-        ensure
-          delete_secret(secret) if secret
-        end
-
         def run_async!(resource, env = {}, secrets = {})
           raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
 
@@ -52,7 +36,7 @@ module Floe
           end
 
           begin
-            container_id = run_container(image, env, secret_guid, :detached => true)
+            container_id = run_container(image, env, secret_guid)
           rescue
             cleanup({"container_ref" => container_id, "secrets_ref" => secret_guid})
             raise
@@ -87,9 +71,9 @@ module Floe
 
         private
 
-        def run_container(image, env, secret, detached: false)
+        def run_container(image, env, secret)
           params  = ["run"]
-          params << (detached ? :detach : :rm)
+          params << :detach
           params += env.map { |k, v| [:e, "#{k}=#{v}"] }
           params << [:e, "_CREDENTIALS=/run/secrets/#{secret}"] if secret
           params << [:net, "host"] if @network == "host"

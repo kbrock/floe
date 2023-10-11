@@ -38,34 +38,6 @@ module Floe
           super
         end
 
-        def run!(resource, env = {}, secrets = {})
-          raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
-
-          image  = resource.sub("docker://", "")
-          name   = pod_name(image)
-          secret = create_secret!(secrets) if secrets && !secrets.empty?
-
-          begin
-            runner_context = {"container_ref" => name}
-
-            create_pod!(name, image, env, secret)
-            loop do
-              case pod_info(name).dig("status", "phase")
-              when "Pending", "Running"
-                sleep(1)
-              else # also "Succeeded"
-                runner_context["exit_code"] = 0
-                output(runner_context)
-                break
-              end
-            end
-
-            runner_context
-          ensure
-            cleanup({"container_ref" => name, "secrets_ref" => secret})
-          end
-        end
-
         def run_async!(resource, env = {}, secrets = {})
           raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
 
