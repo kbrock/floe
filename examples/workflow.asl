@@ -4,7 +4,7 @@
   "States": {
     "FirstState": {
       "Type": "Task",
-      "Resource": "docker://agrare/hello-world:latest",
+      "Resource": "docker://docker.io/agrare/hello-world:latest",
       "Credentials": {
         "mysecret": "dont tell anyone"
       },
@@ -49,13 +49,13 @@
 
     "FirstMatchState": {
       "Type" : "Task",
-      "Resource": "docker://agrare/hello-world:latest",
+      "Resource": "docker://docker.io/agrare/hello-world:latest",
       "Next": "PassState"
     },
 
     "SecondMatchState": {
       "Type" : "Task",
-      "Resource": "docker://agrare/hello-world:latest",
+      "Resource": "docker://docker.io/agrare/hello-world:latest",
       "Next": "NextState"
     },
 
@@ -87,7 +87,7 @@
 
     "NextState": {
       "Type": "Task",
-      "Resource": "docker://agrare/hello-world:latest",
+      "Resource": "docker://docker.io/agrare/hello-world:latest",
       "Secrets": ["vmdb:aaa-bbb-ccc"],
       "End": true
     }

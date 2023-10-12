@@ -116,6 +116,19 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       end
     end
 
+    context "with a task service account name" do
+      let(:task_service_account) { "my-service-account" }
+      let(:runner_options) { {"server" => "https://kubernetes.local:6443", "token" => "my-token", "task_service_account" => task_service_account} }
+
+      it "calls kubectl run with the service account" do
+        expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :spec => hash_including(:serviceAccountName => task_service_account))
+
+        stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
+
+        subject.run_async!("docker://hello-world:latest")
+      end
+    end
+
     context "without a kubeconfig file or server+token" do
       let(:runner_options) { {} }
 

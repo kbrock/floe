@@ -35,6 +35,8 @@ module Floe
 
           @namespace = options.fetch("namespace", "default")
 
+          @task_service_account = options["task_service_account"]
+
           super
         end
 
@@ -119,6 +121,8 @@ module Floe
               :restartPolicy => "Never"
             }
           }
+
+          spec[:spec][:serviceAccountName] = @task_service_account if @task_service_account
 
           if secret
             spec[:spec][:volumes] = [
