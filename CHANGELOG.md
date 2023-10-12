@@ -4,6 +4,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2023-10-12
+### Added
+- For task errors, use the json on the last line ([#128](https://github.com/ManageIQ/floe/pull/128))
+- Add ability to pass task service account to kube runner ([#131](https://github.com/ManageIQ/floe/pull/131))
+
+### Fixed
+- Don't put credentials file into input ([#124](https://github.com/ManageIQ/floe/pull/124))
+- exe/floe return success status if the workflow was successful ([#129](https://github.com/ManageIQ/floe/pull/129))
+- For error output, drop trailing newline ([#126](https://github.com/ManageIQ/floe/pull/126))
+
 ## [0.4.1] - 2023-10-06
 ### Added
 - Add Fail#CausePath and Fail#ErrorPath ([#110](https://github.com/ManageIQ/floe/pull/110))
