@@ -4,6 +4,8 @@ module Floe
   class Workflow
     class Runner
       class Kubernetes < Floe::Workflow::Runner
+        include DockerMixin
+
         TOKEN_FILE   = "/run/secrets/kubernetes.io/serviceaccount/token"
         CA_CERT_FILE = "/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
@@ -44,7 +46,7 @@ module Floe
           raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
 
           image  = resource.sub("docker://", "")
-          name   = pod_name(image)
+          name   = container_name(image)
           secret = create_secret!(secrets) if secrets && !secrets.empty?
 
           runner_context = {"container_ref" => name, "secrets_ref" => secret}
@@ -91,17 +93,6 @@ module Floe
           kubeclient.get_pod(pod_name, namespace)
         end
 
-        def container_name(image)
-          image.match(%r{^(?<repository>.+/)?(?<image>.+):(?<tag>.+)$})&.named_captures&.dig("image")
-        end
-
-        def pod_name(image)
-          container_short_name = container_name(image)
-          raise ArgumentError, "Invalid docker image [#{image}]" if container_short_name.nil?
-
-          "#{container_short_name}-#{SecureRandom.uuid}"
-        end
-
         def pod_spec(name, image, env, secret = nil)
           spec = {
             :kind       => "Pod",
@@ -113,7 +104,7 @@ module Floe
             :spec       => {
               :containers    => [
                 {
-                  :name  => container_name(image),
+                  :name  => image_name(image),
                   :image => image,
                   :env   => env.map { |k, v| {:name => k, :value => v.to_s} }
                 }

@@ -4,6 +4,8 @@ module Floe
   class Workflow
     class Runner
       class Podman < Floe::Workflow::Runner
+        include DockerMixin
+
         def initialize(options = {})
           require "awesome_spawn"
           require "securerandom"
@@ -78,6 +80,7 @@ module Floe
           params << [:e, "_CREDENTIALS=/run/secrets/#{secret}"] if secret
           params << [:net, "host"] if @network == "host"
           params << [:secret, secret] if secret
+          params << [:name, container_name(image)]
           params << image
 
           logger.debug("Running podman: #{AwesomeSpawn.build_command_line("podman", params)}")
