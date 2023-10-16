@@ -35,7 +35,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
         :spec       => hash_including(
           :containers => [
             hash_including(
-              :name  => "hello-world",
+              :name  => "floe-hello-world",
               :image => "hello-world:latest"
             )
           ]
@@ -44,6 +44,52 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
       subject.run_async!("docker://hello-world:latest")
+    end
+
+    it "calls kubectl run with an image name <= 63 characters" do
+      expected_pod_spec = hash_including(
+        :kind       => "Pod",
+        :apiVersion => "v1",
+        :metadata   => {
+          :name      => a_string_matching(/^floe-this-is-a-very-long-image-name-way-longer-than-sh\-\h{8}$/).and(is_a_valid_kube_name),
+          :namespace => "default"
+        },
+        :spec       => hash_including(
+          :containers => [
+            hash_including(
+              :name  => eq("floe-this-is-a-very-long-image-name-way-longer-than-sh").and(is_a_valid_kube_name),
+              :image => "this-is-a-very-long-image-name-way-longer-than-should-be-allowed:latest"
+            )
+          ]
+        )
+      )
+
+      stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
+
+      subject.run_async!("docker://this-is-a-very-long-image-name-way-longer-than-should-be-allowed:latest")
+    end
+
+    it "calls kubectl run with an image name that has characters that would be invalid in a pod name" do
+      expected_pod_spec = hash_including(
+        :kind       => "Pod",
+        :apiVersion => "v1",
+        :metadata   => {
+          :name      => a_string_matching(/^floe-a-b-c-0--1--2\-\h{8}$/).and(is_a_valid_kube_name),
+          :namespace => "default"
+        },
+        :spec       => hash_including(
+          :containers => [
+            hash_including(
+              :name  => eq("floe-a-b-c-0--1--2").and(is_a_valid_kube_name),
+              :image => "a.b-c_0--1__2:latest"
+            )
+          ]
+        )
+      )
+
+      stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
+
+      subject.run_async!("docker://a.b-c_0--1__2:latest")
     end
 
     it "doesn't create a secret if Credentials is nil" do
@@ -386,5 +432,11 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
   def stub_kubernetes_bad_run
     expect(kubeclient).to receive(:create_pod).and_raise(Kubeclient::HttpError.new(403, "Forbidden", {}))
     expect(kubeclient).to receive(:delete_pod).with(a_string_starting_with("floe-hello-world-"), "default").and_raise(Kubeclient::HttpError.new(404, "Not Found", {}))
+  end
+
+  def is_a_valid_kube_name
+    # See https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names
+    # and https://github.com/kubernetes/kubernetes/blob/952a9cb0/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go#L178-L184
+    a_string_matching(/^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/).and(a_string_matching(/^.{0,63}$/))
   end
 end
