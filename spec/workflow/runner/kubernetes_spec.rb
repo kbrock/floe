@@ -25,14 +25,29 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
     end
 
     it "calls kubectl run with the image name" do
-      expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_including("hello-world-"), :namespace => "default"})
+      expected_pod_spec = hash_including(
+        :kind       => "Pod",
+        :apiVersion => "v1",
+        :metadata   => {
+          :name      => a_string_starting_with("floe-hello-world-"),
+          :namespace => "default"
+        },
+        :spec       => hash_including(
+          :containers => [
+            hash_including(
+              :name  => "hello-world",
+              :image => "hello-world:latest"
+            )
+          ]
+        )
+      )
       stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
       subject.run_async!("docker://hello-world:latest")
     end
 
     it "doesn't create a secret if Credentials is nil" do
-      expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_including("hello-world-"), :namespace => "default"})
+      expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_starting_with("floe-hello-world-"), :namespace => "default"})
 
       expect(subject).not_to receive(:create_secret!)
       stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
@@ -68,7 +83,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       expected_pod_spec = hash_including(
         :kind       => "Pod",
         :apiVersion => "v1",
-        :metadata   => {:name => a_string_including("hello-world-"), :namespace => "default"},
+        :metadata   => {:name => a_string_starting_with("floe-hello-world-"), :namespace => "default"},
         :spec       => hash_including(
           :volumes    => [{:name => "secret-volume", :secret => {:secretName => anything}}],
           :containers => [
@@ -108,7 +123,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       let(:runner_options) { {"server" => "https://kubernetes.local:6443", "token" => "my-token", "namespace" => namespace} }
 
       it "calls kubectl run with the image name" do
-        expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_including("hello-world-"), :namespace => namespace})
+        expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_starting_with("floe-hello-world-"), :namespace => namespace})
 
         stub_kubernetes_run(:spec => expected_pod_spec, :namespace => namespace, :status => false, :cleanup => false)
 
@@ -357,19 +372,19 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
     # run
     if status && status > 0
       (status - 1).times do
-        expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), namespace).and_return({"status" => {"phase" => "Running"}})
+        expect(kubeclient).to receive(:get_pod).with(a_string_starting_with("floe-hello-world-"), namespace).and_return({"status" => {"phase" => "Running"}})
       end
-      expect(kubeclient).to receive(:get_pod).with(a_string_including("hello-world-"), namespace).and_return({"status" => {"phase" => "Succeeded"}})
-      expect(kubeclient).to receive(:get_pod_log).with(a_string_including("hello-world-"), namespace).and_return(RestClient::Response.new("hello, world!"))
+      expect(kubeclient).to receive(:get_pod).with(a_string_starting_with("floe-hello-world-"), namespace).and_return({"status" => {"phase" => "Succeeded"}})
+      expect(kubeclient).to receive(:get_pod_log).with(a_string_starting_with("floe-hello-world-"), namespace).and_return(RestClient::Response.new("hello, world!"))
     end
 
     if cleanup
-      expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), namespace)
+      expect(kubeclient).to receive(:delete_pod).with(a_string_starting_with("floe-hello-world-"), namespace)
     end
   end
 
   def stub_kubernetes_bad_run
     expect(kubeclient).to receive(:create_pod).and_raise(Kubeclient::HttpError.new(403, "Forbidden", {}))
-    expect(kubeclient).to receive(:delete_pod).with(a_string_including("hello-world-"), "default").and_raise(Kubeclient::HttpError.new(404, "Not Found", {}))
+    expect(kubeclient).to receive(:delete_pod).with(a_string_starting_with("floe-hello-world-"), "default").and_raise(Kubeclient::HttpError.new(404, "Not Found", {}))
   end
 end

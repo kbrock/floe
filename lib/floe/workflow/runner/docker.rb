@@ -4,6 +4,8 @@ module Floe
   class Workflow
     class Runner
       class Docker < Floe::Workflow::Runner
+        include DockerMixin
+
         def initialize(options = {})
           require "awesome_spawn"
           require "tempfile"
@@ -69,6 +71,7 @@ module Floe
           params << [:e, "_CREDENTIALS=/run/secrets"] if secrets_file
           params << [:net, "host"] if @network == "host"
           params << [:v, "#{secrets_file}:/run/secrets:z"] if secrets_file
+          params << [:name, container_name(image)]
           params << image
 
           logger.debug("Running docker: #{AwesomeSpawn.build_command_line("docker", params)}")
