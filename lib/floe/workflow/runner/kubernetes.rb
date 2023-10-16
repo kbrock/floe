@@ -104,7 +104,7 @@ module Floe
             :spec       => {
               :containers    => [
                 {
-                  :name  => image_name(image),
+                  :name  => name[0...-9], # remove the random suffix and its leading hyphen
                   :image => image,
                   :env   => env.map { |k, v| {:name => k, :value => v.to_s} }
                 }
