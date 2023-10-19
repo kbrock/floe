@@ -351,6 +351,16 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Succeeded"}}
       expect(subject.running?(runner_context)).to be_falsey
     end
+
+    it "returns false when there is an ErrImagePull" do
+      runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Pending", "containerStatuses" => [{"name" => "my-container", "state" => {"waiting" => {"reason" => "ErrImagePull", "message" => "rpc error: code = Unknown desc = failed to pull and unpack image"}}}]}}
+      expect(subject.running?(runner_context)).to be_falsey
+    end
+
+    it "returns false when there is an ImagePullBackOff" do
+      runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Pending", "containerStatuses" => [{"name" => "my-container", "state" => {"waiting" => {"reason" => "ImagePullBackOff", "message" => "Back-off pulling image"}}}]}}
+      expect(subject.running?(runner_context)).to be_falsey
+    end
   end
 
   describe "#success?" do

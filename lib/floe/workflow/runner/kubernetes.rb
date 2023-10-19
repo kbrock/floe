@@ -6,8 +6,10 @@ module Floe
       class Kubernetes < Floe::Workflow::Runner
         include DockerMixin
 
-        TOKEN_FILE   = "/run/secrets/kubernetes.io/serviceaccount/token"
-        CA_CERT_FILE = "/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+        TOKEN_FILE      = "/run/secrets/kubernetes.io/serviceaccount/token"
+        CA_CERT_FILE    = "/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+        RUNNING_PHASES  = %w[Pending Running].freeze
+        FAILURE_REASONS = %w[ImagePullBackOff ErrImagePull].freeze
 
         def initialize(options = {})
           require "awesome_spawn"
@@ -66,7 +68,17 @@ module Floe
         end
 
         def running?(runner_context)
-          %w[Pending Running].include?(runner_context.dig("container_state", "phase"))
+          phase              = runner_context.dig("container_state", "phase")
+          container_statuses = runner_context.dig("container_state", "containerStatuses") || []
+          container_reasons  = container_statuses.map { |status| status.dig("state", "waiting", "reason") }.compact
+
+          return false if RUNNING_PHASES.none?(phase)
+          # If an image failed to pull then the phase will be Pending but the
+          # container status will be waiting with a reason of ImagePullBackOff
+          # or ErrImagePull
+          return false if (container_reasons & FAILURE_REASONS).any?
+
+          true
         end
 
         def success?(runner_context)
