@@ -12,6 +12,7 @@ module Floe
         FAILURE_REASONS = %w[CrashLoopBackOff ImagePullBackOff ErrImagePull].freeze
 
         def initialize(options = {})
+          require "active_support/core_ext/hash/keys"
           require "awesome_spawn"
           require "securerandom"
           require "base64"
@@ -64,7 +65,7 @@ module Floe
         end
 
         def status!(runner_context)
-          runner_context["container_state"] = pod_info(runner_context["container_ref"])["status"]
+          runner_context["container_state"] = pod_info(runner_context["container_ref"]).to_h.deep_stringify_keys["status"]
         end
 
         def running?(runner_context)
