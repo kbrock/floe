@@ -68,15 +68,11 @@ module Floe
         end
 
         def running?(runner_context)
-          phase              = runner_context.dig("container_state", "phase")
-          container_statuses = runner_context.dig("container_state", "containerStatuses") || []
-          container_reasons  = container_statuses.map { |status| status.dig("state", "waiting", "reason") }.compact
-
-          return false if RUNNING_PHASES.none?(phase)
-          # If an image failed to pull then the phase will be Pending but the
-          # container status will be waiting with a reason of ImagePullBackOff
-          # or ErrImagePull
-          return false if (container_reasons & FAILURE_REASONS).any?
+          return false unless pod_running?(runner_context)
+          # If a pod is Pending and the containers are waiting with a failure
+          # reason such as ImagePullBackOff or CrashLoopBackOff then the pod
+          # will never be run.
+          return false if container_failed?(runner_context)
 
           true
         end
@@ -86,8 +82,13 @@ module Floe
         end
 
         def output(runner_context)
-          output = kubeclient.get_pod_log(runner_context["container_ref"], namespace).body
-          runner_context["output"] = output
+          runner_context["output"] =
+            if container_failed?(runner_context)
+              failed_state = failed_container_states(runner_context).first
+              "#{failed_state["reason"]}: #{failed_state["message"]}"
+            else
+              kubeclient.get_pod_log(runner_context["container_ref"], namespace).body
+            end
         end
 
         def cleanup(runner_context)
@@ -103,6 +104,20 @@ module Floe
 
         def pod_info(pod_name)
           kubeclient.get_pod(pod_name, namespace)
+        end
+
+        def pod_running?(context)
+          RUNNING_PHASES.include?(context.dig("container_state", "phase"))
+        end
+
+        def failed_container_states(context)
+          container_statuses = context.dig("container_state", "containerStatuses") || []
+          container_statuses.map { |status| status["state"]&.values&.first }.compact
+                            .select { |state| FAILURE_REASONS.include?(state["reason"]) }
+        end
+
+        def container_failed?(context)
+          failed_container_states(context).any?
         end
 
         def pod_spec(name, image, env, secret = nil)
