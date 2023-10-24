@@ -85,7 +85,7 @@ module Floe
           runner_context["output"] =
             if container_failed?(runner_context)
               failed_state = failed_container_states(runner_context).first
-              "#{failed_state["reason"]}: #{failed_state["message"]}"
+              {"Error" => failed_state["reason"], "Cause" => failed_state["message"]}
             else
               kubeclient.get_pod_log(runner_context["container_ref"], namespace).body
             end
