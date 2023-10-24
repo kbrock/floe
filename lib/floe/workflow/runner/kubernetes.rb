@@ -9,7 +9,7 @@ module Floe
         TOKEN_FILE      = "/run/secrets/kubernetes.io/serviceaccount/token"
         CA_CERT_FILE    = "/run/secrets/kubernetes.io/serviceaccount/ca.crt"
         RUNNING_PHASES  = %w[Pending Running].freeze
-        FAILURE_REASONS = %w[ImagePullBackOff ErrImagePull].freeze
+        FAILURE_REASONS = %w[CrashLoopBackOff ImagePullBackOff ErrImagePull].freeze
 
         def initialize(options = {})
           require "awesome_spawn"

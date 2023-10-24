@@ -378,6 +378,16 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Succeeded"}}
       expect(subject.success?(runner_context)).to be_truthy
     end
+
+    it "returns false when there is an ErrImagePull" do
+      runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Pending", "containerStatuses" => [{"name" => "my-container", "state" => {"waiting" => {"reason" => "ErrImagePull", "message" => "rpc error: code = Unknown desc = failed to pull and unpack image"}}}]}}
+      expect(subject.success?(runner_context)).to be_falsey
+    end
+
+    it "returns false when there is an ImagePullBackOff" do
+      runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Pending", "containerStatuses" => [{"name" => "my-container", "state" => {"waiting" => {"reason" => "ImagePullBackOff", "message" => "Back-off pulling image"}}}]}}
+      expect(subject.success?(runner_context)).to be_falsey
+    end
   end
 
   describe "#output" do
@@ -391,6 +401,16 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
     it "raises an exception when getting pod logs fails" do
       allow(kubeclient).to receive(:get_pod_log).and_raise(Kubeclient::ResourceNotFoundError.new(404, "Resource Not Found", {}))
       expect { subject.output(runner_context) }.to raise_error(Kubeclient::ResourceNotFoundError, /Resource Not Found/)
+    end
+
+    it "returns an error when  there is an ErrImagePull" do
+      runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Pending", "containerStatuses" => [{"name" => "my-container", "state" => {"waiting" => {"reason" => "ErrImagePull", "message" => "rpc error: code = Unknown desc = failed to pull and unpack image"}}}]}}
+      expect(subject.output(runner_context)).to eq("ErrImagePull: rpc error: code = Unknown desc = failed to pull and unpack image")
+    end
+
+    it "returns an error when  there is an ImagePullBackOff" do
+      runner_context = {"container_ref" => "my-pod", "container_state" => {"phase" => "Pending", "containerStatuses" => [{"name" => "my-container", "state" => {"waiting" => {"reason" => "ImagePullBackOff", "message" => "Back-off pulling image"}}}]}}
+      expect(subject.output(runner_context)).to eq("ImagePullBackOff: Back-off pulling image")
     end
   end
 
