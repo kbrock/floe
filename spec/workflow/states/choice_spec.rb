@@ -28,6 +28,26 @@ RSpec.describe Floe::Workflow::States::Choice do
     )
   end
 
+  it "raises an exception if Choices is missing" do
+    payload = {"StartAt" => "Choice", "States" => {"Choice" => {"Type" => "Choice", "Default" => "DefaultState"}, "DefaultState" => {"type" => "Succeed"}}}
+    expect { Floe::Workflow.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Choice state must have \"Choices\"")
+  end
+
+  it "raises an exception if Choices is not an array" do
+    payload = {"StartAt" => "Choice", "States" => {"Choice" => {"Type" => "Choice", "Choices" => {}, "Default" => "DefaultState"}, "DefaultState" => {"type" => "Succeed"}}}
+    expect { Floe::Workflow.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "\"Choices\" must be a non-empty array")
+  end
+
+  it "raises an exception if Choices is an empty array" do
+    payload = {"StartAt" => "Choice", "States" => {"Choice" => {"Type" => "Choice", "Choices" => [], "Default" => "DefaultState"}, "DefaultState" => {"type" => "Succeed"}}}
+    expect { Floe::Workflow.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "\"Choices\" must be a non-empty array")
+  end
+
+  it "raises an exception if Default isn't a valid state" do
+    payload = {"StartAt" => "Choice", "States" => {"Choice" => {"Type" => "Choice", "Choices" => [{"Variable" => "$.foo", "NumericEquals" => 1, "Next" => "FirstMatchState"}], "Default" => "MissingState"}}}
+    expect { Floe::Workflow.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "\"Default\" not in \"States\"")
+  end
+
   it "#end?" do
     expect(state.end?).to eq(false)
   end

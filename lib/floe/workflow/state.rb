@@ -8,6 +8,7 @@ module Floe
       class << self
         def build!(workflow, name, payload)
           state_type = payload["Type"]
+          raise Floe::InvalidWorkflowError, "Missing \"Type\" field in state [#{name}]" if payload["Type"].nil?
 
           begin
             klass = Floe::Workflow::States.const_get(state_type)
@@ -27,6 +28,9 @@ module Floe
         @payload  = payload
         @type     = payload["Type"]
         @comment  = payload["Comment"]
+
+        raise Floe::InvalidWorkflowError, "Missing \"Type\" field in state [#{name}]" if payload["Type"].nil?
+        raise Floe::InvalidWorkflowError, "State name [#{name}] must be less than or equal to 80 characters" if name.length > 80
       end
 
       def run!(_input = nil)

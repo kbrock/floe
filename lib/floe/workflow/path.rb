@@ -11,6 +11,9 @@ module Floe
 
       def initialize(payload)
         @payload = payload
+
+        raise Floe::InvalidWorkflowError, "Path [#{payload}] must be a string" if payload.nil? || !payload.kind_of?(String)
+        raise Floe::InvalidWorkflowError, "Path [#{payload}] must start with \"$\"" if payload[0] != "$"
       end
 
       def value(context, input = {})

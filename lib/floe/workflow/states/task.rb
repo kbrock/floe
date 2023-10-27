@@ -4,6 +4,8 @@ module Floe
   class Workflow
     module States
       class Task < Floe::Workflow::State
+        include NonTerminalMixin
+
         attr_reader :credentials, :end, :heartbeat_seconds, :next, :parameters,
                     :result_selector, :resource, :timeout_seconds, :retry, :catch,
                     :input_path, :output_path, :result_path
@@ -25,6 +27,8 @@ module Floe
           @parameters        = PayloadTemplate.new(payload["Parameters"])     if payload["Parameters"]
           @result_selector   = PayloadTemplate.new(payload["ResultSelector"]) if payload["ResultSelector"]
           @credentials       = PayloadTemplate.new(payload["Credentials"])    if payload["Credentials"]
+
+          validate_state!
         end
 
         def start(input)
@@ -71,6 +75,10 @@ module Floe
         private
 
         attr_reader :runner
+
+        def validate_state!
+          validate_state_next!
+        end
 
         def success?
           runner.success?(context.state["RunnerContext"])

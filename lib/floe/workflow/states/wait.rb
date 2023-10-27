@@ -6,6 +6,8 @@ module Floe
   class Workflow
     module States
       class Wait < Floe::Workflow::State
+        include NonTerminalMixin
+
         attr_reader :end, :next, :seconds, :input_path, :output_path
 
         def initialize(workflow, name, payload)
@@ -20,6 +22,8 @@ module Floe
 
           @input_path  = Path.new(payload.fetch("InputPath", "$"))
           @output_path = Path.new(payload.fetch("OutputPath", "$"))
+
+          validate_state!
         end
 
         def start(input)
@@ -40,6 +44,10 @@ module Floe
         end
 
         private
+
+        def validate_state!
+          validate_state_next!
+        end
 
         def please_hold(input)
           wait(
