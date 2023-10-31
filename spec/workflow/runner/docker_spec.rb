@@ -97,6 +97,7 @@ RSpec.describe Floe::Workflow::Runner::Docker do
 
     it "deletes the container and secret" do
       stub_good_run!("docker", :params => ["rm", container_id])
+      allow(File).to receive(:exist?).and_call_original
       expect(File).to receive(:exist?).with(secrets_file).and_return(true)
       expect(File).to receive(:unlink).with(secrets_file)
       subject.cleanup({"container_ref" => container_id, "secrets_ref" => secrets_file})
@@ -110,6 +111,7 @@ RSpec.describe Floe::Workflow::Runner::Docker do
 
     it "deletes the secrets file if deleting the container fails" do
       stub_bad_run!("docker", :params => ["rm", container_id])
+      allow(File).to receive(:exist?).and_call_original
       expect(File).to receive(:exist?).with(secrets_file).and_return(true)
       expect(File).to receive(:unlink).with(secrets_file)
       subject.cleanup({"container_ref" => container_id, "secrets_ref" => secrets_file})
