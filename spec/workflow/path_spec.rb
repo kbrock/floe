@@ -1,4 +1,13 @@
 RSpec.describe Floe::Workflow::Path do
+  it "raises an exception if the payload isn't a string" do
+    expect { described_class.new(nil) }.to raise_error(Floe::InvalidWorkflowError, "Path [] must be a string")
+    expect { described_class.new(0) }.to raise_error(Floe::InvalidWorkflowError, "Path [0] must be a string")
+  end
+
+  it "raises an exception if the first character isn't a $" do
+    expect { described_class.new("foo") }.to raise_error(Floe::InvalidWorkflowError, "Path [foo] must start with \"$\"")
+  end
+
   describe "#value" do
     context "referencing the global context" do
       it "with a missing value" do

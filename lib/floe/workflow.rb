@@ -38,6 +38,10 @@ module Floe
       credentials = JSON.parse(credentials) if credentials.kind_of?(String)
       context     = Context.new(context)    unless context.kind_of?(Context)
 
+      raise Floe::InvalidWorkflowError, "Missing field \"States\""  if payload["States"].nil?
+      raise Floe::InvalidWorkflowError, "Missing field \"StartAt\"" if payload["StartAt"].nil?
+      raise Floe::InvalidWorkflowError, "\"StartAt\" not in the \"States\" field" unless payload["States"].key?(payload["StartAt"])
+
       @payload     = payload
       @context     = context
       @credentials = credentials

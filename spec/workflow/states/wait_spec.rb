@@ -20,7 +20,7 @@ RSpec.describe Floe::Workflow::States::Pass do
 
   describe "#running?" do
     context "with seconds" do
-      let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "Seconds" => 1, "Next" => "SuccessState"}}) }
+      let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "Seconds" => 1, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
       it "is running before finished" do
         state.start(ctx.input)
         expect(state.running?).to be_truthy
@@ -36,7 +36,7 @@ RSpec.describe Floe::Workflow::States::Pass do
 
     context "with secondsPath" do
       let(:input)    { {"expire" => "1"} }
-      let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "SecondsPath" => "$.expire", "Next" => "SuccessState"}}) }
+      let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "SecondsPath" => "$.expire", "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
       it "is running? before finished" do
         state.start(ctx.input)
         expect(state.running?).to be_truthy
@@ -52,7 +52,7 @@ RSpec.describe Floe::Workflow::States::Pass do
 
     context "with timestamp" do
       let(:expiry) { Time.now.utc + 1 }
-      let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "Timestamp" => expiry.iso8601, "Next" => "SuccessState"}}) }
+      let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "Timestamp" => expiry.iso8601, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
       it "is running? before finished" do
         state.start(ctx.input)
         expect(state.running?).to be_truthy
@@ -69,7 +69,7 @@ RSpec.describe Floe::Workflow::States::Pass do
     context "with timestamp" do
       let(:expiry) { Time.now.utc + 1 }
       let(:input) { {"expire" => expiry.iso8601} }
-      let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "TimestampPath" => "$.expire", "Next" => "SuccessState"}}) }
+      let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "TimestampPath" => "$.expire", "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
       it "is running? before finished" do
         state.start(ctx.input)
         expect(state.running?).to be_truthy

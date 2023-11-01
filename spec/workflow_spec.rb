@@ -22,6 +22,37 @@ RSpec.describe Floe::Workflow do
       expect(ctx.state_name).to eq("FirstState")
       expect(ctx.input).to eq(input)
     end
+
+    it "raises an exception for missing States" do
+      payload = {"Comment" => "Test", "StartAt" => "Nothing"}
+
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Missing field \"States\"")
+    end
+
+    it "raises an exception for missing StartAt" do
+      payload = {"Comment" => "Test", "States" => {}}
+
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Missing field \"StartAt\"")
+    end
+
+    it "raises an exception for StartAt not in States" do
+      payload = {"Comment" => "Test", "StartAt" => "Foo", "States" => {"Bar" => {"Type" => "Succeed"}}}
+
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "\"StartAt\" not in the \"States\" field")
+    end
+
+    it "raises an exception for a State missing a Type field" do
+      payload = {"Comment" => "Test", "StartAt" => "First", "States" => {"First" => {}}}
+
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Missing \"Type\" field in state [First]")
+    end
+
+    it "raises an exception for an invalid State name" do
+      state_name = Array.new(81).map { "a" }.join
+      payload    = {"Comment" => "Test", "StartAt" => state_name, "States" => {state_name => {"Type" => "Succeed"}}}
+
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, /must be less than or equal to 80 characters/)
+    end
   end
 
   describe "#run!" do
@@ -226,7 +257,7 @@ RSpec.describe Floe::Workflow do
     context "with a state that is running" do
       it "returns Try again" do
         ctx.state["EnteredTime"] = Time.now.utc.iso8601
-        workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Task", "Resource" => "docker://agrare/hello-world:latest"}})
+        workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Task", "Resource" => "docker://agrare/hello-world:latest", "End" => true}})
         expect(workflow.current_state).to receive(:running?).and_return(true)
         expect(workflow.step_nonblock_wait(:timeout => 0)).to eq(Errno::EAGAIN)
       end
@@ -253,7 +284,7 @@ RSpec.describe Floe::Workflow do
     context "with a state that is running" do
       it "returns false" do
         ctx.state["EnteredTime"] = Time.now.utc.iso8601
-        workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Task", "Resource" => "docker://agrare/hello-world:latest"}})
+        workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Task", "Resource" => "docker://agrare/hello-world:latest", "End" => true}})
         expect(workflow.current_state).to receive(:running?).and_return(true)
         expect(workflow.step_nonblock_ready?).to be_falsey
       end
