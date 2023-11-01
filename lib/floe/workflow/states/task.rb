@@ -106,7 +106,7 @@ module Floe
 
           return if context["State"]["RetryCount"] > retrier.max_attempts
 
-          wait(:seconds => retrier.sleep_duration(context["State"]["RetryCount"]))
+          wait_until!(:seconds => retrier.sleep_duration(context["State"]["RetryCount"]))
           context.next_state = context.state_name
           true
         end

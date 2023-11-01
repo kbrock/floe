@@ -8,7 +8,7 @@ module Floe
       class Wait < Floe::Workflow::State
         include NonTerminalMixin
 
-        attr_reader :end, :next, :seconds, :input_path, :output_path
+        attr_reader :end, :input_path, :next, :seconds, :seconds_path, :timestamp, :timestamp_path, :output_path
 
         def initialize(workflow, name, payload)
           super
@@ -32,7 +32,11 @@ module Floe
 
           context.output     = output_path.value(context, input)
           context.next_state = end? ? nil : @next
-          please_hold(input)
+
+          wait_until!(
+            :seconds => seconds_path ? seconds_path.value(context, input).to_i : seconds,
+            :time    => timestamp_path ? timestamp_path.value(context, input) : timestamp
+          )
         end
 
         def running?
@@ -47,13 +51,6 @@ module Floe
 
         def validate_state!
           validate_state_next!
-        end
-
-        def please_hold(input)
-          wait(
-            :seconds => @seconds_path ? @seconds_path.value(context, input).to_i : @seconds,
-            :time    => @timestamp_path ? @timestamp_path.value(context, input) : @timestamp
-          )
         end
       end
     end
