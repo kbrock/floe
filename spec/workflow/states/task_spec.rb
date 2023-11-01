@@ -55,13 +55,8 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "with an error" do
-        let(:success) { false }
-
         it "uses the last error line as output if it is JSON" do
-          expect(mock_runner)
-            .to receive(:run_async!)
-            .with(resource, {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, nil)
-          expect(mock_runner).to receive("output").and_return("ABCD\nHELLO\n{\"Error\":\"Custom Error\"}")
+          expect_run_async({"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, :output => "ABCD\nHELLO\n{\"Error\":\"Custom Error\"}", :success => false)
 
           workflow.current_state.run_nonblock!
 
