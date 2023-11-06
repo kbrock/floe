@@ -81,7 +81,7 @@ module Floe
     end
 
     def step_nonblock_wait(timeout: 5)
-      current_state.run_wait(:timeout => timeout)
+      current_state.wait(:timeout => timeout)
     end
 
     def step_nonblock_ready?

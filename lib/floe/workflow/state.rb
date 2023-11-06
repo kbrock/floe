@@ -34,10 +34,10 @@ module Floe
       end
 
       def run!(_input = nil)
-        run_wait until run_nonblock! == 0
+        wait until run_nonblock! == 0
       end
 
-      def run_wait(timeout: 5)
+      def wait(timeout: 5)
         start = Time.now.utc
 
         loop do
@@ -99,7 +99,7 @@ module Floe
 
       private
 
-      def wait(seconds: nil, time: nil)
+      def wait_until!(seconds: nil, time: nil)
         context.state["WaitUntil"] =
           if seconds
             (Time.parse(context.state["EnteredTime"]) + seconds).iso8601
