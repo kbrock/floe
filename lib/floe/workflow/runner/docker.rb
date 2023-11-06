@@ -6,6 +6,8 @@ module Floe
       class Docker < Floe::Workflow::Runner
         include DockerMixin
 
+        DOCKER_COMMAND = "docker"
+
         def initialize(options = {})
           require "awesome_spawn"
           require "tempfile"
@@ -40,7 +42,7 @@ module Floe
           container_id, secrets_file = runner_context.values_at("container_ref", "secrets_ref")
 
           delete_container(container_id) if container_id
-          File.unlink(secrets_file)      if secrets_file && File.exist?(secrets_file)
+          delete_secret(secrets_file)    if secrets_file
         end
 
         def status!(runner_context)
@@ -90,6 +92,14 @@ module Floe
           nil
         end
 
+        def delete_secret(secrets_file)
+          return unless File.exist?(secrets_file)
+
+          File.unlink(secrets_file)
+        rescue
+          nil
+        end
+
         def create_secret(secrets)
           secrets_file = Tempfile.new
           secrets_file.write(secrets.to_json)
@@ -97,8 +107,13 @@ module Floe
           secrets_file.path
         end
 
-        def docker!(*params, **kwargs)
-          AwesomeSpawn.run!("docker", :params => params, **kwargs)
+        def global_docker_options
+          []
+        end
+
+        def docker!(*args, **kwargs)
+          params = global_docker_options + args
+          AwesomeSpawn.run!(self.class::DOCKER_COMMAND, :params => params, **kwargs)
         end
       end
     end
