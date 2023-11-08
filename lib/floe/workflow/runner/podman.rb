@@ -3,8 +3,8 @@
 module Floe
   class Workflow
     class Runner
-      class Podman < Floe::Workflow::Runner
-        include DockerMixin
+      class Podman < Floe::Workflow::Runner::Docker
+        DOCKER_COMMAND = "podman"
 
         def initialize(options = {})
           require "awesome_spawn"
@@ -28,49 +28,6 @@ module Floe
           @volumepath      = options["volumepath"]
         end
 
-        def run_async!(resource, env = {}, secrets = {})
-          raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
-
-          image = resource.sub("docker://", "")
-
-          if secrets && !secrets.empty?
-            secret_guid = create_secret(secrets)
-          end
-
-          begin
-            container_id = run_container(image, env, secret_guid)
-          rescue
-            cleanup({"container_ref" => container_id, "secrets_ref" => secret_guid})
-            raise
-          end
-
-          {"container_ref" => container_id, "secrets_ref" => secret_guid}
-        end
-
-        def cleanup(runner_context)
-          container_id, secret_guid = runner_context.values_at("container_ref", "secrets_ref")
-
-          delete_container(container_id) if container_id
-          delete_secret(secret_guid)     if secret_guid
-        end
-
-        def status!(runner_context)
-          runner_context["container_state"] = inspect_container(runner_context["container_ref"]).first&.dig("State")
-        end
-
-        def running?(runner_context)
-          runner_context.dig("container_state", "Running")
-        end
-
-        def success?(runner_context)
-          runner_context.dig("container_state", "ExitCode") == 0
-        end
-
-        def output(runner_context)
-          output = podman!("logs", runner_context["container_ref"], :combined_output => true).output
-          runner_context["output"] = output
-        end
-
         private
 
         def run_container(image, env, secret)
@@ -89,16 +46,6 @@ module Floe
           result.output
         end
 
-        def inspect_container(container_id)
-          JSON.parse(podman!("inspect", container_id).output)
-        end
-
-        def delete_container(container_id)
-          podman!("rm", container_id)
-        rescue
-          nil
-        end
-
         def create_secret(secrets)
           secret_guid = SecureRandom.uuid
           podman!("secret", "create", secret_guid, "-", :in_data => secrets.to_json)
@@ -111,13 +58,9 @@ module Floe
           nil
         end
 
-        def podman!(*args, **kwargs)
-          params = podman_global_options + args
+        alias podman! docker!
 
-          AwesomeSpawn.run!("podman", :params => params, **kwargs)
-        end
-
-        def podman_global_options
+        def global_docker_options
           options = []
           options << [:identity, @identity]                 if @identity
           options << [:"log-level", @log_level]             if @log_level
