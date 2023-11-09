@@ -4,6 +4,21 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2023-11-09
+### Added
+- Prefix pod names with 'floe-' ([#132](https://github.com/ManageIQ/floe/pull/132))
+- Validate that the workflow payload is correct ([#136](https://github.com/ManageIQ/floe/pull/136))
+
+### Fixed
+- Fix issue where certain docker image names cannot be pod names ([#134](https://github.com/ManageIQ/floe/pull/134))
+- Fix uninitialized constant RSpec::Support::Differ in tests ([#137](https://github.com/ManageIQ/floe/pull/137))
+- Handle ImagePullErr/ImagePullBackOff as errors ([#135](https://github.com/ManageIQ/floe/pull/135))
+
+### Changed
+- Add task spec helper ([#123](https://github.com/ManageIQ/floe/pull/123))
+- Rename State#run_wait to just #wait ([#139](https://github.com/ManageIQ/floe/pull/139))
+- Refactor the Podman runner to be a Docker subclass ([#140](https://github.com/ManageIQ/floe/pull/140))
+
 ## [0.5.0] - 2023-10-12
 ### Added
 - For task errors, use the json on the last line ([#128](https://github.com/ManageIQ/floe/pull/128))
@@ -32,19 +47,19 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.3.1] - 2023-08-29
 ### Added
-- Add more global podman runner options ([#90])(https://github.com/ManageIQ/floe/pull/90)
+- Add more global podman runner options ([#90](https://github.com/ManageIQ/floe/pull/90))
 
 ## [0.3.0] - 2023-08-07
 ### Added
-- Add --network=host option to Docker/Podman runners ([#81])(https://github.com/ManageIQ/floe/pull/81)
+- Add --network=host option to Docker/Podman runners ([#81](https://github.com/ManageIQ/floe/pull/81))
 
 ### Fixed
-- Fix PayloadTemplate value transformation rules ([#78])(https://github.com/ManageIQ/floe/pull/78)
-- Move end out of the root state node ([#80])(https://github.com/ManageIQ/floe/pull/80)
+- Fix PayloadTemplate value transformation rules ([#78](https://github.com/ManageIQ/floe/pull/78))
+- Move end out of the root state node ([#80](https://github.com/ManageIQ/floe/pull/80))
 
 ## [0.2.3] - 2023-07-28
 ### Fixed
-- Fix storing next_state in Context ([#76])(https://github.com/ManageIQ/floe/pull/76)
+- Fix storing next_state in Context ([#76](https://github.com/ManageIQ/floe/pull/76))
 
 ## [0.2.2] - 2023-07-24
 ### Fixed
@@ -84,7 +99,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/ManageIQ/floe/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/ManageIQ/floe/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/ManageIQ/floe/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/ManageIQ/floe/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/ManageIQ/floe/compare/v0.3.0...v0.3.1
