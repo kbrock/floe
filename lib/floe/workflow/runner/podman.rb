@@ -30,7 +30,7 @@ module Floe
 
         private
 
-        def run_container(image, env, secret)
+        def run_container_params(image, env, secret)
           params  = ["run"]
           params << :detach
           params += env.map { |k, v| [:e, "#{k}=#{v}"] }
@@ -39,11 +39,6 @@ module Floe
           params << [:secret, secret] if secret
           params << [:name, container_name(image)]
           params << image
-
-          logger.debug("Running podman: #{AwesomeSpawn.build_command_line("podman", params)}")
-
-          result = podman!(*params)
-          result.output
         end
 
         def create_secret(secrets)

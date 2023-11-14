@@ -67,6 +67,15 @@ module Floe
         attr_reader :network
 
         def run_container(image, env, secrets_file)
+          params = run_container_params(image, env, secrets_file)
+
+          logger.debug("Running #{AwesomeSpawn.build_command_line("docker", params)}")
+
+          result = docker!(*params)
+          result.output
+        end
+
+        def run_container_params(image, env, secrets_file)
           params  = ["run"]
           params << :detach
           params += env.map { |k, v| [:e, "#{k}=#{v}"] }
@@ -75,11 +84,6 @@ module Floe
           params << [:v, "#{secrets_file}:/run/secrets:z"] if secrets_file
           params << [:name, container_name(image)]
           params << image
-
-          logger.debug("Running docker: #{AwesomeSpawn.build_command_line("docker", params)}")
-
-          result = docker!(*params)
-          result.output
         end
 
         def inspect_container(container_id)
