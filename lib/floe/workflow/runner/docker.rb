@@ -30,12 +30,11 @@ module Floe
 
           begin
             runner_context["container_ref"] = run_container(image, env, runner_context["secrets_ref"])
-          rescue
+            runner_context
+          rescue AwesomeSpawn::CommandResultError => err
             cleanup(runner_context)
-            raise
+            {"Error" => "States.TaskFailed", "Cause" => err.to_s}
           end
-
-          runner_context
         end
 
         def cleanup(runner_context)
@@ -46,11 +45,13 @@ module Floe
         end
 
         def status!(runner_context)
+          return if runner_context.key?("Error")
+
           runner_context["container_state"] = inspect_container(runner_context["container_ref"]).first&.dig("State")
         end
 
         def running?(runner_context)
-          runner_context.dig("container_state", "Running")
+          !!runner_context.dig("container_state", "Running")
         end
 
         def success?(runner_context)
@@ -58,6 +59,8 @@ module Floe
         end
 
         def output(runner_context)
+          return runner_context.slice("Error", "Cause") if runner_context.key?("Error")
+
           output = docker!("logs", runner_context["container_ref"], :combined_output => true).output
           runner_context["output"] = output
         end
