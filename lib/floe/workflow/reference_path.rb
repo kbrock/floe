@@ -32,12 +32,16 @@ module Floe
         if path.empty?
           result.merge!(value)
         else
-          child = result
-          path[..-2].each do |key|
+          child    = result
+          keys     = path.dup
+          last_key = keys.pop
+
+          keys.each do |key|
             child[key] = {} if child[key].nil?
             child = child[key]
           end
-          child[path.last] = value
+
+          child[last_key] = value
         end
 
         result
