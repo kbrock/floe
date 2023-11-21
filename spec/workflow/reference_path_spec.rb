@@ -37,6 +37,15 @@ RSpec.describe Floe::Workflow::ReferencePath do
         end
       end
     end
+
+    context "with a top-level array input" do
+      let(:payload) { "$.[1].title" }
+      let(:input)   { [{"title" => "Advanced ASL"}, {"title" => "ASL For Dummies"}] }
+
+      it "returns the value from the array" do
+        expect(subject.get(input)).to eq("ASL For Dummies")
+      end
+    end
   end
 
   describe "#set" do
@@ -63,6 +72,15 @@ RSpec.describe Floe::Workflow::ReferencePath do
 
       it "sets the value in the array" do
         expect(subject.set(input, "hi")).to eq("master" => [{"foo" => "bar"}, {"bar" => "hi"}])
+      end
+    end
+
+    context "with a top-level array" do
+      let(:input)   { [{"book" => {"title" => "Advanced ASL"}}, {"book" => {"title" => "ASL for dummies"}}] }
+      let(:payload) { "$.[1].book.title" }
+
+      it "sets the value in the array" do
+        expect(subject.set(input, "ASL for Dummies")).to eq([{"book" => {"title" => "Advanced ASL"}}, {"book" => {"title" => "ASL for Dummies"}}])
       end
     end
 
