@@ -56,15 +56,16 @@ module Floe
 
           begin
             create_pod!(name, image, env, secret)
-          rescue
+            runner_context
+          rescue Kubeclient::HttpError => err
             cleanup(runner_context)
-            raise
+            {"Error" => "States.TaskFailed", "Cause" => err.to_s}
           end
-
-          runner_context
         end
 
         def status!(runner_context)
+          return if runner_context.key?("Error")
+
           runner_context["container_state"] = pod_info(runner_context["container_ref"]).to_h.deep_stringify_keys["status"]
         end
 
@@ -83,13 +84,14 @@ module Floe
         end
 
         def output(runner_context)
-          runner_context["output"] =
-            if container_failed?(runner_context)
-              failed_state = failed_container_states(runner_context).first
-              {"Error" => failed_state["reason"], "Cause" => failed_state["message"]}
-            else
-              kubeclient.get_pod_log(runner_context["container_ref"], namespace).body
-            end
+          if runner_context.key?("Error")
+            runner_context.slice("Error", "Cause")
+          elsif container_failed?(runner_context)
+            failed_state = failed_container_states(runner_context).first
+            {"Error" => failed_state["reason"], "Cause" => failed_state["message"]}
+          else
+            runner_context["output"] = kubeclient.get_pod_log(runner_context["container_ref"], namespace).body
+          end
         end
 
         def cleanup(runner_context)

@@ -38,7 +38,8 @@ RSpec.describe Floe::Workflow::Runner::Podman do
       stub_bad_run!("podman", :params => ["run", :detach, [:e, "FOO=BAR"], [:e, a_string_including("_CREDENTIALS=")], [:secret, anything], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"])
       stub_good_run!("podman", :params => ["secret", "rm", anything])
 
-      expect { subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"}) }.to raise_error(AwesomeSpawn::CommandResultError, /podman exit code: 1/)
+      expect(subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"}))
+        .to eq({"Error" => "States.TaskFailed", "Cause" => "podman exit code: 1 error was: Failure"})
     end
   end
 

@@ -160,8 +160,7 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       expect(kubeclient).to receive(:create_secret).with(hash_including(:kind => "Secret", :type => "Opaque"))
       stub_kubernetes_bad_run
       expect(kubeclient).to receive(:delete_secret)
-
-      expect { subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"}) }.to raise_error(Kubeclient::HttpError, /Forbidden/)
+      expect(subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})).to eq({"Error" => "States.TaskFailed", "Cause" => "HTTP status code 403, Forbidden"})
     end
 
     context "with an alternate namespace" do
