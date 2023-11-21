@@ -9,20 +9,21 @@ module Floe
         end
       end
 
+      attr_reader :path
+
       def initialize(*)
         super
 
         raise Floe::InvalidWorkflowError, "Invalid Reference Path" if payload.match?(/@|,|:|\?/)
+        @path = JsonPath.new(payload)
+                        .path[1..]
+                        .map { |v| v.match(/\[(?<name>.+)\]/)["name"] }
+                        .map { |v| v[0] == "'" ? v.delete("'") : v.to_i }
+                        .compact
       end
 
       def set(context, value)
         result = context.dup
-
-        path = JsonPath.new(payload)
-                       .path[1..]
-                       .map { |v| v.match(/\[(?<name>.+)\]/)["name"] }
-                       .map { |v| v[0] == "'" ? v.delete("'") : v.to_i }
-                       .compact
 
         # If the payload is '$' then merge the value into the context
         # otherwise use store path to set the value to a sub-key
