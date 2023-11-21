@@ -22,8 +22,8 @@ RSpec.describe Floe::Workflow::ReferencePath do
     end
 
     context "with an array dereference" do
-      let(:payload) { "$['store'][0]['book']" }
-      let(:input)   { {"store" => [{"book" => "ASL For Dummies"}]} }
+      let(:payload) { "$['store'][1]['book']" }
+      let(:input)   { {"store" => [{"book" => "Advanced ASL"}, {"book" => "ASL For Dummies"}]} }
 
       it "returns the value from the array" do
         expect(subject.get(input)).to eq("ASL For Dummies")
@@ -59,10 +59,10 @@ RSpec.describe Floe::Workflow::ReferencePath do
 
     context "with an array" do
       let(:input)   { {"master" => [{"foo" => "bar"}, {"bar" => "baz"}]} }
-      let(:payload) { "$.master[0].foo" }
+      let(:payload) { "$.master[1].bar" }
 
       it "sets the value in the array" do
-        expect(subject.set(input, "hi")).to eq("master" => [{"foo" => "hi"}, {"bar" => "baz"}])
+        expect(subject.set(input, "hi")).to eq("master" => [{"foo" => "bar"}, {"bar" => "hi"}])
       end
     end
 
