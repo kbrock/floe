@@ -4,6 +4,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.1] - 2023-11-21
+### Fixed
+- Return an error payload if run_async! fails ([#143](https://github.com/ManageIQ/floe/pull/143))
+
+### Changed
+- Extract run_container_params for docker/podman ([#142](https://github.com/ManageIQ/floe/pull/142))
+
 ## [0.6.0] - 2023-11-09
 ### Added
 - Prefix pod names with 'floe-' ([#132](https://github.com/ManageIQ/floe/pull/132))
@@ -99,7 +106,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/ManageIQ/floe/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/ManageIQ/floe/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/ManageIQ/floe/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/ManageIQ/floe/compare/v0.4.0...v0.4.1
