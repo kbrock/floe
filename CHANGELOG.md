@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Remove the dependency on more_core_extensions in ReferencePath ([#144](https://github.com/ManageIQ/floe/pull/144))
+
+### Added
+- Implement `ReferencePath#get` ([#144](https://github.com/ManageIQ/floe/pull/144))
 
 ## [0.6.1] - 2023-11-21
 ### Fixed
