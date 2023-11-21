@@ -4,6 +4,10 @@ module Floe
   class Workflow
     class ReferencePath < Path
       class << self
+        def get(payload, context)
+          new(payload).get(context)
+        end
+
         def set(payload, context, value)
           new(payload).set(context, value)
         end
@@ -22,11 +26,17 @@ module Floe
                         .compact
       end
 
+      def get(context)
+        return context if path.empty?
+
+        context.dig(*path)
+      end
+
       def set(context, value)
         result = context.dup
 
         # If the payload is '$' then merge the value into the context
-        # otherwise use store path to set the value to a sub-key
+        # otherwise store the value under the path
         #
         # TODO: how to handle non-hash values, raise error if path=$ and value not a hash?
         if path.empty?

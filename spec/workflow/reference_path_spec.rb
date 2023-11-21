@@ -1,15 +1,46 @@
 RSpec.describe Floe::Workflow::ReferencePath do
+  let(:subject) { described_class.new(payload) }
+
   describe "#initialize" do
     context "with invalid value" do
+      let(:payload) { "$.foo@.bar" }
+
       it "raises an exception" do
-        expect { described_class.new("$.foo@.bar") }.to raise_error(Floe::InvalidWorkflowError, "Invalid Reference Path")
+        expect { subject }.to raise_error(Floe::InvalidWorkflowError, "Invalid Reference Path")
+      end
+    end
+  end
+
+  describe "#get" do
+    context "with a simple path" do
+      let(:payload) { "$" }
+      let(:input)   { {"hello" => "world"} }
+
+      it "returns the input" do
+        expect(subject.get(input)).to eq(input)
+      end
+    end
+
+    context "with an array dereference" do
+      let(:payload) { "$['store'][0]['book']" }
+      let(:input)   { {"store" => [{"book" => "ASL For Dummies"}]} }
+
+      it "returns the value from the array" do
+        expect(subject.get(input)).to eq("ASL For Dummies")
+      end
+
+      context "with a missing value" do
+        let(:input)   { {"store" => []} }
+
+        it "returns nil" do
+          expect(subject.get(input)).to be_nil
+        end
       end
     end
   end
 
   describe "#set" do
     let(:payload) { "$" }
-    let(:subject) { described_class.new(payload) }
     let(:input) { {} }
 
     context "with a simple path" do
