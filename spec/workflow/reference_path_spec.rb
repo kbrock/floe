@@ -73,6 +73,14 @@ RSpec.describe Floe::Workflow::ReferencePath do
       it "sets the value in the array" do
         expect(subject.set(input, "hi")).to eq("master" => [{"foo" => "bar"}, {"bar" => "hi"}])
       end
+
+      context "with an array index past the last value" do
+        let(:payload) { "$.master[2].bar" }
+
+        it "appends to the array" do
+          expect(subject.set(input, "hi")).to eq("master" => [{"foo" => "bar"}, {"bar" => "baz"}, {"bar" => "hi"}])
+        end
+      end
     end
 
     context "with a top-level array" do
