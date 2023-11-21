@@ -10,9 +10,6 @@ module Floe
       end
 
       def initialize(*)
-        require "more_core_extensions/core_ext/hash/nested"
-        require "more_core_extensions/core_ext/array/nested"
-
         super
 
         raise Floe::InvalidWorkflowError, "Invalid Reference Path" if payload.match?(/@|,|:|\?/)
@@ -34,7 +31,12 @@ module Floe
         if path.empty?
           result.merge!(value)
         else
-          result.store_path(path, value)
+          child = result
+          path[..-2].each do |key|
+            child[key] = {} if child[key].nil?
+            child = child[key]
+          end
+          child[path.last] = value
         end
 
         result
