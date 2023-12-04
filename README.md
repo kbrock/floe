@@ -51,6 +51,38 @@ You can provide that at runtime via the `--credentials` parameter:
 bundle exec ruby exe/floe --workflow my-workflow.asl --credentials='{"roleArn": "arn:aws:iam::111122223333:role/LambdaRole"}'
 ```
 
+If you need to set a credential at runtime you can do that by using the `"ResultPath": "$.Credentials"` directive, for example to user a username/password to login and get a Bearer token:
+
+```
+bundle exec ruby exe/floe --workflow my-workflow.asl --credentials='{"username": "user", "password": "pass"}'
+```
+
+```json
+{
+  "StartAt": "Login",
+  "States": {
+    "Login": {
+      "Type": "Task",
+      "Resource": "docker://login:latest",
+      "Credentials": {
+        "username.$": "$.username",
+        "password.$": "$.password"
+      },
+      "ResultPath": "$.Credentials",
+      "Next": "DoSomething"
+    },
+    "DoSomething": {
+      "Type": "Task",
+      "Resource": "docker://do-something:latest",
+      "Credentials": {
+        "token.$": "$.bearer_token"
+      },
+      "End": true
+    }
+  }
+}
+```
+
 ### Ruby Library
 
 ```ruby
