@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - Implement `ReferencePath#get` ([#144](https://github.com/ManageIQ/floe/pull/144))
+- Allow a State to set a value in Credentials for subsequent states ([#145](https://github.com/ManageIQ/floe/pull/145))
 
 ## [0.6.1] - 2023-11-21
 ### Fixed

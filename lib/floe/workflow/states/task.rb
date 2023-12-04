@@ -156,7 +156,12 @@ module Floe
           return if output_path.nil?
 
           results = result_selector.value(context, results) if result_selector
-          output  = result_path.set(output, results)
+          if result_path.payload.start_with?("$.Credentials")
+            credentials = result_path.set(workflow.credentials, results)["Credentials"]
+            workflow.credentials.merge!(credentials)
+          else
+            output = result_path.set(output, results)
+          end
           output_path.value(context, output)
         end
 

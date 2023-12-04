@@ -98,6 +98,22 @@ RSpec.describe Floe::Workflow::States::Task do
             "ip_addrs" => ["192.168.1.2"]
           )
         end
+
+        context "setting a Credential" do
+          let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "ResultPath" => "$.Credentials", "End" => true}}) }
+
+          it "inserts the response into the workflow credentials" do
+            expect_run_async(input, :output => "{\"token\": \"shhh!\"}")
+
+            workflow.current_state.run_nonblock!
+
+            expect(workflow.credentials).to include("token" => "shhh!")
+            expect(ctx.output).to eq(
+              "foo" => {"bar" => "baz"},
+              "bar" => {"baz" => "foo"}
+            )
+          end
+        end
       end
 
       context "OutputPath" do

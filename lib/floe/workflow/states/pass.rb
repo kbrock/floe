@@ -26,7 +26,14 @@ module Floe
         def start(input)
           super
           output = input_path.value(context, input)
-          output = result_path.set(output, result) if result && result_path
+          if result && result_path
+            if result_path.payload.start_with?("$.Credentials")
+              credentials = result_path.set(workflow.credentials, result)["Credentials"]
+              workflow.credentials.merge!(credentials)
+            else
+              output = result_path.set(output, result)
+            end
+          end
           output = output_path.value(context, output)
 
           context.next_state = end? ? nil : @next
