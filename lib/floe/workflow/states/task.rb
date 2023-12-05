@@ -4,6 +4,7 @@ module Floe
   class Workflow
     module States
       class Task < Floe::Workflow::State
+        include InputOutputMixin
         include NonTerminalMixin
 
         attr_reader :credentials, :end, :heartbeat_seconds, :next, :parameters,
@@ -49,7 +50,7 @@ module Floe
 
           if success?
             output = parse_output(output)
-            context.state["Output"] = process_output!(output)
+            context.state["Output"] = process_output(context.input.dup, output)
             context.next_state      = next_state
           else
             error = parse_error(output)
@@ -126,12 +127,6 @@ module Floe
           context.state["Error"] = context.output["Error"]
         end
 
-        def process_input(input)
-          input = input_path.value(context, input)
-          input = parameters.value(context, input) if parameters
-          input
-        end
-
         def parse_error(output)
           return if output.nil?
           return output if output.kind_of?(Hash)
@@ -148,21 +143,6 @@ module Floe
           JSON.parse(output.split("\n").last)
         rescue JSON::ParserError
           nil
-        end
-
-        def process_output!(results)
-          output = context.input.dup
-          return output if results.nil?
-          return if output_path.nil?
-
-          results = result_selector.value(context, results) if result_selector
-          if result_path.payload.start_with?("$.Credentials")
-            credentials = result_path.set(workflow.credentials, results)["Credentials"]
-            workflow.credentials.merge!(credentials)
-          else
-            output = result_path.set(output, results)
-          end
-          output_path.value(context, output)
         end
 
         def next_state
