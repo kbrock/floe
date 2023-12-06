@@ -4,37 +4,54 @@ module Floe
   class Workflow
     class ReferencePath < Path
       class << self
+        def get(payload, context)
+          new(payload).get(context)
+        end
+
         def set(payload, context, value)
           new(payload).set(context, value)
         end
       end
 
-      def initialize(*)
-        require "more_core_extensions/core_ext/hash/nested"
-        require "more_core_extensions/core_ext/array/nested"
+      attr_reader :path
 
+      def initialize(*)
         super
 
         raise Floe::InvalidWorkflowError, "Invalid Reference Path" if payload.match?(/@|,|:|\?/)
+        @path = JsonPath.new(payload)
+                        .path[1..]
+                        .map { |v| v.match(/\[(?<name>.+)\]/)["name"] }
+                        .map { |v| v[0] == "'" ? v.delete("'") : v.to_i }
+                        .compact
+      end
+
+      def get(context)
+        return context if path.empty?
+
+        context.dig(*path)
       end
 
       def set(context, value)
         result = context.dup
 
-        path = JsonPath.new(payload)
-                       .path[1..]
-                       .map { |v| v.match(/\[(?<name>.+)\]/)["name"] }
-                       .map { |v| v[0] == "'" ? v.delete("'") : v.to_i }
-                       .compact
-
         # If the payload is '$' then merge the value into the context
-        # otherwise use store path to set the value to a sub-key
+        # otherwise store the value under the path
         #
         # TODO: how to handle non-hash values, raise error if path=$ and value not a hash?
         if path.empty?
           result.merge!(value)
         else
-          result.store_path(path, value)
+          child    = result
+          keys     = path.dup
+          last_key = keys.pop
+
+          keys.each do |key|
+            child[key] = {} if child[key].nil?
+            child = child[key]
+          end
+
+          child[last_key] = value
         end
 
         result
