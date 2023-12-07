@@ -74,6 +74,10 @@ module Floe
         end
       end
 
+      def success?
+        status == "success"
+      end
+
       def state=(val)
         @context["State"] = val
       end
