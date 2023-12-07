@@ -55,6 +55,24 @@ module Floe
           nil
         end
 
+        def parse_notice(notice)
+          notice = JSON.parse(notice)
+          [notice["Name"], podman_event_status_to_event(notice["Status"])]
+        end
+
+        def podman_event_status_to_event(status)
+          case status
+          when "create"
+            :create
+          when "init", "start"
+            :update
+          when "died", "cleanup", "remove"
+            :delete
+          else
+            :unknown
+          end
+        end
+
         alias podman! docker!
 
         def global_docker_options

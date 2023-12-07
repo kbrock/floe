@@ -10,6 +10,7 @@ module Floe
 
         def initialize(options = {})
           require "awesome_spawn"
+          require "io/wait"
           require "tempfile"
 
           super
@@ -45,7 +46,56 @@ module Floe
           delete_secret(secrets_file)    if secrets_file
         end
 
-        def wait(timeout: nil, events: %i[create update delete])
+        def wait(timeout: nil, events: %i[create update delete], &block)
+          until_timestamp = Time.now.utc + timeout if timeout
+
+          r, w = IO.pipe
+
+          pid = AwesomeSpawn.run_detached(
+            self.class::DOCKER_COMMAND, :err => :out, :out => w, :params => wait_params(until_timestamp)
+          )
+
+          w.close
+
+          loop do
+            readable_timeout = until_timestamp - Time.now.utc if until_timestamp
+
+            # Wait for our end of the pipe to be readable and if it didn't timeout
+            # get the events from stdout
+            next if r.wait_readable(readable_timeout).nil?
+
+            # Get all events while the pipe is readable
+            notices = []
+            while r.ready?
+              notice = r.gets
+
+              # If the process has exited `r.gets` returns `nil` and the pipe is
+              # always `ready?`
+              break if notice.nil?
+
+              ref, event = parse_notice(notice)
+              next unless events.include?(event)
+
+              notices << [ref, event]
+            end
+
+            # If we're given a block yield the events otherwise return them
+            if block
+              notices.each(&block)
+            else
+              # Terminate the `docker events` process before returning the events
+              Process.kill("TERM", pid) rescue Errno::ESRCH
+              return notices
+            end
+
+            # Check that the `docker events` process is still alive
+            Process.kill(0, pid)
+          rescue Errno::ESRCH
+            # Break out of the loop if the `docker events` process has exited
+            break
+          end
+        ensure
+          r.close
         end
 
         def status!(runner_context)
@@ -92,6 +142,30 @@ module Floe
           params << [:v, "#{secrets_file}:/run/secrets:z"] if secrets_file
           params << [:name, container_name(image)]
           params << image
+        end
+
+        def wait_params(until_timestamp)
+          params = ["events", [:format, "{{json .}}"], [:filter, "type=container"], [:since, Time.now.utc.to_i]]
+          params << [:until, until_timestamp.to_i] if until_timestamp
+        end
+
+        def parse_notice(notice)
+          notice = JSON.parse(notice)
+          ref = notice.dig("Actor", "Attributes", "name")
+          [ref, docker_event_status_to_event(notice["status"])]
+        end
+
+        def docker_event_status_to_event(status)
+          case status
+          when "create"
+            :create
+          when "start"
+            :update
+          when "die"
+            :delete
+          else
+            :unkonwn
+          end
         end
 
         def inspect_container(container_id)
