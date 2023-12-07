@@ -45,6 +45,9 @@ module Floe
           delete_secret(secrets_file)    if secrets_file
         end
 
+        def wait(timeout: nil, events: %i[create update delete])
+        end
+
         def status!(runner_context)
           return if runner_context.key?("Error")
 

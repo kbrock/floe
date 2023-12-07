@@ -102,6 +102,9 @@ module Floe
           delete_secret(secret) if secret
         end
 
+        def wait(timeout: nil, events: %i[create update delete])
+        end
+
         private
 
         attr_reader :ca_file, :kubeconfig_file, :kubeconfig_context, :namespace, :server, :token, :verify_ssl

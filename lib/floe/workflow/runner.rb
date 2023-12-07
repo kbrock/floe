@@ -68,6 +68,10 @@ module Floe
       def cleanup(_runner_context)
         raise NotImplementedError, "Must be implemented in a subclass"
       end
+
+      def wait(timeout: nil, events: %i[create update delete])
+        raise NotImplementedError, "Must be implemented in a subclass"
+      end
     end
   end
 end
