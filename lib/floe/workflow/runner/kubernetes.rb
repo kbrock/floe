@@ -103,6 +103,27 @@ module Floe
         end
 
         def wait(timeout: nil, events: %i[create update delete])
+          watcher = kubeclient.watch_pods(:namespace => namespace)
+
+          timeout_thread = Thread.new { sleep(timeout); watcher.finish } if timeout > 0
+
+          ref = nil
+
+          watcher.each do |notice|
+            event = kube_notice_type_to_event(notice.type)
+            next unless events.include?(event)
+
+            if block_given?
+              yield [notice.object.metadata.name, event]
+            else
+              timeout_thread&.kill # If we break out before the timeout, kill the timeout thread
+              return [notice.object.metadata.name, event]
+            end
+          end
+
+          ref
+        ensure
+          timeout_thread&.join(0)
         end
 
         private
@@ -218,6 +239,19 @@ module Floe
           delete_secret!(name)
         rescue
           nil
+        end
+
+        def kube_notice_type_to_event(type)
+          case type
+          when "ADDED"
+            :create
+          when "MODIFIED"
+            :update
+          when "DELETED"
+            :delete
+          else
+            :unknown
+          end
         end
 
         def kubeclient
