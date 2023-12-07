@@ -8,9 +8,12 @@ module Floe
     include Logging
 
     class << self
-      def load(path_or_io, context = nil, credentials = {})
+      def load(path_or_io, context = nil, credentials = {}, name = nil)
         payload = path_or_io.respond_to?(:read) ? path_or_io.read : File.read(path_or_io)
-        new(payload, context, credentials)
+        # default the name if it is a filename and none was passed in
+        name ||= path_or_io.respond_to?(:read) ? "stream" : path_or_io.split("/").last.split(".").first
+
+        new(payload, context, credentials, name)
       end
 
       def wait(workflows, timeout: 5)
@@ -31,9 +34,9 @@ module Floe
       end
     end
 
-    attr_reader :context, :credentials, :payload, :states, :states_by_name, :start_at
+    attr_reader :context, :credentials, :payload, :states, :states_by_name, :start_at, :name
 
-    def initialize(payload, context = nil, credentials = {})
+    def initialize(payload, context = nil, credentials = {}, name = nil)
       payload     = JSON.parse(payload)     if payload.kind_of?(String)
       credentials = JSON.parse(credentials) if credentials.kind_of?(String)
       context     = Context.new(context)    unless context.kind_of?(Context)
@@ -42,12 +45,13 @@ module Floe
       raise Floe::InvalidWorkflowError, "Missing field \"StartAt\"" if payload["StartAt"].nil?
       raise Floe::InvalidWorkflowError, "\"StartAt\" not in the \"States\" field" unless payload["States"].key?(payload["StartAt"])
 
+      @name        = name
       @payload     = payload
       @context     = context
       @credentials = credentials
       @start_at    = payload["StartAt"]
 
-      @states         = payload["States"].to_a.map { |name, state| State.build!(self, name, state) }
+      @states         = payload["States"].to_a.map { |state_name, state| State.build!(self, state_name, state) }
       @states_by_name = @states.each_with_object({}) { |state, result| result[state.name] = state }
 
       unless context.state.key?("Name")
