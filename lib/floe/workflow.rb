@@ -17,6 +17,7 @@ module Floe
       end
 
       def wait(workflows, timeout: nil)
+        workflows = [workflows] if workflows.kind_of?(self)
         logger.info("checking #{workflows.count} workflows...")
 
         start = Time.now.utc
