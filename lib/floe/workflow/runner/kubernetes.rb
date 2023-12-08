@@ -105,24 +105,27 @@ module Floe
         def wait(timeout: nil, events: %i[create update delete])
           watcher = kubeclient.watch_pods(:namespace => namespace)
 
-          timeout_thread = Thread.new { sleep(timeout); watcher.finish } if timeout > 0
-
-          ref = nil
+          timeout_thread = Thread.new { sleep(timeout); watcher.finish } if timeout.to_i > 0
 
           watcher.each do |notice|
             event = kube_notice_type_to_event(notice.type)
             next unless events.include?(event)
 
+            pod = notice.object
+            container_ref   = pod.metadata.name
+            container_state = pod.to_h.deep_stringify_keys["status"]
+
+            runner_context = {"container_ref" => container_ref, "container_state" => container_state}
+
             if block_given?
-              yield [notice.object.metadata.name, event]
+              yield runner_context
             else
               timeout_thread&.kill # If we break out before the timeout, kill the timeout thread
-              return [notice.object.metadata.name, event]
+              return runner_context
             end
           end
-
-          ref
         ensure
+          watch&.finish rescue nil
           timeout_thread&.join(0)
         end
 

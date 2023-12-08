@@ -57,7 +57,7 @@ module Floe
 
         def parse_notice(notice)
           notice = JSON.parse(notice)
-          [notice["Name"], podman_event_status_to_event(notice["Status"])]
+          [notice["ID"], podman_event_status_to_event(notice["Status"])]
         end
 
         def podman_event_status_to_event(status)

@@ -76,7 +76,11 @@ module Floe
               ref, event = parse_notice(notice)
               next unless events.include?(event)
 
-              notices << [ref, event]
+              state = inspect_container(ref).first&.dig("State")
+
+              runner_context = {"container_ref" => ref, "container_state" => state}
+
+              notices << runner_context
             end
 
             # If we're given a block yield the events otherwise return them
@@ -147,6 +151,7 @@ module Floe
         def wait_params(until_timestamp)
           params = ["events", [:format, "{{json .}}"], [:filter, "type=container"], [:since, Time.now.utc.to_i]]
           params << [:until, until_timestamp.to_i] if until_timestamp
+          params
         end
 
         def parse_notice(notice)
