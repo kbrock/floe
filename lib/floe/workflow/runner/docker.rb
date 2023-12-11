@@ -76,7 +76,7 @@ module Floe
               ref, event = parse_notice(notice)
               next unless events.include?(event)
 
-              state = inspect_container(ref).first&.dig("State")
+              state = inspect_container(ref)&.dig("State")
 
               runner_context = {"container_ref" => ref, "container_state" => state}
 
@@ -105,7 +105,7 @@ module Floe
         def status!(runner_context)
           return if runner_context.key?("Error")
 
-          runner_context["container_state"] = inspect_container(runner_context["container_ref"]).first&.dig("State")
+          runner_context["container_state"] = inspect_container(runner_context["container_ref"])&.dig("State")
         end
 
         def running?(runner_context)
@@ -174,7 +174,9 @@ module Floe
         end
 
         def inspect_container(container_id)
-          JSON.parse(docker!("inspect", container_id).output)
+          JSON.parse(docker!("inspect", container_id).output).first
+        rescue
+          nil
         end
 
         def delete_container(container_id)
