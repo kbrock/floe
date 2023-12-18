@@ -4,6 +4,7 @@ module Floe
   class Workflow
     module States
       class Pass < Floe::Workflow::State
+        include InputOutputMixin
         include NonTerminalMixin
 
         attr_reader :end, :next, :result, :parameters, :input_path, :output_path, :result_path
@@ -25,12 +26,11 @@ module Floe
 
         def start(input)
           super
-          output = input_path.value(context, input)
-          output = result_path.set(output, result) if result && result_path
-          output = output_path.value(context, output)
 
+          input = process_input(input)
+
+          context.output     = process_output(input, result)
           context.next_state = end? ? nil : @next
-          context.output     = output
         end
 
         def running?

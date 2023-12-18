@@ -9,6 +9,8 @@ module Floe
         end
       end
 
+      attr_reader :payload
+
       def initialize(payload)
         @payload = payload
 
@@ -28,10 +30,6 @@ module Floe
 
         results.count < 2 ? results.first : results
       end
-
-      private
-
-      attr_reader :payload
     end
   end
 end

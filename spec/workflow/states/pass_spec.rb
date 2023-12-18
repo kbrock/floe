@@ -2,21 +2,20 @@ RSpec.describe Floe::Workflow::States::Pass do
   let(:input)    { {} }
   let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
   let(:state)    { workflow.current_state }
-  let(:workflow) do
-    make_workflow(
-      ctx, {
-        "PassState"    => {
-          "Type"       => "Pass",
-          "Result"     => {
-            "foo" => "bar",
-            "bar" => "baz"
-          },
-          "ResultPath" => "$.result",
-          "Next"       => "SuccessState"
+  let(:workflow) { make_workflow(ctx, payload) }
+  let(:payload)  do
+    {
+      "PassState"    => {
+        "Type"       => "Pass",
+        "Result"     => {
+          "foo" => "bar",
+          "bar" => "baz"
         },
-        "SuccessState" => {"Type" => "Succeed"}
-      }
-    )
+        "ResultPath" => "$.result",
+        "Next"       => "SuccessState"
+      },
+      "SuccessState" => {"Type" => "Succeed"}
+    }
   end
 
   describe "#end?" do
@@ -30,6 +29,29 @@ RSpec.describe Floe::Workflow::States::Pass do
       state.run_nonblock!
       expect(ctx.output["result"]).to include({"foo" => "bar", "bar" => "baz"})
       expect(ctx.next_state).to eq("SuccessState")
+    end
+
+    context "with a ResultPath setting a Credential" do
+      let(:payload) do
+        {
+          "PassState"    => {
+            "Type"       => "Pass",
+            "Result"     => {
+              "user"     => "luggage",
+              "password" => "1234"
+            },
+            "ResultPath" => "$.Credentials",
+            "Next"       => "SuccessState"
+          },
+          "SuccessState" => {"Type" => "Succeed"}
+        }
+      end
+
+      it "sets the result in Credentials" do
+        state.run_nonblock!
+        expect(workflow.credentials).to include({"user" => "luggage", "password" => "1234"})
+        expect(ctx.next_state).to eq("SuccessState")
+      end
     end
   end
 end
