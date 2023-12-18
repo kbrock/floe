@@ -55,10 +55,10 @@ RSpec.describe Floe::Workflow do
     end
   end
 
-  describe "#run!" do
+  describe "#run_nonblock" do
     it "sets execution variables for success" do
       workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Succeed"}})
-      workflow.run!
+      workflow.run_nonblock
 
       # state
       expect(Time.parse(ctx.state["EnteredTime"])).to be_within(1).of(now)
@@ -83,7 +83,7 @@ RSpec.describe Floe::Workflow do
 
     it "sets execution variables for failure" do
       workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Fail", "Cause" => "Bad Stuff", "Error" => "Issue"}})
-      workflow.run!
+      workflow.run_nonblock
 
       # state
       expect(Time.parse(ctx.state["EnteredTime"])).to be_within(1).of(now)
@@ -107,9 +107,7 @@ RSpec.describe Floe::Workflow do
       expect(workflow.status).to eq("failure")
       expect(workflow.end?).to eq(true)
     end
-  end
 
-  describe "#run_nonblock" do
     it "starts the first state" do
       workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
       workflow.run_nonblock

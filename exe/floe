@@ -6,14 +6,20 @@ require "optimist"
 
 opts = Optimist.options do
   version("v#{Floe::VERSION}\n")
-  opt :workflow, "Path to your workflow json",                 :type => :string, :required => true
-  opt :input, "JSON payload to input to the workflow",         :default => '{}'
-  opt :credentials, "JSON payload with credentials",           :default => "{}"
-  opt :docker_runner, "Type of runner for docker images",      :default => "docker"
-  opt :docker_runner_options, "Options to pass to the runner", :type => :strings
+  usage("[options] workflow input [workflow2 input2]")
+
+  opt :workflow, "Path to your workflow json (legacy)",         :type => :string
+  opt :input, "JSON payload to input to the workflow (legacy)", :type => :string
+  opt :credentials, "JSON payload with credentials",            :default => "{}"
+  opt :docker_runner, "Type of runner for docker images",       :default => "docker"
+  opt :docker_runner_options, "Options to pass to the runner",  :type => :strings
 end
 
 Optimist.die(:docker_runner, "must be one of #{Floe::Workflow::Runner::TYPES.join(", ")}") unless Floe::Workflow::Runner::TYPES.include?(opts[:docker_runner])
+
+# legacy support for --workflow
+args = ARGV.empty? ? [opts[:workflow], opts[:input]] : ARGV
+Optimist.die(:workflow, "must be specified") if args.empty?
 
 require "logger"
 Floe.logger = Logger.new($stdout)
@@ -31,10 +37,29 @@ runner_options = opts[:docker_runner_options].to_h { |opt| opt.split("=", 2) }
 
 Floe::Workflow::Runner.docker_runner = runner_klass.new(runner_options)
 
-context = Floe::Workflow::Context.new(:input => opts[:input])
-workflow = Floe::Workflow.load(opts[:workflow], context, opts[:credentials])
+workflows =
+  args.each_slice(2).map do |workflow, input|
+    context = Floe::Workflow::Context.new(:input => input || opts[:input] || "{}")
+    Floe::Workflow.load(workflow, context, opts[:credentials])
+  end
 
-workflow.run!
+# run
 
-puts workflow.output.inspect
-exit workflow.status == "success" ? 0 : 1
+outstanding = workflows.dup
+until outstanding.empty?
+  ready = outstanding.select(&:step_nonblock_ready?)
+  ready.map(&:run_nonblock)
+  outstanding -= ready.select(&:end?)
+  sleep(1) if !outstanding.empty?
+end
+
+# display status
+
+workflows.each do |workflow|
+  puts "", "#{workflow.name}#{" (#{workflow.status})" unless workflow.context.success?}", "===" if workflows.size > 1
+  puts workflow.output.inspect
+end
+
+# exit status
+
+exit workflows.all? { |workflow| workflow.context.success? } ? 0 : 1

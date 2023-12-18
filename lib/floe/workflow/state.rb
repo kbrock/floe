@@ -33,10 +33,6 @@ module Floe
         raise Floe::InvalidWorkflowError, "State name [#{name}] must be less than or equal to 80 characters" if name.length > 80
       end
 
-      def run!(_input = nil)
-        wait until run_nonblock! == 0
-      end
-
       def wait(timeout: 5)
         start = Time.now.utc
 
