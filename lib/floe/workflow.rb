@@ -62,16 +62,6 @@ module Floe
       raise Floe::InvalidWorkflowError, err.message
     end
 
-    def run!
-      step until end?
-      self
-    end
-
-    def step
-      step_nonblock_wait until step_nonblock == 0
-      self
-    end
-
     def run_nonblock
       loop while step_nonblock == 0 && !end?
       self
