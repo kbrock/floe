@@ -51,6 +51,16 @@ You can provide that at runtime via the `--credentials` parameter:
 bundle exec ruby exe/floe --workflow my-workflow.asl --credentials='{"roleArn": "arn:aws:iam::111122223333:role/LambdaRole"}'
 ```
 
+Or if you are running the floe command programmatically you can securely provide the credentials via a stdin pipe via `--credentials=-`:
+```
+echo '{"roleArn": "arn:aws:iam::111122223333:role/LambdaRole"}' | bundle exec ruby exe/floe --workflow my-workflow.asl --credentials -
+```
+
+Or you can pass a file path with the `--credentials-file` parameter:
+```
+bundle exec ruby exe/floe --workflow my-workflow.asl --credentials-file /tmp/20231218-80537-kj494t
+```
+
 If you need to set a credential at runtime you can do that by using the `"ResultPath": "$.Credentials"` directive, for example to user a username/password to login and get a Bearer token:
 
 ```
