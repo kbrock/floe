@@ -137,8 +137,8 @@ module Floe
         end
 
         def parse_output(output)
-          return if output.nil?
           return output if output.kind_of?(Hash)
+          return if output.nil? || output.empty?
 
           JSON.parse(output.split("\n").last)
         rescue JSON::ParserError
