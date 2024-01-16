@@ -41,6 +41,16 @@ RSpec.describe Floe::Workflow::Runner::Docker do
         subject.run_async!("docker://hello-world:latest")
       end
     end
+
+    context "with pull-policy=always" do
+      let(:runner_options) { {"pull-policy" => "always"} }
+
+      it "calls docker run with --pull always" do
+        stub_good_run!("docker", :params => ["run", :detach, [:pull, "always"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"])
+
+        subject.run_async!("docker://hello-world:latest")
+      end
+    end
   end
 
   describe "#status!" do

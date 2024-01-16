@@ -16,6 +16,7 @@ module Floe
           @log_level       = options["log-level"]
           @network         = options["network"]
           @noout           = options["noout"].to_s == "true" if options.key?("noout")
+          @pull_policy     = options["pull-policy"]
           @root            = options["root"]
           @runroot         = options["runroot"]
           @runtime         = options["runtime"]
@@ -35,7 +36,8 @@ module Floe
           params << :detach
           params += env.map { |k, v| [:e, "#{k}=#{v}"] }
           params << [:e, "_CREDENTIALS=/run/secrets/#{secret}"] if secret
-          params << [:net, "host"] if @network == "host"
+          params << [:pull, @pull_policy] if @pull_policy
+          params << [:net, "host"]        if @network == "host"
           params << [:secret, secret] if secret
           params << [:name, container_name(image)]
           params << image

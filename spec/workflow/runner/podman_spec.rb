@@ -152,6 +152,16 @@ RSpec.describe Floe::Workflow::Runner::Podman do
         end
       end
 
+      context "with pull-policy=newer" do
+        let(:runner_options) { {"pull-policy" => "newer"} }
+
+        it "calls podman run with --noout" do
+          stub_good_run!("podman", :params => ["run", :detach, [:pull, "newer"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+
+          subject.run_async!("docker://hello-world:latest")
+        end
+      end
+
       context "with --root" do
         let(:runner_options) { {"root" => "/run/containers/storage"} }
 

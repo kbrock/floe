@@ -4,6 +4,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Add a Docker Runner pull-policy option ([#155](https://github.com/ManageIQ/floe/pull/155))
+
 ## [0.7.0] - 2023-12-18
 ### Changed
 - Remove the dependency on more_core_extensions in ReferencePath ([#144](https://github.com/ManageIQ/floe/pull/144))
