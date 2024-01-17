@@ -162,6 +162,7 @@ end
 Options supported by the Docker docker runner are:
 
 * `network` - What docker to connect the container to, defaults to `"bridge"`.  If you need access to host resources for development you can pass `network=host`.
+* `pull-policy` - Pull image policy. The default is missing.  Allowed values: always, missing, never
 
 #### Podman
 
@@ -171,6 +172,7 @@ Options supported by the podman docker runner are:
 * `log-level=string` - Log messages above specified level (trace, debug, info, warn, warning, error, fatal, panic)
 * `network=string` - What docker to connect the container to, defaults to `"bridge"`.  If you need access to host resources for development you can pass `network=host`.
 * `noout=boolean` - do not output to stdout
+* `pull-policy=string` - Pull image policy. The default is missing. Allowed values: always, missing, never, newer
 * `root=string` - Path to the root directory in which data, including images, is stored
 * `runroot=string` - Path to the 'run directory' where all state information is stored
 * `runtime=string` - Path to the OCI-compatible binary used to run containers
@@ -189,6 +191,7 @@ Options supported by the kubernetes docker runner are:
 * `kubeconfig` - Path to a kubeconfig file, defaults to `KUBECONFIG` environment variable or `~/.kube/config`
 * `kubeconfig_context` - Context to use in the kubeconfig file, defaults to `"default"`
 * `namespace` - Namespace to use when creating kubernetes resources, defaults to `"default"`
+* `pull-policy` - Pull image policy. The default is Always.  Allowed values: IfNotPresent, Always, Never
 * `server` - A kubernetes API Server URL, overrides anything in your kubeconfig file.  If set `KUBERNETES_SERVICE_HOST` and `KUBERNETES_SERVICE_PORT` will be used
 * `token` - A bearer_token to use to authenticate to the kubernetes API, overrides anything in your kubeconfig file.  If present, `/run/secrets/kubernetes.io/serviceaccount/token` will be used
 * `ca_file` - Path to a certificate-authority file for the kubernetes API, only valid if server and token are passed.  If present `/run/secrets/kubernetes.io/serviceaccount/ca.crt` will be used

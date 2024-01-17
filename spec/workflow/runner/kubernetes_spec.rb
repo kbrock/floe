@@ -189,6 +189,18 @@ RSpec.describe Floe::Workflow::Runner::Kubernetes do
       end
     end
 
+    context "with pull-policy=Always" do
+      let(:runner_options) { {"server" => "https://kubernetes.local:6443", "token" => "my-token", "pull-policy" => "Always"} }
+
+      it "creates the pod spec with imagePullPolicy=Always" do
+        expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :spec => hash_including(:imagePullPolicy => "Always"))
+
+        stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
+
+        subject.run_async!("docker://hello-world:latest")
+      end
+    end
+
     context "without a kubeconfig file or server+token" do
       let(:runner_options) { {} }
 

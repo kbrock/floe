@@ -40,6 +40,7 @@ module Floe
 
           @namespace = options.fetch("namespace", "default")
 
+          @pull_policy          = options["pull-policy"]
           @task_service_account = options["task_service_account"]
 
           super
@@ -143,6 +144,7 @@ module Floe
             }
           }
 
+          spec[:spec][:imagePullPolicy]    = @pull_policy          if @pull_policy
           spec[:spec][:serviceAccountName] = @task_service_account if @task_service_account
 
           if secret
