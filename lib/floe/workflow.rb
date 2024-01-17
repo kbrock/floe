@@ -48,7 +48,7 @@ module Floe
       @name        = name
       @payload     = payload
       @context     = context
-      @credentials = credentials
+      @credentials = credentials || {}
       @start_at    = payload["StartAt"]
 
       @states         = payload["States"].to_a.map { |state_name, state| State.build!(self, state_name, state) }
