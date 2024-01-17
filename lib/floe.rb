@@ -45,7 +45,26 @@ module Floe
     @logger ||= NullLogger.new
   end
 
+  # Set the logger to use
+  #
+  # @example
+  #   require "logger"
+  #   Floe.logger = Logger.new($stdout)
+  #
+  # @param logger [Logger] logger to use for logging actions
   def self.logger=(logger)
     @logger = logger
+  end
+
+  # Set the runner to use
+  #
+  # @example
+  #   Floe.set_runner "kubernetes"
+  #   Floe.set_runner Floe::Workflow::Runner::Kubernetes.new
+  #
+  # @param name_or_instance [String|Floe::Workflow::Runner] Name of runner to use for docker (e.g.: docker)
+  # @param options [Hash]                                   Options for constructor of the runner (optional)
+  def self.set_runner(name, options = {})
+    Floe::Workflow::Runner.set_runner(name, options)
   end
 end

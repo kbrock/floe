@@ -5,17 +5,36 @@ module Floe
     class Runner
       include Logging
 
-      TYPES         = %w[docker podman kubernetes].freeze
       OUTPUT_MARKER = "__FLOE_OUTPUT__\n"
 
       def initialize(_options = {})
       end
 
       class << self
-        attr_writer :docker_runner
+        # deprecated -- use Floe.set_runner instead
+        def docker_runner=(value)
+          set_runner(value)
+        end
+
+        # see Floe.set_runner
+        def set_runner(name_or_instance, options = {})
+          @docker_runner =
+            case name_or_instance
+            when "docker", nil
+              Floe::Workflow::Runner::Docker.new(options)
+            when "podman"
+              Floe::Workflow::Runner::Podman.new(options)
+            when "kubernetes"
+              Floe::Workflow::Runner::Kubernetes.new(options)
+            when Floe::Workflow::Runner
+              name_or_instance
+            else
+              raise ArgumentError, "docker runner must be one of: docker, podman, kubernetes"
+            end
+        end
 
         def docker_runner
-          @docker_runner ||= Floe::Workflow::Runner::Docker.new
+          @docker_runner || set_runner("docker")
         end
 
         def for_resource(resource)
