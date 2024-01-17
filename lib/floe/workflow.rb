@@ -16,7 +16,7 @@ module Floe
         new(payload, context, credentials, name)
       end
 
-      def wait(workflows, timeout: 5)
+      def wait(workflows, timeout: nil)
         logger.info("checking #{workflows.count} workflows...")
 
         start = Time.now.utc
@@ -74,7 +74,7 @@ module Floe
       current_state.run_nonblock!
     end
 
-    def step_nonblock_wait(timeout: 5)
+    def step_nonblock_wait(timeout: nil)
       current_state.wait(:timeout => timeout)
     end
 
