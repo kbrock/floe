@@ -35,7 +35,7 @@ Floe.logger = Logger.new($stdout)
 runner_options = opts[:docker_runner_options].to_h { |opt| opt.split("=", 2) }
 
 begin
-  Floe.set_runner(opts[:docker_runner], runner_options)
+  Floe.set_runner("docker", opts[:docker_runner], runner_options)
 rescue ArgumentError => e
   Optimist.die(:docker_runner, e.message)
 end

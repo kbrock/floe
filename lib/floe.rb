@@ -59,12 +59,13 @@ module Floe
   # Set the runner to use
   #
   # @example
-  #   Floe.set_runner "kubernetes"
-  #   Floe.set_runner Floe::Workflow::Runner::Kubernetes.new
+  #   Floe.set_runner "docker", kubernetes", {}
+  #   Floe.set_runner "docker", Floe::Workflow::Runner::Kubernetes.new({})
   #
+  # @param scheme [String] scheme                           Protocol to register (e.g.: docker)
   # @param name_or_instance [String|Floe::Workflow::Runner] Name of runner to use for docker (e.g.: docker)
   # @param options [Hash]                                   Options for constructor of the runner (optional)
-  def self.set_runner(name, options = {})
-    Floe::Workflow::Runner.set_runner(name, options)
+  def self.set_runner(scheme, name_or_instance, options = {})
+    Floe::Workflow::Runner.set_runner(scheme, name_or_instance, options)
   end
 end
