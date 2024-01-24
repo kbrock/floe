@@ -20,8 +20,6 @@ opts = Optimist.options do
   opt :kubernetes, "Use kubernetes to run images (short for --docker_runner=kubernetes)", :type => :boolean
 end
 
-Optimist.die(:docker_runner, "must be one of #{Floe::Workflow::Runner::TYPES.join(", ")}") unless Floe::Workflow::Runner::TYPES.include?(opts[:docker_runner])
-
 # legacy support for --workflow
 args = ARGV.empty? ? [opts[:workflow], opts[:input]] : ARGV
 Optimist.die(:workflow, "must be specified") if args.empty?
@@ -34,18 +32,13 @@ opts[:docker_runner] ||= "kubernetes" if opts[:kubernetes]
 require "logger"
 Floe.logger = Logger.new($stdout)
 
-runner_klass = case opts[:docker_runner]
-               when "docker"
-                 Floe::Workflow::Runner::Docker
-               when "podman"
-                 Floe::Workflow::Runner::Podman
-               when "kubernetes"
-                 Floe::Workflow::Runner::Kubernetes
-               end
-
 runner_options = opts[:docker_runner_options].to_h { |opt| opt.split("=", 2) }
 
-Floe::Workflow::Runner.docker_runner = runner_klass.new(runner_options)
+begin
+  Floe.set_runner("docker", opts[:docker_runner], runner_options)
+rescue ArgumentError => e
+  Optimist.die(:docker_runner, e.message)
+end
 
 credentials =
   if opts[:credentials_given]
