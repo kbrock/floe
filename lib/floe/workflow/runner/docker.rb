@@ -73,10 +73,10 @@ module Floe
               # always `ready?`
               break if notice.nil?
 
-              ref, event = parse_notice(notice)
+              ref, event, state = parse_notice(notice)
               next unless events.include?(event)
 
-              state = inspect_container(ref)&.dig("State")
+              state ||= inspect_container(ref)&.dig("State")
 
               runner_context = {"container_ref" => ref, "container_state" => state}
 
