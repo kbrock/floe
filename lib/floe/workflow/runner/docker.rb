@@ -76,7 +76,7 @@ module Floe
               event, runner_context = parse_notice(notice)
               next unless events.include?(event)
 
-              notices << runner_context
+              notices << [event, runner_context]
             end
 
             # If we're given a block yield the events otherwise return them
