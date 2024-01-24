@@ -73,12 +73,10 @@ module Floe
               # always `ready?`
               break if notice.nil?
 
-              ref, event, state = parse_notice(notice)
+              event, runner_context = parse_notice(notice)
               next unless events.include?(event)
 
-              state ||= inspect_container(ref)&.dig("State")
-
-              notices << {"container_ref" => ref, "container_state" => state}
+              notices << runner_context
             end
 
             # If we're given a block yield the events otherwise return them
@@ -154,8 +152,16 @@ module Floe
 
         def parse_notice(notice)
           notice = JSON.parse(notice)
-          ref = notice.dig("Actor", "Attributes", "name")
-          [ref, docker_event_status_to_event(notice["status"])]
+
+          status  = notice["status"]
+          event   = docker_event_status_to_event(status)
+          running = event != :delete
+
+          name, exit_code = notice.dig("Actor", "Attributes")&.values_at("name", "exitCode")
+
+          runner_context = {"container_ref" => name, "container_state" => {"Running" => running, "ExitCode" => exit_code.to_i}}
+
+          [event, runner_context]
         end
 
         def docker_event_status_to_event(status)

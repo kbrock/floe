@@ -61,9 +61,9 @@ module Floe
           event   = podman_event_status_to_event(status)
           running = event != :delete
 
-          container_state = {"Running" => running, "ExitCode" => exit_code.to_i}
+          runner_context = {"container_ref" => id, "container_state" => {"Running" => running, "ExitCode" => exit_code.to_i}}
 
-          [id, event, container_state]
+          [event, runner_context]
         end
 
         def podman_event_status_to_event(status)
