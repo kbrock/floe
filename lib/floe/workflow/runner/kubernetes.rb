@@ -118,7 +118,7 @@ module Floe
 
             pod = notice.object
             container_ref   = pod.metadata.name
-            container_state = pod.to_h.deep_stringify_keys["status"]
+            container_state = pod.to_h[:status].deep_stringify_keys
 
             runner_context = {"container_ref" => container_ref, "container_state" => container_state}
 
