@@ -126,7 +126,7 @@ module Floe
               yield runner_context
             else
               timeout_thread&.kill # If we break out before the timeout, kill the timeout thread
-              return runner_context
+              return [runner_context]
             end
           end
         ensure
