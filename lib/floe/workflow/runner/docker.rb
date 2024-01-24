@@ -164,7 +164,7 @@ module Floe
             :create
           when "start"
             :update
-          when "die"
+          when "die", "destroy"
             :delete
           else
             :unkonwn
