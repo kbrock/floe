@@ -78,9 +78,7 @@ module Floe
 
               state ||= inspect_container(ref)&.dig("State")
 
-              runner_context = {"container_ref" => ref, "container_state" => state}
-
-              notices << runner_context
+              notices << {"container_ref" => ref, "container_state" => state}
             end
 
             # If we're given a block yield the events otherwise return them

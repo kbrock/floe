@@ -56,8 +56,14 @@ module Floe
         end
 
         def parse_notice(notice)
-          notice = JSON.parse(notice)
-          [notice["ID"], podman_event_status_to_event(notice["Status"])]
+          id, status, exit_code = JSON.parse(notice).values_at("ID", "Status", "ContainerExitCode")
+
+          event   = podman_event_status_to_event(status)
+          running = event != :delete
+
+          container_state = {"Running" => running, "ExitCode" => exit_code.to_i}
+
+          [id, event, container_state]
         end
 
         def podman_event_status_to_event(status)

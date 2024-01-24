@@ -105,7 +105,12 @@ module Floe
         def wait(timeout: nil, events: %i[create update delete])
           watcher = kubeclient.watch_pods(:namespace => namespace)
 
-          timeout_thread = Thread.new { sleep(timeout); watcher.finish } if timeout.to_i > 0
+          if timeout.to_i > 0
+            timeout_thread = Thread.new do
+              sleep(timeout)
+              watcher.finish
+            end
+          end
 
           watcher.each do |notice|
             event = kube_notice_type_to_event(notice.type)
