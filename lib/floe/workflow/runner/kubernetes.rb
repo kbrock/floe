@@ -53,7 +53,7 @@ module Floe
           name   = container_name(image)
           secret = create_secret!(secrets) if secrets && !secrets.empty?
 
-          runner_context = {"container_ref" => name, "secrets_ref" => secret}
+          runner_context = {"container_ref" => name, "container_state" => {"phase" => "Pending"}, "secrets_ref" => secret}
 
           begin
             create_pod!(name, image, env, secret)
