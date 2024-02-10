@@ -84,7 +84,8 @@ module Floe
               notices.each(&block)
             else
               # Terminate the `docker events` process before returning the events
-              Process.kill("TERM", pid) rescue Errno::ESRCH
+              sigterm(pid)
+
               return notices
             end
 
@@ -204,6 +205,12 @@ module Floe
           secrets_file.write(secrets.to_json)
           secrets_file.close
           secrets_file.path
+        end
+
+        def sigterm(pid)
+          Process.kill("TERM", pid)
+        rescue Errno::ESRCH
+          nil
         end
 
         def global_docker_options
