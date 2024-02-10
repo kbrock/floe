@@ -150,7 +150,12 @@ module Floe
             retry_connection = false
             retry
           ensure
-            watch&.finish rescue nil
+            begin
+              watch&.finish
+            rescue
+              nil
+            end
+
             timeout_thread&.join(0)
           end
         end
