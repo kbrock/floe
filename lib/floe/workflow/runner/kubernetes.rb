@@ -103,35 +103,56 @@ module Floe
         end
 
         def wait(timeout: nil, events: %i[create update delete])
-          watcher = kubeclient.watch_pods(:namespace => namespace)
+          retry_connection = true
 
-          if timeout.to_i > 0
-            timeout_thread = Thread.new do
-              sleep(timeout)
-              watcher.finish
+          begin
+            watcher = kubeclient.watch_pods(:namespace => namespace)
+
+            retry_connection = true
+
+            if timeout.to_i > 0
+              timeout_thread = Thread.new do
+                sleep(timeout)
+                watcher.finish
+              end
             end
-          end
 
-          watcher.each do |notice|
-            event = kube_notice_type_to_event(notice.type)
-            next unless events.include?(event)
+            watcher.each do |notice|
+              if notice.type == "ERROR"
+                message = notice.object&.message
+                code    = notice.object&.code
+                reason  = notice.object&.reason
 
-            pod = notice.object
-            container_ref   = pod.metadata.name
-            container_state = pod.to_h[:status].deep_stringify_keys
+                logger.warn("Received [#{code} #{reason}], [#{message}]")
+                break
+              end
 
-            runner_context = {"container_ref" => container_ref, "container_state" => container_state}
+              event = kube_notice_type_to_event(notice.type)
+              next unless events.include?(event)
 
-            if block_given?
-              yield [event, runner_context]
-            else
-              timeout_thread&.kill # If we break out before the timeout, kill the timeout thread
-              return [[event, runner_context]]
+              pod = notice.object
+              container_ref   = pod.metadata.name
+              container_state = pod.to_h[:status].deep_stringify_keys
+
+              runner_context = {"container_ref" => container_ref, "container_state" => container_state}
+
+              if block_given?
+                yield [event, runner_context]
+              else
+                timeout_thread&.kill # If we break out before the timeout, kill the timeout thread
+                return [[event, runner_context]]
+              end
             end
+          rescue Kubeclient::HttpError => err
+            raise unless err.error_code == 401 && retry_connection
+
+            @kubeclient = nil
+            retry_connection = false
+            retry
+          ensure
+            watch&.finish rescue nil
+            timeout_thread&.join(0)
           end
-        ensure
-          watch&.finish rescue nil
-          timeout_thread&.join(0)
         end
 
         private
