@@ -74,7 +74,7 @@ module Floe
               break if notice.nil?
 
               event, runner_context = parse_notice(notice)
-              next unless events.include?(event)
+              next if event.nil? || !events.include?(event)
 
               notices << [event, runner_context]
             end
@@ -162,6 +162,8 @@ module Floe
           runner_context = {"container_ref" => name, "container_state" => {"Running" => running, "ExitCode" => exit_code.to_i}}
 
           [event, runner_context]
+        rescue JSON::ParserError
+          []
         end
 
         def docker_event_status_to_event(status)

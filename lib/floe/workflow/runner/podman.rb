@@ -64,6 +64,8 @@ module Floe
           runner_context = {"container_ref" => id, "container_state" => {"Running" => running, "ExitCode" => exit_code.to_i}}
 
           [event, runner_context]
+        rescue JSON::ParserError
+          []
         end
 
         def podman_event_status_to_event(status)
