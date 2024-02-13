@@ -118,23 +118,13 @@ module Floe
             end
 
             watcher.each do |notice|
-              if notice.type == "ERROR"
-                message = notice.object&.message
-                code    = notice.object&.code
-                reason  = notice.object&.reason
-
-                logger.warn("Received [#{code} #{reason}], [#{message}]")
-                break
-              end
+              break if error_notice?(notice)
 
               event = kube_notice_type_to_event(notice.type)
               next unless events.include?(event)
 
-              pod = notice.object
-              container_ref   = pod.metadata.name
-              container_state = pod.to_h[:status].deep_stringify_keys
-
-              runner_context = {"container_ref" => container_ref, "container_state" => container_state}
+              runner_context = parse_notice(notice)
+              next if runner_context.nil?
 
               if block_given?
                 yield [event, runner_context]
@@ -286,6 +276,28 @@ module Floe
           else
             :unknown
           end
+        end
+
+        def error_notice?(notice)
+          return false unless notice.type == "ERROR"
+
+          message = notice.object&.message
+          code    = notice.object&.code
+          reason  = notice.object&.reason
+
+          logger.warn("Received [#{code} #{reason}], [#{message}]")
+
+          true
+        end
+
+        def parse_notice(notice)
+          return if notice.object.nil?
+
+          pod             = notice.object
+          container_ref   = pod.metadata.name
+          container_state = pod.to_h[:status].deep_stringify_keys
+
+          {"container_ref" => container_ref, "container_state" => container_state}
         end
 
         def kubeclient
