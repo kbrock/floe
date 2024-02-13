@@ -93,6 +93,14 @@ module Floe
         context.state.key?("FinishedTime")
       end
 
+      def waiting?
+        context.state["WaitUntil"] && Time.now.utc <= Time.parse(context.state["WaitUntil"])
+      end
+
+      def wait_until
+        context.state["WaitUntil"] && Time.parse(context.state["WaitUntil"])
+      end
+
       private
 
       def wait_until!(seconds: nil, time: nil)
@@ -104,10 +112,6 @@ module Floe
           else
             time.iso8601
           end
-      end
-
-      def waiting?
-        context.state["WaitUntil"] && Time.now.utc <= Time.parse(context.state["WaitUntil"])
       end
     end
   end
