@@ -55,13 +55,7 @@ workflows =
 
 # run
 
-outstanding = workflows.dup
-until outstanding.empty?
-  ready = outstanding.select(&:step_nonblock_ready?)
-  ready.map(&:run_nonblock)
-  outstanding -= ready.select(&:end?)
-  sleep(1) if !outstanding.empty?
-end
+Floe::Workflow.wait(workflows, &:run_nonblock)
 
 # display status
 

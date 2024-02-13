@@ -16,7 +16,7 @@ module Floe
         new(payload, context, credentials, name)
       end
 
-      def wait(workflows, timeout: nil)
+      def wait(workflows, timeout: nil, &block)
         workflows = [workflows] if workflows.kind_of?(self)
         logger.info("checking #{workflows.count} workflows...")
 
@@ -25,7 +25,18 @@ module Floe
 
         loop do
           ready = workflows.select(&:step_nonblock_ready?)
-          break if timeout.zero? || Time.now.utc - start > timeout || !ready.empty?
+          break if timeout&.zero?
+          break if timeout && Time.now.utc - start > timeout
+
+          unless ready.empty?
+            if block
+              ready.each(&block)
+            else
+              break
+            end
+          end
+
+          break if workflows.all?(&:end?)
 
           sleep(1)
         end
