@@ -55,6 +55,32 @@ module Floe
           nil
         end
 
+        def parse_notice(notice)
+          id, status, exit_code = JSON.parse(notice).values_at("ID", "Status", "ContainerExitCode")
+
+          event   = podman_event_status_to_event(status)
+          running = event != :delete
+
+          runner_context = {"container_ref" => id, "container_state" => {"Running" => running, "ExitCode" => exit_code.to_i}}
+
+          [event, runner_context]
+        rescue JSON::ParserError
+          []
+        end
+
+        def podman_event_status_to_event(status)
+          case status
+          when "create"
+            :create
+          when "init", "start"
+            :update
+          when "died", "cleanup", "remove"
+            :delete
+          else
+            :unknown
+          end
+        end
+
         alias podman! docker!
 
         def global_docker_options

@@ -293,4 +293,32 @@ RSpec.describe Floe::Workflow do
       end
     end
   end
+
+  describe ".wait" do
+    context "with two ready workflows" do
+      let(:workflow_1) { make_workflow(Floe::Workflow::Context.new(:input => input), {"FirstState" => {"Type" => "Succeed"}}) }
+      let(:workflow_2) { make_workflow(Floe::Workflow::Context.new(:input => input), {"FirstState" => {"Type" => "Succeed"}}) }
+
+      it "returns both workflows as ready to step" do
+        expect(described_class.wait([workflow_1, workflow_2], :timeout => 0)).to include(workflow_1, workflow_2)
+      end
+    end
+
+    context "with one ready workflow and one that would block" do
+      let(:workflow_1) { make_workflow(Floe::Workflow::Context.new(:input => input), {"FirstState" => {"Type" => "Succeed"}}).tap(&:step_nonblock) }
+      let(:workflow_2) { make_workflow(Floe::Workflow::Context.new(:input => input), {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}}).tap(&:step_nonblock) }
+
+      it "returns only the first workflow as ready to step" do
+        expect(described_class.wait([workflow_1, workflow_2], :timeout => 0)).to eq([workflow_1])
+      end
+    end
+
+    context "with a workflow that would block for 10 seconds" do
+      let(:workflow) { make_workflow(Floe::Workflow::Context.new(:input => input), {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}}).tap(&:step_nonblock) }
+
+      it "returns no ready workflows with :timeout => 0" do
+        expect(described_class.wait(workflow, :timeout => 0)).to be_empty
+      end
+    end
+  end
 end

@@ -53,7 +53,7 @@ module Floe
           name   = container_name(image)
           secret = create_secret!(secrets) if secrets && !secrets.empty?
 
-          runner_context = {"container_ref" => name, "secrets_ref" => secret}
+          runner_context = {"container_ref" => name, "container_state" => {"phase" => "Pending"}, "secrets_ref" => secret}
 
           begin
             create_pod!(name, image, env, secret)
@@ -100,6 +100,54 @@ module Floe
 
           delete_pod(pod)       if pod
           delete_secret(secret) if secret
+        end
+
+        def wait(timeout: nil, events: %i[create update delete])
+          retry_connection = true
+
+          begin
+            watcher = kubeclient.watch_pods(:namespace => namespace)
+
+            retry_connection = true
+
+            if timeout.to_i > 0
+              timeout_thread = Thread.new do
+                sleep(timeout)
+                watcher.finish
+              end
+            end
+
+            watcher.each do |notice|
+              break if error_notice?(notice)
+
+              event = kube_notice_type_to_event(notice.type)
+              next unless events.include?(event)
+
+              runner_context = parse_notice(notice)
+              next if runner_context.nil?
+
+              if block_given?
+                yield [event, runner_context]
+              else
+                timeout_thread&.kill # If we break out before the timeout, kill the timeout thread
+                return [[event, runner_context]]
+              end
+            end
+          rescue Kubeclient::HttpError => err
+            raise unless err.error_code == 401 && retry_connection
+
+            @kubeclient = nil
+            retry_connection = false
+            retry
+          ensure
+            begin
+              watch&.finish
+            rescue
+              nil
+            end
+
+            timeout_thread&.join(0)
+          end
         end
 
         private
@@ -215,6 +263,41 @@ module Floe
           delete_secret!(name)
         rescue
           nil
+        end
+
+        def kube_notice_type_to_event(type)
+          case type
+          when "ADDED"
+            :create
+          when "MODIFIED"
+            :update
+          when "DELETED"
+            :delete
+          else
+            :unknown
+          end
+        end
+
+        def error_notice?(notice)
+          return false unless notice.type == "ERROR"
+
+          message = notice.object&.message
+          code    = notice.object&.code
+          reason  = notice.object&.reason
+
+          logger.warn("Received [#{code} #{reason}], [#{message}]")
+
+          true
+        end
+
+        def parse_notice(notice)
+          return if notice.object.nil?
+
+          pod             = notice.object
+          container_ref   = pod.metadata.name
+          container_state = pod.to_h[:status].deep_stringify_keys
+
+          {"container_ref" => container_ref, "container_state" => container_state}
         end
 
         def kubeclient
