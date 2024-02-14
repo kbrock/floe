@@ -54,7 +54,8 @@ module Floe
           # it will be done sleeping
           if wait_until
             sleep_thread = Thread.new do
-              sleep wait_until - Time.now.utc
+              sleep_duration = wait_until - Time.now.utc
+              sleep sleep_duration if sleep_duration > 0
               queue.push(nil)
             end
           end
