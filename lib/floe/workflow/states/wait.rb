@@ -28,15 +28,19 @@ module Floe
 
         def start(input)
           super
-          input = input_path.value(context, input)
 
-          context.output     = output_path.value(context, input)
-          context.next_state = end? ? nil : @next
+          input          = input_path.value(context, input)
+          context.output = output_path.value(context, input)
 
           wait_until!(
             :seconds => seconds_path ? seconds_path.value(context, input).to_i : seconds,
             :time    => timestamp_path ? timestamp_path.value(context, input) : timestamp
           )
+        end
+
+        def finish
+          context.next_state = end? ? nil : @next
+          super
         end
 
         def running?
