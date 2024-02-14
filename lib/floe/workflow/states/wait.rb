@@ -38,11 +38,6 @@ module Floe
           )
         end
 
-        def finish
-          context.next_state = end? ? nil : @next
-          super
-        end
-
         def running?
           waiting?
         end
