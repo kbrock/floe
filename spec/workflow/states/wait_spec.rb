@@ -11,8 +11,17 @@ RSpec.describe Floe::Workflow::States::Pass do
   end
 
   describe "#start" do
+    it "sets WaitUntil" do
+      state.start(ctx.input)
+
+      expect(state.waiting?).to be_truthy
+    end
+  end
+
+  describe "#finish" do
     it "transitions to the next state" do
       state.start(ctx.input)
+      state.finish
 
       expect(ctx.next_state).to eq("SuccessState")
     end
