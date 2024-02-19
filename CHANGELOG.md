@@ -4,6 +4,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2024-02-19
+### Changed
+- Default to wait indefinitely ([#157](https://github.com/ManageIQ/floe/pull/157))
+- Create docker runners factory and add scheme ([#152](https://github.com/ManageIQ/floe/pull/152))
+- Add a watch method to Workflow::Runner for event driven updates ([#95](https://github.com/ManageIQ/floe/pull/95))
+
+### Fixed
+- Fix waiting on extremely short durations ([#160](https://github.com/ManageIQ/floe/pull/160))
+- Fix wait state missing finish ([#159](https://github.com/ManageIQ/floe/pull/159))
+
 ## [0.8.0] - 2024-01-17
 ### Added
 - Add CLI shorthand options for docker runner ([#147](https://github.com/ManageIQ/floe/pull/147))
@@ -126,7 +136,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/ManageIQ/floe/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/ManageIQ/floe/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/ManageIQ/floe/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/ManageIQ/floe/compare/v0.6.0...v0.6.1
