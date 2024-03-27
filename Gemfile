@@ -7,9 +7,3 @@ require File.join(Bundler::Plugin.index.load_paths("bundler-inject")[0], "bundle
 
 # Specify your gem's dependencies in floe.gemspec
 gemspec
-
-gem "manageiq-style"
-gem "rake", "~> 13.0"
-gem "rspec"
-gem "rubocop"
-gem "timecop"
