@@ -10,6 +10,7 @@ opts = Optimist.options do
 
   opt :workflow, "Path to your workflow json (legacy)",         :type => :string
   opt :input, "JSON payload to input to the workflow (legacy)", :type => :string
+  opt :context, "JSON payload of the Context",                  :type => :string
   opt :credentials, "JSON payload with credentials",            :type => :string
   opt :credentials_file, "Path to a file with credentials",     :type => :string
   opt :docker_runner, "Type of runner for docker images",       :type => :string, :short => 'r'
@@ -49,7 +50,7 @@ credentials =
 
 workflows =
   args.each_slice(2).map do |workflow, input|
-    context = Floe::Workflow::Context.new(:input => input || opts[:input] || "{}")
+    context = Floe::Workflow::Context.new(opts[:context], :input => input || opts[:input] || "{}")
     Floe::Workflow.load(workflow, context, credentials)
   end
 

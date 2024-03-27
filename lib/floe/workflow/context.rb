@@ -3,19 +3,19 @@
 module Floe
   class Workflow
     class Context
+      # @param context [Json|Hash] (default, create another with input and execution params)
+      # @param input [Hash] (default: {})
       def initialize(context = nil, input: {})
         context = JSON.parse(context) if context.kind_of?(String)
         input = JSON.parse(input) if input.kind_of?(String)
 
-        @context = context || {
-          "Execution"    => {
-            "Input" => input
-          },
-          "State"        => {},
-          "StateHistory" => [],
-          "StateMachine" => {},
-          "Task"         => {}
-        }
+        @context = context || {}
+        self["Execution"]          ||= {}
+        self["Execution"]["Input"] ||= input
+        self["State"]              ||= {}
+        self["StateHistory"]       ||= []
+        self["StateMachine"]       ||= {}
+        self["Task"]               ||= {}
       end
 
       def execution
