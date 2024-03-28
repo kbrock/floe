@@ -3,8 +3,15 @@ RSpec.describe Floe::Workflow::Context do
   let(:input) { {"x" => "y"}.freeze }
 
   describe "#new" do
-    it "sets input" do
+    it "with an empty context, sets input" do
       expect(ctx.execution["Input"]).to eq(input)
+      expect(ctx.state).not_to eq(nil)
+    end
+
+    it "with a context, sets input and keeps context" do
+      ctx = described_class.new({"Execution" => {"api" => "http://localhost/"}}, :input => input)
+      expect(ctx.execution["api"]).to eq("http://localhost/")
+      expect(ctx.state).not_to eq(nil)
     end
   end
 
