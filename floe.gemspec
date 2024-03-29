@@ -37,10 +37,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency "kubeclient", "~>4.7"
   spec.add_dependency "optimist", "~>3.0"
 
-  spec.add_development_dependency "manageiq-style"
+  spec.add_development_dependency "manageiq-style", ">= 1.5.2"
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rspec"
-  spec.add_development_dependency "rubocop"
   spec.add_development_dependency "simplecov", ">= 0.21.2"
   spec.add_development_dependency "timecop"
 end
