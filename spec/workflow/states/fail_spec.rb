@@ -22,8 +22,7 @@ RSpec.describe Floe::Workflow::States::Fail do
     it "populates static values" do
       state.run_nonblock!
       expect(ctx.next_state).to eq(nil)
-      expect(ctx.state["Error"]).to eq("FailStateError")
-      expect(ctx.state["Cause"]).to eq("No Matches!")
+      expect(ctx.output).to eq("Error" => "FailStateError", "Cause" => "No Matches!")
     end
 
     context "with dynamic error text" do
@@ -43,8 +42,7 @@ RSpec.describe Floe::Workflow::States::Fail do
       it "populates dynamic values" do
         state.run_nonblock!
         expect(ctx.next_state).to eq(nil)
-        expect(ctx.state["Error"]).to eq("DynamicError")
-        expect(ctx.state["Cause"]).to eq("DynamicCause")
+        expect(ctx.output).to eq("Error" => "DynamicError", "Cause" => "DynamicCause")
       end
     end
   end

@@ -25,8 +25,6 @@ module Floe
             "Error" => @error_path ? @error_path.value(context, input) : error,
             "Cause" => @cause_path ? @cause_path.value(context, input) : cause
           }.compact
-          context.state["Error"] = context.output["Error"]
-          context.state["Cause"] = context.output["Cause"]
         end
 
         def running?
