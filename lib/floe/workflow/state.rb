@@ -58,7 +58,7 @@ module Floe
         context.state["Guid"]            = SecureRandom.uuid
         context.state["EnteredTime"]     = start_time
 
-        logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...")
+        logger.info("Running state: [#{long_name}] with input [#{context.input}]...")
       end
 
       def finish
@@ -70,7 +70,8 @@ module Floe
         context.state["Duration"]       = finished_time - entered_time
         context.execution["EndTime"]    = finished_time_iso if context.next_state.nil?
 
-        logger.info("Running state: [#{context.state_name}] with input [#{context.input}]...Complete - next state: [#{context.next_state}] output: [#{context.output}]")
+        level = context.output&.[]("Error") ? :error : :info
+        logger.public_send(level, "Running state: [#{long_name}] with input [#{context.input}]...Complete #{context.next_state ? "- next state [#{context.next_state}]" : "workflow -"} output: [#{context.output}]")
 
         context.state_history << context.state
 
@@ -99,6 +100,10 @@ module Floe
 
       def wait_until
         context.state["WaitUntil"] && Time.parse(context.state["WaitUntil"])
+      end
+
+      def long_name
+        "#{self.class.name.split("::").last}:#{name}"
       end
 
       private
