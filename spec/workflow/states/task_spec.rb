@@ -194,9 +194,9 @@ RSpec.describe Floe::Workflow::States::Task do
 
           2.times { workflow.current_state.run_nonblock! }
 
-          expect(ctx.next_state).to     be_nil
-          expect(ctx.status).to         eq("failure")
-          expect(ctx.state["Error"]).to eq("States.Timeout")
+          expect(ctx.next_state).to be_nil
+          expect(ctx.status).to     eq("failure")
+          expect(ctx.output).to     eq("Error" => "States.Timeout")
         end
 
         it "fails the workflow if the exception isn't caught" do
@@ -204,9 +204,9 @@ RSpec.describe Floe::Workflow::States::Task do
 
           workflow.current_state.run_nonblock!
 
-          expect(ctx.next_state).to     be_nil
-          expect(ctx.status).to         eq("failure")
-          expect(ctx.state["Error"]).to eq("Exception")
+          expect(ctx.next_state).to be_nil
+          expect(ctx.status).to     eq("failure")
+          expect(ctx.output).to     eq("Error" => "Exception")
         end
       end
 

@@ -98,8 +98,6 @@ RSpec.describe Floe::Workflow do
       expect(ctx.input).to eq(input)
       expect(ctx.output).to eq({"Cause" => "Bad Stuff", "Error" => "Issue"})
       expect(ctx.state["Duration"].to_f).to be <= 1
-      expect(ctx.state["Cause"]).to eq("Bad Stuff")
-      expect(ctx.state["Error"]).to eq("Issue")
       expect(ctx.status).to eq("failure")
 
       # execution

@@ -30,6 +30,10 @@ module Floe
         started? && !ended?
       end
 
+      def failed?
+        output&.key?("Error") || false
+      end
+
       def ended?
         execution.key?("EndTime")
       end
@@ -67,7 +71,7 @@ module Floe
           "pending"
         elsif running?
           "running"
-        elsif state["Error"]
+        elsif failed?
           "failure"
         else
           "success"

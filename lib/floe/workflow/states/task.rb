@@ -125,7 +125,6 @@ module Floe
         def fail_workflow!(error)
           context.next_state     = nil
           context.output         = {"Error" => error["Error"], "Cause" => error["Cause"]}.compact
-          context.state["Error"] = context.output["Error"]
         end
 
         def parse_error(output)
