@@ -46,16 +46,16 @@ module Floe
         end
 
         def finish
-          super
-
           output = runner.output(context.state["RunnerContext"])
 
           if success?
             output = parse_output(output)
-            context.state["Output"] = process_output(context.input.dup, output)
+            context.output = process_output(context.input.dup, output)
+            super
           else
             context.next_state = nil
-            error = parse_error(output)
+            context.output = error = parse_error(output)
+            super
             retry_state!(error) || catch_error!(error) || fail_workflow!(error)
           end
         ensure
