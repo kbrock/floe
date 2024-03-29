@@ -292,6 +292,38 @@ RSpec.describe Floe::Workflow do
     end
   end
 
+  describe "#wait_until" do
+    it "reads when the workflow will be ready to continue" do
+      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
+      workflow.run_nonblock
+
+      expect(workflow.wait_until).to be_within(1).of(Time.now.utc + 10)
+    end
+
+    it "doesn't have a wait" do
+      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Succeed"}})
+      workflow.run_nonblock
+
+      expect(workflow.wait_until).to be_nil
+    end
+  end
+
+  describe "#waiting?" do
+    it "reads when the workflow will be ready to continue" do
+      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
+      workflow.run_nonblock
+
+      expect(workflow.waiting?).to be_truthy
+    end
+
+    it "doesn't have a wait" do
+      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Succeed"}})
+      workflow.run_nonblock
+
+      expect(workflow.waiting?).to be_falsey
+    end
+  end
+
   describe ".wait" do
     context "with two ready workflows" do
       let(:workflow_1) { make_workflow(Floe::Workflow::Context.new(:input => input), {"FirstState" => {"Type" => "Succeed"}}) }
