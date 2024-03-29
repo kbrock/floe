@@ -18,14 +18,14 @@ module Floe
           @output_path = Path.new(payload.fetch("OutputPath", "$"))
         end
 
-        def start(input)
-          super
-          input      = input_path.value(context, input)
+        def finish
+          input      = input_path.value(context, context.input)
           next_state = choices.detect { |choice| choice.true?(context, input) }&.next || default
           output     = output_path.value(context, input)
 
           context.next_state = next_state
           context.output     = output
+          super
         end
 
         def running?

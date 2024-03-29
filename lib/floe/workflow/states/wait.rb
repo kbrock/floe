@@ -29,13 +29,18 @@ module Floe
         def start(input)
           super
 
-          input          = input_path.value(context, input)
-          context.output = output_path.value(context, input)
+          input = input_path.value(context, context.input)
 
           wait_until!(
             :seconds => seconds_path ? seconds_path.value(context, input).to_i : seconds,
             :time    => timestamp_path ? timestamp_path.value(context, input) : timestamp
           )
+        end
+
+        def finish
+          input          = input_path.value(context, context.input)
+          context.output = output_path.value(context, input)
+          super
         end
 
         def running?

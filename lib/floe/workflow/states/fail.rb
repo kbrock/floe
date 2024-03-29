@@ -15,16 +15,16 @@ module Floe
           @error_path = Path.new(payload["ErrorPath"]) if payload["ErrorPath"]
         end
 
-        def start(input)
-          super
+        def finish
           context.next_state = nil
           # TODO: support intrinsic functions here
           # see https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-fail-state.html
           #     https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-intrinsic-functions.html#asl-intrsc-func-generic
           context.output     = {
-            "Error" => @error_path ? @error_path.value(context, input) : error,
-            "Cause" => @cause_path ? @cause_path.value(context, input) : cause
+            "Error" => @error_path ? @error_path.value(context, context.input) : error,
+            "Cause" => @cause_path ? @cause_path.value(context, context.input) : cause
           }.compact
+          super
         end
 
         def running?
