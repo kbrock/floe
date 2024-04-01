@@ -24,13 +24,11 @@ module Floe
           validate_state!
         end
 
-        def start(input)
-          super
-
-          input = process_input(input)
-
+        def finish
+          input              = process_input(context.input)
           context.output     = process_output(input, result)
           context.next_state = end? ? nil : @next
+          super
         end
 
         def running?

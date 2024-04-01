@@ -46,16 +46,16 @@ module Floe
         end
 
         def finish
-          super
-
           output = runner.output(context.state["RunnerContext"])
 
           if success?
             output = parse_output(output)
-            context.state["Output"] = process_output(context.input.dup, output)
+            context.output = process_output(context.input.dup, output)
+            super
           else
             context.next_state = nil
-            error = parse_error(output)
+            context.output = error = parse_error(output)
+            super
             retry_state!(error) || catch_error!(error) || fail_workflow!(error)
           end
         ensure
@@ -109,6 +109,7 @@ module Floe
 
           wait_until!(:seconds => retrier.sleep_duration(context["State"]["RetryCount"]))
           context.next_state = context.state_name
+          logger.info("Running state: [#{long_name}] with input [#{context.input}]...Retry - delay: #{wait_until}")
           true
         end
 
@@ -118,12 +119,15 @@ module Floe
 
           context.next_state = catcher.next
           context.output     = catcher.result_path.set(context.input, error)
+          logger.info("Running state: [#{long_name}] with input [#{context.input}]...CatchError - next state: [#{context.next_state}] output: [#{context.output}]")
+
           true
         end
 
         def fail_workflow!(error)
           context.next_state     = nil
           context.output         = {"Error" => error["Error"], "Cause" => error["Cause"]}.compact
+          logger.error("Running state: [#{long_name}] with input [#{context.input}]...Complete workflow - output: [#{context.output}]")
         end
 
         def parse_error(output)
