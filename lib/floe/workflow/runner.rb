@@ -12,35 +12,21 @@ module Floe
 
       @runners = {}
       class << self
-        # deprecated -- use Floe.set_runner instead
-        def docker_runner=(value)
-          set_runner("docker", value)
+        def register_scheme(scheme, klass_or_proc)
+          @runners[scheme] = klass_or_proc
         end
 
-        # see Floe.set_runner
-        def set_runner(scheme, name_or_instance, options = {})
-          @runners[scheme] =
-            case name_or_instance
-            when "docker", nil
-              Floe::Workflow::Runner::Docker.new(options)
-            when "podman"
-              Floe::Workflow::Runner::Podman.new(options)
-            when "kubernetes"
-              Floe::Workflow::Runner::Kubernetes.new(options)
-            when Floe::Workflow::Runner
-              name_or_instance
-            else
-              raise ArgumentError, "docker runner must be one of: docker, podman, kubernetes"
-            end
+        private def resolve_scheme(scheme)
+          runner = @runners[scheme]
+          runner = @runners[scheme] = @runners[scheme].call if runner.is_a?(Proc)
+          runner
         end
 
         def for_resource(resource)
           raise ArgumentError, "resource cannot be nil" if resource.nil?
 
-          # if no runners are set, default docker:// to docker
-          set_runner("docker", "docker") if @runners.empty?
           scheme = resource.split("://").first
-          @runners[scheme] || raise(ArgumentError, "Invalid resource scheme [#{scheme}]")
+          resolve_scheme(scheme) || raise(ArgumentError, "Invalid resource scheme [#{scheme}]")
         end
       end
 

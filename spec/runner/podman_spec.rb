@@ -1,4 +1,4 @@
-RSpec.describe Floe::Workflow::Runner::Podman do
+RSpec.describe Floe::Runner::ContainerRunner::Podman do
   require "securerandom"
 
   let(:subject)        { described_class.new(runner_options) }

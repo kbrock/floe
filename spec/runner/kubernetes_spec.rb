@@ -1,4 +1,4 @@
-RSpec.describe Floe::Workflow::Runner::Kubernetes do
+RSpec.describe Floe::Runner::ContainerRunner::Kubernetes do
   before do
     allow(ENV).to receive(:fetch).and_call_original
     allow(ENV).to receive(:fetch).with('KUBECONFIG', nil).and_return(nil)

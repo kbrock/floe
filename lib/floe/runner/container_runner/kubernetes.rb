@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module Floe
-  class Workflow
-    class Runner
+  class Runner
+    class ContainerRunner
       class Kubernetes < Floe::Workflow::Runner
         include DockerMixin
 

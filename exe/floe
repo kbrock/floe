@@ -13,33 +13,21 @@ opts = Optimist.options do
   opt :context, "JSON payload of the Context",                  :type => :string
   opt :credentials, "JSON payload with credentials",            :type => :string
   opt :credentials_file, "Path to a file with credentials",     :type => :string
-  opt :docker_runner, "Type of runner for docker images",       :type => :string, :short => 'r'
-  opt :docker_runner_options, "Options to pass to the runner",  :type => :strings, :short => 'o'
 
-  opt :docker,     "Use docker to run images     (short for --docker_runner=docker)",     :type => :boolean
-  opt :podman,     "Use podman to run images     (short for --docker_runner=podman)",     :type => :boolean
-  opt :kubernetes, "Use kubernetes to run images (short for --docker_runner=kubernetes)", :type => :boolean
+  Floe::Runner::ContainerRunner.cli_options(self)
+
+  banner("")
+  banner("General options:")
 end
 
 # legacy support for --workflow
 args = ARGV.empty? ? [opts[:workflow], opts[:input]] : ARGV
 Optimist.die(:workflow, "must be specified") if args.empty?
 
-# shortcut support
-opts[:docker_runner] ||= "docker" if opts[:docker]
-opts[:docker_runner] ||= "podman" if opts[:podman]
-opts[:docker_runner] ||= "kubernetes" if opts[:kubernetes]
+Floe::Runner::ContainerRunner.resolve_cli_options!(opts)
 
 require "logger"
 Floe.logger = Logger.new($stdout)
-
-runner_options = opts[:docker_runner_options].to_h { |opt| opt.split("=", 2) }
-
-begin
-  Floe.set_runner("docker", opts[:docker_runner], runner_options)
-rescue ArgumentError => e
-  Optimist.die(:docker_runner, e.message)
-end
 
 credentials =
   if opts[:credentials_given]

@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 module Floe
-  class Workflow
-    class Runner
+  class Runner
+    class ContainerRunner
       module DockerMixin
         def image_name(image)
           image.match(%r{^(?<repository>.+/)?(?<image>.+):(?<tag>.+)$})&.named_captures&.dig("image")
