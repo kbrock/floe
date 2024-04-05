@@ -351,4 +351,16 @@ RSpec.describe Floe::Workflow do
       end
     end
   end
+
+  describe "#comment" do
+    it "handles no comment" do
+      workflow = Floe::Workflow.new({"StartAt" => "First", "States" => {"First" => {"Type" => "Succeed"}}}, {})
+      expect(workflow.comment).to be nil
+    end
+
+    it "handles a comment" do
+      workflow = Floe::Workflow.new({"StartAt" => "First", "Comment" => "great stuff", "States" => {"First" => {"Type" => "Succeed"}}}, {})
+      expect(workflow.comment).to eq("great stuff")
+    end
+  end
 end
