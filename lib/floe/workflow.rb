@@ -85,7 +85,7 @@ module Floe
       end
     end
 
-    attr_reader :context, :credentials, :payload, :states, :states_by_name, :start_at, :name
+    attr_reader :context, :credentials, :payload, :states, :states_by_name, :start_at, :name, :comment
 
     def initialize(payload, context = nil, credentials = {}, name = nil)
       payload     = JSON.parse(payload)     if payload.kind_of?(String)
@@ -100,6 +100,7 @@ module Floe
       @payload     = payload
       @context     = context
       @credentials = credentials || {}
+      @comment     = payload["Comment"]
       @start_at    = payload["StartAt"]
 
       @states         = payload["States"].to_a.map { |state_name, state| State.build!(self, state_name, state) }
