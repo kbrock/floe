@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module Floe
-  class Workflow
-    class Runner
-      class Podman < Floe::Workflow::Runner::Docker
+  class Runner
+    class ContainerRunner
+      class Podman < Docker
         DOCKER_COMMAND = "podman"
 
         def initialize(options = {})

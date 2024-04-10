@@ -18,10 +18,6 @@ require_relative "floe/workflow/payload_template"
 require_relative "floe/workflow/reference_path"
 require_relative "floe/workflow/retrier"
 require_relative "floe/workflow/runner"
-require_relative "floe/workflow/runner/docker_mixin"
-require_relative "floe/workflow/runner/docker"
-require_relative "floe/workflow/runner/kubernetes"
-require_relative "floe/workflow/runner/podman"
 require_relative "floe/workflow/state"
 require_relative "floe/workflow/states/choice"
 require_relative "floe/workflow/states/fail"
@@ -33,6 +29,8 @@ require_relative "floe/workflow/states/pass"
 require_relative "floe/workflow/states/succeed"
 require_relative "floe/workflow/states/task"
 require_relative "floe/workflow/states/wait"
+
+require_relative "floe/runner/container_runner"
 
 require "jsonpath"
 require "time"
@@ -54,18 +52,5 @@ module Floe
   # @param logger [Logger] logger to use for logging actions
   def self.logger=(logger)
     @logger = logger
-  end
-
-  # Set the runner to use
-  #
-  # @example
-  #   Floe.set_runner "docker", kubernetes", {}
-  #   Floe.set_runner "docker", Floe::Workflow::Runner::Kubernetes.new({})
-  #
-  # @param scheme [String] scheme                           Protocol to register (e.g.: docker)
-  # @param name_or_instance [String|Floe::Workflow::Runner] Name of runner to use for docker (e.g.: docker)
-  # @param options [Hash]                                   Options for constructor of the runner (optional)
-  def self.set_runner(scheme, name_or_instance, options = {})
-    Floe::Workflow::Runner.set_runner(scheme, name_or_instance, options)
   end
 end
