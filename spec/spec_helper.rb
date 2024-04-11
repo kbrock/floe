@@ -51,7 +51,7 @@ RSpec.configure do |config|
   config.shared_context_metadata_behavior = :apply_to_host_groups
 
   require "awesome_spawn/spec_helper"
-  config.define_derived_metadata(:file_path => %r{/spec/runner/}) do |metadata|
+  config.define_derived_metadata(:file_path => %r{/spec/container_runner/}) do |metadata|
     metadata[:uses_awesome_spawn] = true
   end
   config.include AwesomeSpawn::SpecHelper, :uses_awesome_spawn => true
@@ -75,6 +75,7 @@ RSpec.configure do |config|
 end
 
 require "floe"
+require "floe/container_runner"
 require "pathname"
 require "timecop"
 

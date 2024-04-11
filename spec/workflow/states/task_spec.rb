@@ -4,11 +4,11 @@ RSpec.describe Floe::Workflow::States::Task do
   let(:resource) { "docker://hello-world:latest" }
 
   describe "#run_async!" do
-    let(:mock_runner) { double("Floe::Workflow::Runner") }
+    let(:mock_runner) { double("Floe::Runner") }
     let(:container_ref) { "container-d" }
 
     before do
-      allow(Floe::Workflow::Runner).to receive(:for_resource).and_return(mock_runner)
+      allow(Floe::Runner).to receive(:for_resource).and_return(mock_runner)
     end
 
     describe "Input" do

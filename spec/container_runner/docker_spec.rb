@@ -1,4 +1,4 @@
-RSpec.describe Floe::Runner::ContainerRunner::Docker do
+RSpec.describe Floe::ContainerRunner::Docker do
   require "securerandom"
 
   let(:subject)        { described_class.new(runner_options) }
