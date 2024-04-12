@@ -18,7 +18,7 @@ module Floe
           @next              = payload["Next"]
           @end               = !!payload["End"]
           @resource          = payload["Resource"]
-          @runner            = Floe::Workflow::Runner.for_resource(@resource)
+          @runner            = Floe::Runner.for_resource(@resource)
           @timeout_seconds   = payload["TimeoutSeconds"]
           @retry             = payload["Retry"].to_a.map { |retrier| Retrier.new(retrier) }
           @catch             = payload["Catch"].to_a.map { |catcher| Catcher.new(catcher) }

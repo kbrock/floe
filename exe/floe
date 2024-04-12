@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "floe"
 require "optimist"
+require "floe"
+require "floe/container_runner"
 
 opts = Optimist.options do
   version("v#{Floe::VERSION}\n")
@@ -14,7 +15,7 @@ opts = Optimist.options do
   opt :credentials, "JSON payload with credentials",            :type => :string
   opt :credentials_file, "Path to a file with credentials",     :type => :string
 
-  Floe::Runner::ContainerRunner.cli_options(self)
+  Floe::ContainerRunner.cli_options(self)
 
   banner("")
   banner("General options:")
@@ -24,7 +25,7 @@ end
 args = ARGV.empty? ? [opts[:workflow], opts[:input]] : ARGV
 Optimist.die(:workflow, "must be specified") if args.empty?
 
-Floe::Runner::ContainerRunner.resolve_cli_options!(opts)
+Floe::ContainerRunner.resolve_cli_options!(opts)
 
 require "logger"
 Floe.logger = Logger.new($stdout)
