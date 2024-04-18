@@ -5,8 +5,10 @@ module Floe
     class Context
       # @param context [Json|Hash] (default, create another with input and execution params)
       # @param input [Hash] (default: {})
-      def initialize(context = nil, input: {})
+      def initialize(context = nil, input: nil)
         context = JSON.parse(context) if context.kind_of?(String)
+
+        input ||= {}
         input = JSON.parse(input) if input.kind_of?(String)
 
         @context = context || {}

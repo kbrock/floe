@@ -11,11 +11,15 @@ opts = Optimist.options do
   version("v#{Floe::VERSION}\n")
   usage("[options] workflow input [workflow2 input2]")
 
-  opt :workflow, "Path to your workflow json (legacy)",         :type => :string
-  opt :input, "JSON payload to input to the workflow (legacy)", :type => :string
-  opt :context, "JSON payload of the Context",                  :type => :string
-  opt :credentials, "JSON payload with credentials",            :type => :string
-  opt :credentials_file, "Path to a file with credentials",     :type => :string
+  opt :workflow, "Path to your workflow json file (alternative to passing a bare workflow)", :type => :string
+  opt :input, <<~EOMSG, :type => :string
+    JSON payload of the Input to the workflow
+      If --input is passed and --workflow is not passed, will be used for all bare workflows listed.
+      If --input is not passed and --workflow is passed, defaults to '{}'.
+  EOMSG
+  opt :context, "JSON payload of the Context",              :type => :string
+  opt :credentials, "JSON payload with Credentials",        :type => :string
+  opt :credentials_file, "Path to a file with Credentials", :type => :string
 
   Floe::ContainerRunner.cli_options(self)
 
@@ -23,9 +27,21 @@ opts = Optimist.options do
   banner("General options:")
 end
 
-# legacy support for --workflow
-args = ARGV.empty? ? [opts[:workflow], opts[:input]] : ARGV
-Optimist.die(:workflow, "must be specified") if args.empty?
+# Create workflow/input pairs from the various combinations of paramaters
+args =
+  if opts[:workflow_given]
+    Optimist.die("cannot specify both --workflow and bare workflows") if ARGV.any?
+
+    [opts[:workflow], opts.fetch(:input, "{}")]
+  elsif opts[:input_given]
+    Optimist.die("workflow(s) must be specified") if ARGV.empty?
+
+    ARGV.flat_map { |w| [w, opts[:input].dup] }
+  else
+    Optimist.die("workflow/input pairs must be specified") if ARGV.empty? || (ARGV.size > 1 && ARGV.size.odd?)
+
+    ARGV
+  end
 
 Floe::ContainerRunner.resolve_cli_options!(opts)
 
@@ -41,7 +57,7 @@ credentials =
 
 workflows =
   args.each_slice(2).map do |workflow, input|
-    context = Floe::Workflow::Context.new(opts[:context], :input => input || opts[:input] || "{}")
+    context = Floe::Workflow::Context.new(opts[:context], :input => input)
     Floe::Workflow.load(workflow, context, credentials)
   end
 
