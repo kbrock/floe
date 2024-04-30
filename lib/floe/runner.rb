@@ -29,27 +29,48 @@ module Floe
       end
     end
 
-    def run!(resource, env = {}, secrets = {})
-      raise NotImplementedError, "Must be implemented in a subclass"
-    end
-
+    # Run a command asynchronously and create a runner_context
     # @return [Hash] runner_context
-    def run_async!(_image, _env = {}, _secrets = {})
+    def run_async!(_resource, _env = {}, _secrets = {})
       raise NotImplementedError, "Must be implemented in a subclass"
     end
 
+    # update the runner_context
+    # @param  [Hash] runner_context (the value returned from run_async!)
+    # @return [void]
+    def status!(_runner_context)
+      raise NotImplementedError, "Must be implemented in a subclass"
+    end
+
+    # check runner_contet to determine if the task is still running or completed
+    # @param  [Hash] runner_context (the value returned from run_async!)
+    # @return [Boolean] value if the task is still running
+    #   true if the task is still running
+    #   false if it has completed
     def running?(_runner_context)
       raise NotImplementedError, "Must be implemented in a subclass"
     end
 
+    # For a non-running? task, check if it was successful
+    # @param  [Hash] runner_context (the value returned from run_async!)
+    # @return [Boolean] value if the task is still running
+    #   true if the task completed successfully
+    #   false if the task had an error
     def success?(_runner_context)
       raise NotImplementedError, "Must be implemented in a subclass"
     end
 
+    # For a successful task, return the output
+    # @param  [Hash] runner_context (the value returned from run_async!)
+    # @return [String, Hash] output from task
     def output(_runner_context)
       raise NotImplementedError, "Must be implemented in a subclass"
     end
 
+    # Cleanup runner context resources
+    # Called after a task is completed and the runner_context is no longer needed.
+    # @param  [Hash] runner_context (the value returned from run_async!)
+    # @return [void]
     def cleanup(_runner_context)
       raise NotImplementedError, "Must be implemented in a subclass"
     end
