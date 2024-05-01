@@ -18,7 +18,7 @@ module Floe
         @pull_policy = options["pull-policy"]
       end
 
-      def run_async!(resource, env = {}, secrets = {})
+      def run_async!(resource, env = {}, secrets = {}, _context = {})
         raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
 
         image = resource.sub("docker://", "")
