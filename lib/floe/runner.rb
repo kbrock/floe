@@ -31,7 +31,7 @@ module Floe
 
     # Run a command asynchronously and create a runner_context
     # @return [Hash] runner_context
-    def run_async!(_resource, _env = {}, _secrets = {})
+    def run_async!(_resource, _env = {}, _secrets = {}, _context = {})
       raise NotImplementedError, "Must be implemented in a subclass"
     end
 

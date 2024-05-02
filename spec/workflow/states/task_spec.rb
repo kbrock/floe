@@ -317,7 +317,7 @@ RSpec.describe Floe::Workflow::States::Task do
 
     expect(mock_runner)
       .to receive(:run_async!)
-      .with(resource, parameters, nil)
+      .with(resource, parameters, nil, ctx)
       .and_return({"container_ref" => container_ref})
   end
 end

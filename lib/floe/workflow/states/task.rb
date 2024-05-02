@@ -36,7 +36,7 @@ module Floe
           super
 
           input          = process_input(input)
-          runner_context = runner.run_async!(resource, input, credentials&.value({}, workflow.credentials))
+          runner_context = runner.run_async!(resource, input, credentials&.value({}, workflow.credentials), context)
 
           context.state["RunnerContext"] = runner_context
         end
