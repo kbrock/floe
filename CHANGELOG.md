@@ -4,6 +4,22 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.11.0] - 2024-05-02
+### Fixed
+- Ensure the local code is loaded in exe/floe ([#173](https://github.com/ManageIQ/floe/pull/173))
+- Fix issues with exe/floe and various combinations of workflow and input ([#174](https://github.com/ManageIQ/floe/pull/174))
+
+### Added
+- Add support for pluggable schemes ([#169](https://github.com/ManageIQ/floe/pull/169))
+
+### Changed
+- Collapse some namespaces ([#171](https://github.com/ManageIQ/floe/pull/171))
+- Pass workflow context into runner#run_async! ([#177](https://github.com/ManageIQ/floe/pull/177))
+
+### Removed
+- Remove unused run! method ([#176](https://github.com/ManageIQ/floe/pull/176))
+
+
 ## [0.10.0] - 2024-04-05
 ### Fixed
 - Fix rubocops ([#164](https://github.com/ManageIQ/floe/pull/164))
@@ -149,7 +165,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/ManageIQ/floe/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/ManageIQ/floe/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/ManageIQ/floe/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/ManageIQ/floe/compare/v0.7.0...v0.8.0
