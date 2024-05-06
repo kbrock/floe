@@ -41,10 +41,6 @@ module Floe
           context.state["RunnerContext"] = runner_context
         end
 
-        def status
-          @end ? "success" : "running"
-        end
-
         def finish
           output = runner.output(context.state["RunnerContext"])
 
