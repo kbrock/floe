@@ -38,8 +38,9 @@ module Floe
         end
 
         def finish
-          input          = input_path.value(context, context.input)
-          context.output = output_path.value(context, input)
+          input              = input_path.value(context, context.input)
+          context.output     = output_path.value(context, input)
+          context.next_state = end? ? nil : @next
           super
         end
 

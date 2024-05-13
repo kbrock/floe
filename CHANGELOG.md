@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Fix issue where a failed state can leave a workflow in "running" ([#182](https://github.com/ManageIQ/floe/pull/182))
 
 ## [0.11.0] - 2024-05-02
 ### Fixed

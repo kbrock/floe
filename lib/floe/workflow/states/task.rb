@@ -46,11 +46,12 @@ module Floe
 
           if success?
             output = parse_output(output)
-            context.output = process_output(context.input.dup, output)
+            context.output     = process_output(context.input.dup, output)
+            context.next_state = end? ? nil : @next
             super
           else
+            context.output     = error = parse_error(output)
             context.next_state = nil
-            context.output = error = parse_error(output)
             super
             retry_state!(error) || catch_error!(error) || fail_workflow!(error)
           end
