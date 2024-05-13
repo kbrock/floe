@@ -13,7 +13,7 @@ RSpec.describe Floe::Workflow::States::Task do
 
     describe "Input" do
       context "with no InputPath" do
-        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "End" => true}}) }
+        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
         it "passes the whole context to the resource" do
           expect_run_async({"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, :output => "hello, world!")
@@ -23,7 +23,7 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "with an InputPath" do
-        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "InputPath" => "$.foo", "End" => true}}) }
+        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "InputPath" => "$.foo", "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
         it "filters the context passed to the resource" do
           expect_run_async({"bar" => "baz"}, :output => nil)
@@ -33,7 +33,7 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "with Parameters" do
-        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Parameters" => {"var1.$" => "$.foo.bar"}, "End" => true}}) }
+        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Parameters" => {"var1.$" => "$.foo.bar"}, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
         it "passes the interpolated parameters to the resource" do
           expect_run_async({"var1" => "baz"}, :output => nil)
@@ -44,7 +44,7 @@ RSpec.describe Floe::Workflow::States::Task do
     end
 
     describe "Output" do
-      let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "End" => true}}) }
+      let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
       it "uses the last line as output if it is JSON" do
         expect_run_async({"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, :output => "ABCD\nHELLO\n{\"response\":[\"192.168.1.2\"]}")
@@ -73,7 +73,7 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "ResultSelector" do
-        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "ResultSelector" => {"ip_addrs.$" => "$.response"}, "End" => true}}) }
+        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "ResultSelector" => {"ip_addrs.$" => "$.response"}, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
         it "filters the results" do
           expect_run_async({"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}}, :output => "ABCD\nHELLO\n{\"response\":[\"192.168.1.2\"],\"exit_code\":0}")
@@ -85,7 +85,7 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "ResultPath" do
-        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "ResultPath" => "$.ip_addrs", "End" => true}}) }
+        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "ResultPath" => "$.ip_addrs", "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
         it "inserts the response into the input" do
           expect_run_async(input, :output => "[\"192.168.1.2\"]")
@@ -100,7 +100,7 @@ RSpec.describe Floe::Workflow::States::Task do
         end
 
         context "setting a Credential" do
-          let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "ResultPath" => "$.Credentials", "End" => true}}) }
+          let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "ResultPath" => "$.Credentials", "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
           it "inserts the response into the workflow credentials" do
             expect_run_async(input, :output => "{\"token\": \"shhh!\"}")
@@ -117,7 +117,7 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "OutputPath" do
-        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "ResultPath" => "$.data.ip_addrs", "OutputPath" => output_path, "End" => true}}) }
+        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "ResultPath" => "$.data.ip_addrs", "OutputPath" => output_path, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
         context "with the default '$'" do
           let(:output_path) { "$" }
@@ -150,7 +150,7 @@ RSpec.describe Floe::Workflow::States::Task do
     end
 
     describe "Retry" do
-      let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Retry" => retriers, "TimeoutSeconds" => 2, "End" => true}}) }
+      let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Retry" => retriers, "TimeoutSeconds" => 2, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
       context "with specific errors" do
         let(:retriers) { [{"ErrorEquals" => ["States.Timeout"], "MaxAttempts" => 1}] }
@@ -166,7 +166,7 @@ RSpec.describe Floe::Workflow::States::Task do
         end
 
         context "with multiple retriers" do
-          let(:retriers) { [{"ErrorEquals" => ["States.Timeout"], "MaxAttempts" => 1}, {"ErrorEquals" => ["Exception"], "End" => true}] }
+          let(:retriers) { [{"ErrorEquals" => ["States.Timeout"], "MaxAttempts" => 1}, {"ErrorEquals" => ["Exception"], "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}] }
 
           it "resets the retrier if a different exception is raised" do
             expect_run_async(input, :error => "States.Timeout")
@@ -225,7 +225,7 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "with a Catch" do
-        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Retry" => [{"ErrorEquals" => ["States.Timeout"]}], "Catch" => [{"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}], "End" => true}}) }
+        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Retry" => [{"ErrorEquals" => ["States.Timeout"]}], "Catch" => [{"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}], "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
         it "retry preceeds catch" do
           expect_run_async(input, :error => "States.Timeout")
@@ -249,7 +249,7 @@ RSpec.describe Floe::Workflow::States::Task do
 
     describe "Catch" do
       context "with specific errors" do
-        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Catch" => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}], "End" => true}}) }
+        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Catch" => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}], "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
         it "catches the exception" do
           expect_run_async(input, :output => "States.Timeout", :success => false)
@@ -271,7 +271,7 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "with a State.ALL catcher" do
-        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Catch" => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}, {"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}], "End" => true}}) }
+        let(:workflow) { make_workflow(ctx, {"State" => {"Type" => "Task", "Resource" => resource, "Catch" => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}, {"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}], "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 
         it "catches a more specific exception" do
           expect_run_async(input, :output => "States.Timeout", :success => false)
