@@ -25,9 +25,8 @@ module Floe
         end
 
         def finish
-          input              = process_input(context.input)
-          context.output     = process_output(input, result)
-          context.next_state = end? ? nil : @next
+          input          = process_input(context.input)
+          context.output = process_output(input, result)
           super
         end
 
