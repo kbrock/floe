@@ -3,8 +3,14 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.11.1] - 2024-05-20
 ### Fixed
 - Fix issue where a failed state can leave a workflow in "running" ([#182](https://github.com/ManageIQ/floe/pull/182))
+
+### Changed
+- Drop unused Task#status ([#180](https://github.com/ManageIQ/floe/pull/180))
+- Check task failed? in non_terminal_mixin ([#183](https://github.com/ManageIQ/floe/pull/183))
 
 ## [0.11.0] - 2024-05-02
 ### Fixed
@@ -167,7 +173,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/ManageIQ/floe/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/ManageIQ/floe/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/ManageIQ/floe/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/ManageIQ/floe/compare/v0.8.0...v0.9.0
