@@ -17,7 +17,7 @@ module Floe
 
       private def resolve_scheme(scheme)
         runner = @runners[scheme]
-        runner = @runners[scheme] = @runners[scheme].call if runner.is_a?(Proc)
+        runner = @runners[scheme] = @runners[scheme].call if runner.kind_of?(Proc)
         runner
       end
 
