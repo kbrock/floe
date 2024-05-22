@@ -3,6 +3,14 @@ RSpec.describe Floe::Workflow::ChoiceRule do
     let(:subject) { described_class.build(payload).true?(context, input) }
     let(:context) { {} }
 
+    context "Abstract Interface" do
+      let(:input) { {} }
+      let(:subject) { described_class.new({}).true?(context, input) }
+      it "is not implemented" do
+        expect { subject }.to raise_exception(NotImplementedError)
+      end
+    end
+
     context "Boolean Expression" do
       context "Not" do
         let(:payload) { {"Not" => {"Variable" => "$.foo", "StringEquals" => "bar"}, "Next" => "FirstMatchState"} }
