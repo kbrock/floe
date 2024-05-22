@@ -72,7 +72,7 @@ RSpec.describe Floe::Runner do
 
   describe "#wait" do
     it "is not implemented" do
-      expect { runner.wait }.to raise_error(NotImplementedError)
+      expect(runner.respond_to?(:wait)).to eq(false)
     end
   end
 end
