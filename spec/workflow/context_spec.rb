@@ -78,6 +78,8 @@ RSpec.describe Floe::Workflow::Context do
 
     it "ended" do
       ctx.state["Output"] = input.dup
+      ctx.execution["StartTime"] ||= Time.now.utc
+      ctx.execution["EndTime"] ||= Time.now.utc
 
       expect(ctx.failed?).to eq(false)
     end
@@ -88,6 +90,34 @@ RSpec.describe Floe::Workflow::Context do
       ctx.output = {"Cause" => "issue", "Error" => "error"}
 
       expect(ctx.failed?).to eq(true)
+    end
+  end
+
+  describe "#success?" do
+    it "new context" do
+      expect(ctx.success?).to eq(false)
+    end
+
+    it "started" do
+      ctx.state["Output"] = {}
+
+      expect(ctx.success?).to eq(false)
+    end
+
+    it "ended" do
+      ctx.state["Output"] = input.dup
+      ctx.execution["StartTime"] ||= Time.now.utc
+      ctx.execution["EndTime"] ||= Time.now.utc
+
+      expect(ctx.success?).to eq(true)
+    end
+
+    it "ended with error" do
+      ctx.execution["StartTime"] ||= Time.now.utc
+      ctx.execution["EndTime"] ||= Time.now.utc
+      ctx.output = {"Cause" => "issue", "Error" => "error"}
+
+      expect(ctx.success?).to eq(false)
     end
   end
 
