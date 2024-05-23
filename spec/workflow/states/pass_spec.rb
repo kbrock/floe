@@ -83,8 +83,8 @@ RSpec.describe Floe::Workflow::States::Pass do
       it "Uses raw input" do
         workflow.run_nonblock
         expect(ctx.output).to eq(
-          "val1"    => 3,
-          "val2"    => 4,
+          "title"   => "Numbers to add",
+          "numbers" => {"val1" => 3, "val2" => 4},
           "sum"     => 7
         )
       end
