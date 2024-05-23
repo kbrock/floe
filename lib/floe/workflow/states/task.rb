@@ -142,10 +142,6 @@ module Floe
         rescue JSON::ParserError
           nil
         end
-
-        def next_state
-          end? ? nil : @next
-        end
       end
     end
   end

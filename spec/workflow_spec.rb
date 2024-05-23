@@ -34,6 +34,10 @@ RSpec.describe Floe::Workflow do
       expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Missing field \"States\"")
     end
 
+    it "raises an exception for invalid States" do
+      expect { make_workflow(ctx, {"FirstState" => {"Type" => "Invalid"}}) }.to raise_error(Floe::InvalidWorkflowError, "Invalid state type: [Invalid]")
+    end
+
     it "raises an exception for missing StartAt" do
       payload = {"Comment" => "Test", "States" => {}}
 
@@ -57,6 +61,10 @@ RSpec.describe Floe::Workflow do
       payload    = {"Comment" => "Test", "StartAt" => state_name, "States" => {state_name => {"Type" => "Succeed"}}}
 
       expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, /must be less than or equal to 80 characters/)
+    end
+
+    it "raises an exception for invalid context" do
+      expect { described_class.new(make_payload({"Start" => {"Type" => "Success"}}), "abc") }.to raise_error(Floe::InvalidWorkflowError, /unexpected token/)
     end
   end
 

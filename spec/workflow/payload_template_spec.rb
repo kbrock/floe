@@ -2,12 +2,21 @@ RSpec.describe Floe::Workflow::PayloadTemplate do
   let(:subject) { described_class.new(payload) }
 
   describe "#value" do
-    context "with static values" do
-      let(:payload) { {"foo" => "bar", "bar" => "$.baz"} }
+    context "with static array" do
+      let(:payload) { ["a", 2] }
       let(:context) { {} }
 
       it "returns the original value" do
-        expect(subject.value(context)).to eq({"foo" => "bar", "bar" => "$.baz"})
+        expect(subject.value(context)).to eq(["a", 2])
+      end
+    end
+
+    context "with static values" do
+      let(:payload) { {"foo" => "bar", "bar" => "$.baz", "baz" => 3} }
+      let(:context) { {} }
+
+      it "returns the original value" do
+        expect(subject.value(context)).to eq({"foo" => "bar", "bar" => "$.baz", "baz" => 3})
       end
     end
 

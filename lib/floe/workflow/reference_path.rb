@@ -3,16 +3,6 @@
 module Floe
   class Workflow
     class ReferencePath < Path
-      class << self
-        def get(payload, context)
-          new(payload).get(context)
-        end
-
-        def set(payload, context, value)
-          new(payload).set(context, value)
-        end
-      end
-
       attr_reader :path
 
       def initialize(*)
