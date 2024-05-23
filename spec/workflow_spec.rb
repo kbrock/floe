@@ -34,6 +34,10 @@ RSpec.describe Floe::Workflow do
       expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Missing field \"States\"")
     end
 
+    it "raises an exception for invalid States" do
+      expect { make_workflow(ctx, {"FirstState" => {"Type" => "Invalid"}}) }.to raise_error(Floe::InvalidWorkflowError, "Invalid state type: [Invalid]")
+    end
+
     it "raises an exception for missing StartAt" do
       payload = {"Comment" => "Test", "States" => {}}
 
