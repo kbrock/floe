@@ -62,6 +62,10 @@ RSpec.describe Floe::Workflow do
 
       expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, /must be less than or equal to 80 characters/)
     end
+
+    it "raises an exception for invalid context" do
+      expect { described_class.new(make_payload({"Start" => {"Type" => "Success"}}), "abc") }.to raise_error(Floe::InvalidWorkflowError, /unexpected token/)
+    end
   end
 
   describe "#run_nonblock" do
