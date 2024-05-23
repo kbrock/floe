@@ -19,9 +19,8 @@ module Floe
         end
 
         def finish
-          input      = input_path.value(context, context.input)
-          next_state = choices.detect { |choice| choice.true?(context, input) }&.next || default
-          output     = output_path.value(context, input)
+          output     = output_path.value(context, context.input)
+          next_state = choices.detect { |choice| choice.true?(context, output) }&.next || default
 
           context.next_state = next_state
           context.output     = output

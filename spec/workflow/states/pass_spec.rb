@@ -53,5 +53,41 @@ RSpec.describe Floe::Workflow::States::Pass do
         expect(ctx.next_state).to eq("SuccessState")
       end
     end
+
+    # https://states-language.net/#inputoutput-processing-examples
+    context "with 2 blocks" do
+      let(:payload) do
+        {
+          "First"   => {
+            "Type"       => "Pass",
+            "Result"     => {
+              "title"   => "Numbers to add",
+              "numbers" => {"val1" => 3, "val2" => 4}
+            },
+            "ResultPath" => "$",
+            "Next"       => "Second"
+          },
+          "Second"  => {
+            "Type"       => "Pass",
+            "Result"     => 7,
+            "InputPath"  => "$.numbers",
+            "ResultPath" => "$.sum",
+            "Next"       => "Success"
+          },
+          "Success" => {
+            "Type" => "Succeed"
+          }
+        }
+      end
+
+      it "Uses raw input" do
+        workflow.run_nonblock
+        expect(ctx.output).to eq(
+          "title"   => "Numbers to add",
+          "numbers" => {"val1" => 3, "val2" => 4},
+          "sum"     => 7
+        )
+      end
+    end
   end
 end
