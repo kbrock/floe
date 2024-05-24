@@ -29,48 +29,52 @@ RSpec.describe Floe::Workflow do
     end
 
     it "raises an exception for missing States" do
-      payload = {"Comment" => "Test", "StartAt" => "Nothing"}
+      payload = {"StartAt" => "Nothing"}
 
       expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Missing field \"States\"")
     end
 
     it "raises an exception for invalid States" do
-      expect { make_workflow(ctx, {"FirstState" => {"Type" => "Invalid"}}) }.to raise_error(Floe::InvalidWorkflowError, "Invalid state type: [Invalid]")
+      payload = make_payload({"FirstState" => {"Type" => "Invalid"}})
+
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Invalid state type: [Invalid]")
     end
 
     it "raises an exception for missing StartAt" do
-      payload = {"Comment" => "Test", "States" => {}}
+      payload = {"States" => {"FirstState" => {"Type" => "Succeed"}}}
 
       expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Missing field \"StartAt\"")
     end
 
     it "raises an exception for StartAt not in States" do
-      payload = {"Comment" => "Test", "StartAt" => "Foo", "States" => {"Bar" => {"Type" => "Succeed"}}}
+      payload = {"StartAt" => "Foo", "States" => {"FirstState" => {"Type" => "Succeed"}}}
 
       expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "\"StartAt\" not in the \"States\" field")
     end
 
     it "raises an exception for a State missing a Type field" do
-      payload = {"Comment" => "Test", "StartAt" => "First", "States" => {"First" => {}}}
+      payload = make_payload({"FirstState" => {}})
 
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Missing \"Type\" field in state [First]")
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Missing \"Type\" field in state [FirstState]")
     end
 
     it "raises an exception for an invalid State name" do
-      state_name = Array.new(81).map { "a" }.join
-      payload    = {"Comment" => "Test", "StartAt" => state_name, "States" => {state_name => {"Type" => "Succeed"}}}
+      state_name = "a" * 81
+      payload    = make_payload({state_name => {"Type" => "Succeed"}})
 
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, /must be less than or equal to 80 characters/)
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "State name [#{state_name}] must be less than or equal to 80 characters")
     end
 
     it "raises an exception for invalid context" do
-      expect { described_class.new(make_payload({"Start" => {"Type" => "Success"}}), "abc") }.to raise_error(Floe::InvalidWorkflowError, /unexpected token/)
+      payload = make_payload({"FirstState" => {"Type" => "Success"}})
+
+      expect { described_class.new(payload, "invalid context") }.to raise_error(Floe::InvalidWorkflowError, "unexpected token at 'invalid context'")
     end
 
     it "raises an exception for invalid resource scheme in a Task state" do
-      payload = make_payload({"Start" => {"Type" => "Task", "Resource" => "invalid://foo"}})
+      payload = make_payload({"FirstState" => {"Type" => "Task", "Resource" => "invalid://foo"}})
 
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, /Invalid resource scheme/)
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Invalid resource scheme [invalid]")
     end
   end
 
