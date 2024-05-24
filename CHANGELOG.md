@@ -4,6 +4,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.11.2] - 2024-05-24
+### Fixed
+- Output now based upon raw input not effective input ([#191](https://github.com/ManageIQ/floe/pull/191))
+- Fix error raised on invalid resource scheme ([#195](https://github.com/ManageIQ/floe/pull/195))
+
 ## [0.11.1] - 2024-05-20
 ### Fixed
 - Fix issue where a failed state can leave a workflow in "running" ([#182](https://github.com/ManageIQ/floe/pull/182))
@@ -26,7 +31,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 - Remove unused run! method ([#176](https://github.com/ManageIQ/floe/pull/176))
-
 
 ## [0.10.0] - 2024-04-05
 ### Fixed
@@ -173,7 +177,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.11.1...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.11.2...HEAD
+[0.11.2]: https://github.com/ManageIQ/floe/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/ManageIQ/floe/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/ManageIQ/floe/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/ManageIQ/floe/compare/v0.9.0...v0.10.0
