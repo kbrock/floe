@@ -46,12 +46,12 @@ module Floe
         def finish(context)
           output = runner.output(context.state["RunnerContext"])
 
-          if success?
+          if success?(context)
             output = parse_output(output)
             context.output = process_output(context.input.dup, output)
           else
             error = parse_error(output)
-            retry_state!(error) || catch_error!(error) || fail_workflow!(error)
+            retry_state!(context, error) || catch_error!(context, error) || fail_workflow!(context, error)
           end
           super
         ensure
@@ -77,7 +77,7 @@ module Floe
           validate_state_next!(workflow)
         end
 
-        def success?
+        def success?(context)
           runner.success?(context.state["RunnerContext"])
         end
 
@@ -89,7 +89,7 @@ module Floe
           self.catch.detect { |c| (c.error_equals & [error, "States.ALL"]).any? }
         end
 
-        def retry_state!(error)
+        def retry_state!(context, error)
           retrier = find_retrier(error["Error"]) if error
           return if retrier.nil?
 
@@ -110,7 +110,7 @@ module Floe
           true
         end
 
-        def catch_error!(error)
+        def catch_error!(context, error)
           catcher = find_catcher(error["Error"]) if error
           return if catcher.nil?
 
@@ -121,7 +121,7 @@ module Floe
           true
         end
 
-        def fail_workflow!(error)
+        def fail_workflow!(context, error)
           # next_state is nil, and will be set to nil again in super
           # keeping in here for completeness
           context.next_state = nil
