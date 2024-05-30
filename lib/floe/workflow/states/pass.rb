@@ -24,7 +24,7 @@ module Floe
           validate_state!(workflow)
         end
 
-        def finish
+        def finish(context)
           context.output = process_output(context.input.dup, result)
           super
         end

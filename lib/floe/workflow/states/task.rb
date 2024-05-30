@@ -34,16 +34,16 @@ module Floe
           raise Floe::InvalidWorkflowError, err.message
         end
 
-        def start(input)
+        def start(context)
           super
 
-          input          = process_input(input)
-          runner_context = runner.run_async!(resource, input, credentials&.value({}, workflow.context.credentials), context)
+          input          = process_input(context.input)
+          runner_context = runner.run_async!(resource, input, credentials&.value({}, context.credentials), context)
 
           context.state["RunnerContext"] = runner_context
         end
 
-        def finish
+        def finish(context)
           output = runner.output(context.state["RunnerContext"])
 
           if success?
