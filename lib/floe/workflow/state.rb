@@ -103,7 +103,7 @@ module Floe
       end
 
       def long_name
-        "#{self.class.name.split("::").last}:#{name}"
+        "#{payload["Type"]}:#{name}"
       end
 
       private
