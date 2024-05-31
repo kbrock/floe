@@ -6,7 +6,7 @@ module Floe
 
     OUTPUT_MARKER = "__FLOE_OUTPUT__\n"
 
-    def initialize(_options = {})
+    def initialize(_options = {}) # rubocop:disable Style/RedundantInitialize
     end
 
     @runners = {}
