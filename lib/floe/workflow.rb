@@ -159,6 +159,7 @@ module Floe
 
       context.state["Name"] = start_at
       context.state["Input"] = context.execution["Input"].dup
+      context.execution["StartTime"] = Time.now.utc.iso8601
 
       self
     end
