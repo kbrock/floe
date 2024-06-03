@@ -50,7 +50,7 @@ RSpec.describe Floe::Workflow::ReferencePath do
 
   describe "#set" do
     let(:payload) { "$" }
-    let(:input) { {} }
+    let(:input) { {"old" => "key"} }
 
     context "with a simple path" do
       it "sets the output at the top-level" do
@@ -58,11 +58,19 @@ RSpec.describe Floe::Workflow::ReferencePath do
       end
     end
 
+    context "with a top level path" do
+      let(:payload) { "$.hash" }
+
+      it "sets the output at the correct nested level" do
+        expect(subject.set(input, "foo" => "bar")).to eq("old" => "key", "hash" => {"foo" => "bar"})
+      end
+    end
+
     context "with a nested path" do
       let(:payload) { "$.nested.hash" }
 
       it "sets the output at the correct nested level" do
-        expect(subject.set(input, "foo" => "bar")).to eq("nested" => {"hash" => {"foo" => "bar"}})
+        expect(subject.set(input, "foo" => "bar")).to eq("old" => "key", "nested" => {"hash" => {"foo" => "bar"}})
       end
     end
 
