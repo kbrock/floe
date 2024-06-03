@@ -25,12 +25,9 @@ module Floe
       def set(context, value)
         result = context.dup
 
-        # If the payload is '$' then merge the value into the context
-        # otherwise store the value under the path
-        #
-        # TODO: how to handle non-hash values, raise error if path=$ and value not a hash?
+        # If the payload is '$' then replace the output with the value
         if path.empty?
-          result.merge!(value)
+          result = value.dup
         else
           child    = result
           keys     = path.dup

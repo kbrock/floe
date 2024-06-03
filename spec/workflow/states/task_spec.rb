@@ -51,7 +51,7 @@ RSpec.describe Floe::Workflow::States::Task do
 
         workflow.current_state.run_nonblock!
 
-        expect(ctx.output).to eq("foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}, "response" => ["192.168.1.2"])
+        expect(ctx.output).to eq("response" => ["192.168.1.2"])
       end
 
       context "with an error" do
@@ -80,7 +80,7 @@ RSpec.describe Floe::Workflow::States::Task do
 
           workflow.current_state.run_nonblock!
 
-          expect(ctx.output).to eq("foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}, "ip_addrs" => ["192.168.1.2"])
+          expect(ctx.output).to eq("ip_addrs" => ["192.168.1.2"])
         end
       end
 
