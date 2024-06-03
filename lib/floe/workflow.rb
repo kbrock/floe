@@ -161,7 +161,13 @@ module Floe
     private
 
     def step_next
-      context.state = {"Name" => context.next_state, "Input" => context.output} if context.next_state
+      if context.next_state
+        # if rerunning due to an error (and we are using Retry)
+        if context.state_name == context.next_state && context.failed? && context.state.key?("Retrier")
+          restore_values = context.state.slice("RetryCount", "Input", "Retrier")
+        end
+        context.state = {"Name" => context.next_state, "Input" => context.output}.merge!(restore_values || {})
+      end
     end
   end
 end
