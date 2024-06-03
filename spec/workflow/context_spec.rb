@@ -13,6 +13,10 @@ RSpec.describe Floe::Workflow::Context do
       expect(ctx.execution["api"]).to eq("http://localhost/")
       expect(ctx.state).not_to eq(nil)
     end
+
+    it "defaults credentials to {}" do
+      expect(ctx.credentials).to eq({})
+    end
   end
 
   describe "#started?" do

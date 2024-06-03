@@ -49,7 +49,7 @@ RSpec.describe Floe::Workflow::States::Pass do
 
       it "sets the result in Credentials" do
         state.run_nonblock!
-        expect(workflow.credentials).to include({"user" => "luggage", "password" => "1234"})
+        expect(ctx.credentials).to include({"user" => "luggage", "password" => "1234"})
         expect(ctx.next_state).to eq("SuccessState")
       end
     end

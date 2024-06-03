@@ -162,7 +162,7 @@ RSpec.describe Floe::Workflow::States::Task do
 
             workflow.run_nonblock
 
-            expect(workflow.credentials).to include("token" => "shhh!")
+            expect(ctx.credentials).to include("token" => "shhh!")
             expect(ctx.output).to eq(
               "foo" => {"bar" => "baz"},
               "bar" => {"baz" => "foo"}
