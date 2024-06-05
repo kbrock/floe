@@ -14,8 +14,9 @@ module Floe
         @backoff_rate     = payload["BackoffRate"] || 2.0
       end
 
+      # @param [Integer] attempt 1 for the first attempt
       def sleep_duration(attempt)
-        interval_seconds * (backoff_rate * attempt)
+        interval_seconds * (backoff_rate**(attempt - 1))
       end
     end
   end
