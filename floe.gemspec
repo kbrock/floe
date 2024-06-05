@@ -7,8 +7,8 @@ Gem::Specification.new do |spec|
   spec.version = Floe::VERSION
   spec.authors = ["ManageIQ Developers"]
 
-  spec.summary = "Simple Workflow Runner."
-  spec.description = "Simple Workflow Runner."
+  spec.summary = "Floe is a runner for Amazon States Language workflows."
+  spec.description = spec.summary
   spec.homepage = "https://github.com/ManageIQ/floe"
   spec.required_ruby_version = ">= 2.7.0"
 
