@@ -5,8 +5,8 @@ module Floe
     module States
       module NonTerminalMixin
         def finish
-          # If this state is failed or the End state set next_state to nil
-          context.next_state = end? || context.failed? ? nil : @next
+          # If this state is failed or this is an end state, next_state to nil
+          context.next_state ||= end? || context.failed? ? nil : @next
 
           super
         end
