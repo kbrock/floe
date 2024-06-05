@@ -6,6 +6,7 @@ module Floe
     module ErrorMatcherMixin
       # @param [String] error the error thrown
       def match_error?(error)
+        return false if error == "States.Runtime"
         return true if error_equals.include?("States.ALL")
         return true if error_equals.include?("States.Timeout") && error == "States.HeartbeatTimeout"
 

@@ -51,6 +51,10 @@ RSpec.describe Floe::Workflow::ErrorMatcherMixin do
       it "matches other exceptions" do
         expect(subject.match_error?("States.Permissions")).to eq(true)
       end
+
+      it "does not match States.Runtime" do
+        expect(subject.match_error?("States.Runtime")).to eq(false)
+      end
     end
 
     context "when matching States.Timeout" do
