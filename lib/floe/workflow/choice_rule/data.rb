@@ -31,8 +31,6 @@ module Floe
           lhs = variable_value(context, input)
           rhs = compare_value(context, input)
 
-          validate!(lhs)
-
           case compare_key
           when "IsNull" then is_null?(lhs)
           when "IsPresent" then is_present?(lhs)
@@ -44,33 +42,29 @@ module Floe
                "NumericEquals", "NumericEqualsPath",
                "BooleanEquals", "BooleanEqualsPath",
                "TimestampEquals", "TimestampEqualsPath"
-            lhs == rhs
+            eq?(lhs, rhs)
           when "StringLessThan", "StringLessThanPath",
                "NumericLessThan", "NumericLessThanPath",
                "TimestampLessThan", "TimestampLessThanPath"
-            lhs < rhs
+            lt?(lhs, rhs)
           when "StringGreaterThan", "StringGreaterThanPath",
                "NumericGreaterThan", "NumericGreaterThanPath",
                "TimestampGreaterThan", "TimestampGreaterThanPath"
-            lhs > rhs
+            gt?(lhs, rhs)
           when "StringLessThanEquals", "StringLessThanEqualsPath",
                "NumericLessThanEquals", "NumericLessThanEqualsPath",
                "TimestampLessThanEquals", "TimestampLessThanEqualsPath"
-            lhs <= rhs
+            lte?(lhs, rhs)
           when "StringGreaterThanEquals", "StringGreaterThanEqualsPath",
                "NumericGreaterThanEquals", "NumericGreaterThanEqualsPath",
                "TimestampGreaterThanEquals", "TimestampGreaterThanEqualsPath"
-            lhs >= rhs
+            gte?(lhs, rhs)
           when "StringMatches"
-            lhs.match?(Regexp.escape(rhs).gsub('\*', '.*?'))
+            matches?(lhs, rhs)
           end
         end
 
         private
-
-        def validate!(value)
-          raise "No such variable [#{variable}]" if value.nil? && !%w[IsNull IsPresent].include?(compare_key)
-        end
 
         def is_null?(value) # rubocop:disable Naming/PredicateName
           value.nil?
@@ -93,12 +87,39 @@ module Floe
         end
 
         def is_timestamp?(value) # rubocop:disable Naming/PredicateName
+          return false if value.nil?
+
           require "date"
 
           DateTime.rfc3339(value)
           true
         rescue TypeError, Date::Error
           false
+        end
+
+        def eq?(lhs, rhs)
+          is_present?(lhs) && is_present?(rhs) && lhs == rhs
+        end
+
+        def lt?(lhs, rhs)
+          is_present?(lhs) && is_present?(rhs) && lhs < rhs
+        end
+
+        def gt?(lhs, rhs)
+          is_present?(lhs) && is_present?(rhs) && lhs > rhs
+        end
+
+        def lte?(lhs, rhs)
+          is_present?(lhs) && is_present?(rhs) && lhs <= rhs
+        end
+
+        def gte?(lhs, rhs)
+          is_present?(lhs) && is_present?(rhs) && lhs >= rhs
+        end
+
+        def matches?(lhs, rhs)
+          is_string?(lhs) && is_string?(rhs) &&
+            lhs.match?(Regexp.escape(rhs).gsub('\*', '.*?'))
         end
 
         def compare_value(context, input)

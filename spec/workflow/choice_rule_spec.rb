@@ -117,15 +117,6 @@ RSpec.describe Floe::Workflow::ChoiceRule do
     end
 
     context "Data-Test Expression" do
-      context "with a missing variable" do
-        let(:payload) { {"Variable" => "$.foo", "NumericEquals" => 1, "Next" => "FirstMatchState"} }
-        let(:input) { {} }
-
-        it "raises an exception" do
-          expect { subject }.to raise_exception(RuntimeError, "No such variable [$.foo]")
-        end
-      end
-
       context "with a missing compare key" do
         let(:payload) { {"Variable" => "$.foo", "Next" => "FirstMatchState"} }
         let(:input) { {"foo" => "bar"} }
@@ -147,6 +138,12 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       context "with IsNull" do
         let(:payload) { {"Variable" => "$.foo", "IsNull" => true, "Next" => "FirstMatchState"} }
 
+        context "with missing value" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(true) }
+        end
+
         context "with null" do
           let(:input) { {"foo" => nil} }
 
@@ -167,6 +164,12 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       context "with IsPresent" do
         let(:payload) { {"Variable" => "$.foo", "IsPresent" => true, "Next" => "FirstMatchState"} }
 
+        context "with missing value" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
         context "with null" do
           let(:input) { {"foo" => nil} }
 
@@ -186,6 +189,18 @@ RSpec.describe Floe::Workflow::ChoiceRule do
 
       context "with IsNumeric" do
         let(:payload) { {"Variable" => "$.foo", "IsNumeric" => true, "Next" => "FirstMatchState"} }
+
+        context "with missing value" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with nil value" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
 
         context "with an integer" do
           let(:input) { {"foo" => 1} }
@@ -215,6 +230,18 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       context "with IsString" do
         let(:payload) { {"Variable" => "$.foo", "IsString" => true, "Next" => "FirstMatchState"} }
 
+        context "with missing value" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with nil value" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
         context "with a string" do
           let(:input) { {"foo" => "bar"} }
 
@@ -235,8 +262,28 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       context "with IsBoolean" do
         let(:payload) { {"Variable" => "$.foo", "IsBoolean" => true, "Next" => "FirstMatchState"} }
 
+        context "with missing value" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with nil value" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
         context "with a boolean" do
           let(:input) { {"foo" => true} }
+
+          it "returns true" do
+            expect(subject).to eq(true)
+          end
+        end
+
+        context "with a boolean" do
+          let(:input) { {"foo" => false} }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -254,6 +301,18 @@ RSpec.describe Floe::Workflow::ChoiceRule do
 
       context "with IsTimestamp" do
         let(:payload) { {"Variable" => "$.foo", "IsTimestamp" => true, "Next" => "FirstMatchState"} }
+
+        context "with missing value" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with nil value" do
+          let(:input) { {"foo" => 1} }
+
+          it { expect(subject).to eq(false) }
+        end
 
         context "with a timestamp" do
           let(:input) { {"foo" => "2016-03-14T01:59:00Z"} }
@@ -291,6 +350,18 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       context "with a NumericEquals" do
         let(:payload) { {"Variable" => "$.foo", "NumericEquals" => 1, "Next" => "FirstMatchState"} }
 
+        context "with missing lhs" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with nil lhs" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
         context "that equals the variable" do
           let(:input) { {"foo" => 1} }
 
@@ -308,8 +379,74 @@ RSpec.describe Floe::Workflow::ChoiceRule do
         end
       end
 
+      context "with a NumericEquals" do
+        let(:payload) { {"Variable" => "$.foo", "BooleanEquals" => true, "Next" => "FirstMatchState"} }
+
+        context "with missing lhs" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with nil lhs" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "that equals the variable" do
+          let(:input) { {"foo" => true} }
+
+          it { expect(subject).to eq(true) }
+        end
+
+        context "that equals the variable alt" do
+          let(:payload) { {"Variable" => "$.foo", "BooleanEquals" => false, "Next" => "FirstMatchState"} }
+          let(:input) { {"foo" => false} }
+
+          it { expect(subject).to eq(true) }
+        end
+
+        context "that does not equal the variable" do
+          let(:input) { {"foo" => false} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "that does not equal the variable alt" do
+          let(:payload) { {"Variable" => "$.foo", "BooleanEquals" => true, "Next" => "FirstMatchState"} }
+          let(:input) { {"foo" => false} }
+
+          it { expect(subject).to eq(false) }
+        end
+      end
+
       context "with a NumericEqualsPath" do
         let(:payload) { {"Variable" => "$.foo", "NumericEqualsPath" => "$.bar", "Next" => "FirstMatchState"} }
+
+        context "with missing lhs" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with null lhs" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with missing rhs" do
+          let(:input) { {"foo" => 1} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with nil rhs" do
+          let(:input) { {"foo" => 1, "bar" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
 
         context "that equals the variable" do
           let(:input) { {"foo" => 1, "bar" => 1} }
@@ -331,6 +468,18 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       context "with a NumericLessThan" do
         let(:payload) { {"Variable" => "$.foo", "NumericLessThan" => 1, "Next" => "FirstMatchState"} }
 
+        context "with missing lhs" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with null lhs" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
         context "that is true" do
           let(:input) { {"foo" => 0} }
 
@@ -350,6 +499,30 @@ RSpec.describe Floe::Workflow::ChoiceRule do
 
       context "with a NumericLessThanPath" do
         let(:payload) { {"Variable" => "$.foo", "NumericLessThanPath" => "$.bar", "Next" => "FirstMatchState"} }
+
+        context "with missing lhs" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with null lhs" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with missing rhs" do
+          let(:input) { {"foo" => 1} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with nil rhs" do
+          let(:input) { {"foo" => 1, "bar" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
 
         context "that is true" do
           let(:input) { {"foo" => 0, "bar" => 1} }
@@ -371,6 +544,18 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       context "with a NumericGreaterThan" do
         let(:payload) { {"Variable" => "$.foo", "NumericGreaterThan" => 1, "Next" => "FirstMatchState"} }
 
+        context "with missing lhs" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with null lhs" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
         context "that is true" do
           let(:input) { {"foo" => 2} }
 
@@ -390,6 +575,30 @@ RSpec.describe Floe::Workflow::ChoiceRule do
 
       context "with a NumericGreaterThanPath" do
         let(:payload) { {"Variable" => "$.foo", "NumericGreaterThanPath" => "$.bar", "Next" => "FirstMatchState"} }
+
+        context "with missing lhs" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with null lhs" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with missing rhs" do
+          let(:input) { {"foo" => 1} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with nil rhs" do
+          let(:input) { {"foo" => 1, "bar" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
 
         context "that is true" do
           let(:input) { {"foo" => 2, "bar" => 1} }
@@ -411,6 +620,18 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       context "with a NumericLessThanEquals" do
         let(:payload) { {"Variable" => "$.foo", "NumericLessThanEquals" => 1, "Next" => "FirstMatchState"} }
 
+        context "with missing lhs" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with null lhs" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
         context "that is true" do
           let(:input) { {"foo" => 1} }
 
@@ -430,6 +651,30 @@ RSpec.describe Floe::Workflow::ChoiceRule do
 
       context "with a NumericLessThanEqualsPath" do
         let(:payload) { {"Variable" => "$.foo", "NumericLessThanEqualsPath" => "$.bar", "Next" => "FirstMatchState"} }
+
+        context "with missing lhs" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with null lhs" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with missing rhs" do
+          let(:input) { {"foo" => 1} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with nil rhs" do
+          let(:input) { {"foo" => 1, "bar" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
 
         context "that is true" do
           let(:input) { {"foo" => 1, "bar" => 1} }
@@ -451,6 +696,18 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       context "with a NumericGreaterThanEquals" do
         let(:payload) { {"Variable" => "$.foo", "NumericGreaterThanEquals" => 1, "Next" => "FirstMatchState"} }
 
+        context "with missing lhs" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with null lhs" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
         context "that is true" do
           let(:input) { {"foo" => 1} }
 
@@ -470,6 +727,30 @@ RSpec.describe Floe::Workflow::ChoiceRule do
 
       context "with a NumericGreaterThanEqualsPath" do
         let(:payload) { {"Variable" => "$.foo", "NumericGreaterThanEqualsPath" => "$.bar", "Next" => "FirstMatchState"} }
+
+        context "with missing lhs" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with null lhs" do
+          let(:input) { {"foo" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with missing rhs" do
+          let(:input) { {"foo" => 1} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with nil rhs" do
+          let(:input) { {"foo" => 1, "bar" => nil} }
+
+          it { expect(subject).to eq(false) }
+        end
 
         context "that is true" do
           let(:input) { {"foo" => 1, "bar" => 1} }
@@ -491,7 +772,27 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       context "with a StringMatches" do
         let(:payload) { {"Variable" => "$.foo", "StringMatches" => "*.log", "Next" => "FirstMatchState"} }
 
-        context "that is true" do
+        context "with missing lhs" do
+          let(:input) { {} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with non string lhs" do
+          let(:input) { {"foo" => 5} }
+
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with string to int comparison" do
+          let(:payload) { {"Variable" => "$.foo", "StringMatches" => "5", "Next" => "FirstMatchState"} }
+          let(:input) { {"foo" => 5} }
+
+          # TODO: determine if we want casting
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with regular expression expanded matching value" do
           let(:input) { {"foo" => "audit.log"} }
 
           it "returns true" do

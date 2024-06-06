@@ -53,12 +53,6 @@ RSpec.describe Floe::Workflow::States::Choice do
   end
 
   describe "#run_nonblock!" do
-    context "with a missing variable" do
-      it "raises an exception" do
-        expect { state.run_nonblock!(ctx) }.to raise_error(RuntimeError, "No such variable [$.foo]")
-      end
-    end
-
     context "with an input value matching a condition" do
       let(:input) { {"foo" => 1} }
 
