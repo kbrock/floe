@@ -120,7 +120,7 @@ module Floe
       return Errno::EPERM if end?
 
       step_next
-      current_state.run_nonblock!
+      current_state.run_nonblock!.tap { end_workflow }
     end
 
     # if this hasn't started (and we have no current_state yet), assume it is ready
@@ -162,6 +162,15 @@ module Floe
       context.execution["StartTime"] = Time.now.utc.iso8601
 
       self
+    end
+
+    # Avoiding State#running? because that is potentially expensive.
+    # State#run_nonblock! already called running? via State#ready? and
+    # called State#finished -- which is what Context#state_finished? is detecting
+    def end_workflow
+      return unless context.state_finished? && context.next_state.nil?
+
+      context.execution["EndTime"] = context.state["FinishedTime"]
     end
 
     # NOTE: Expecting the context to be initialized (via start_workflow) before this
