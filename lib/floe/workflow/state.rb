@@ -83,7 +83,7 @@ module Floe
       end
 
       def started?
-        context.state.key?("EnteredTime")
+        context.state_started?
       end
 
       def ready?
@@ -91,7 +91,7 @@ module Floe
       end
 
       def finished?
-        context.state.key?("FinishedTime")
+        context.state_finished?
       end
 
       def waiting?
