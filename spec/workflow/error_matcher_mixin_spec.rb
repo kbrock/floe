@@ -52,5 +52,16 @@ RSpec.describe Floe::Workflow::ErrorMatcherMixin do
         expect(subject.match_error?("States.Permissions")).to eq(true)
       end
     end
+
+    context "when matching States.Timeout" do
+      let(:retriers) { [{"ErrorEquals" => ["States.Timeout"]}] }
+      it "matches HearbeatTimeout" do
+        expect(subject.match_error?("States.HeartbeatTimeout")).to eq(true)
+      end
+
+      it "fails to match other errors" do
+        expect(subject.match_error?("States.Permissions")).to eq(false)
+      end
+    end
   end
 end
