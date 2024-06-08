@@ -105,33 +105,32 @@ module Floe
 
       @states         = payload["States"].to_a.map { |state_name, state| State.build!(self, state_name, state) }
       @states_by_name = @states.each_with_object({}) { |state, result| result[state.name] = state }
-
-      unless context.state.key?("Name")
-        context.state["Name"] = start_at
-        context.state["Input"] = context.execution["Input"].dup
-      end
     rescue => err
       raise Floe::InvalidWorkflowError, err.message
     end
 
     def run_nonblock
+      start_workflow
       loop while step_nonblock == 0 && !end?
       self
     end
 
+    # NOTE: If running manually, make sure to call start_workflow at startup
     def step_nonblock
       return Errno::EPERM if end?
 
       step_next
-      current_state.run_nonblock!
+      current_state.run_nonblock!.tap { end_workflow }
     end
 
+    # if this hasn't started (and we have no current_state yet), assume it is ready
     def step_nonblock_wait(timeout: nil)
-      current_state.wait(:timeout => timeout)
+      context.started? ? current_state.wait(:timeout => timeout) : 0
     end
 
+    # if this hasn't started (and we have no current_state yet), assume it is ready
     def step_nonblock_ready?
-      current_state.ready?
+      !context.started? || current_state.ready?
     end
 
     def waiting?
@@ -154,6 +153,27 @@ module Floe
       context.ended?
     end
 
+    # setup a workflow
+    def start_workflow
+      return if context.state_name
+
+      context.state["Name"] = start_at
+      context.state["Input"] = context.execution["Input"].dup
+      context.execution["StartTime"] = Time.now.utc.iso8601
+
+      self
+    end
+
+    # Avoiding State#running? because that is potentially expensive.
+    # State#run_nonblock! already called running? via State#ready? and
+    # called State#finished -- which is what Context#state_finished? is detecting
+    def end_workflow
+      return unless context.state_finished? && context.next_state.nil?
+
+      context.execution["EndTime"] = context.state["FinishedTime"]
+    end
+
+    # NOTE: Expecting the context to be initialized (via start_workflow) before this
     def current_state
       @states_by_name[context.state_name]
     end

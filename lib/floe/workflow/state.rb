@@ -52,23 +52,18 @@ module Floe
       end
 
       def start(_input)
-        start_time = Time.now.utc.iso8601
-
-        context.execution["StartTime"] ||= start_time
         context.state["Guid"]            = SecureRandom.uuid
-        context.state["EnteredTime"]     = start_time
+        context.state["EnteredTime"]     = Time.now.utc.iso8601
 
         logger.info("Running state: [#{long_name}] with input [#{context.input}]...")
       end
 
       def finish
         finished_time     = Time.now.utc
-        finished_time_iso = finished_time.iso8601
         entered_time      = Time.parse(context.state["EnteredTime"])
 
-        context.state["FinishedTime"] ||= finished_time_iso
+        context.state["FinishedTime"] ||= finished_time.iso8601
         context.state["Duration"]       = finished_time - entered_time
-        context.execution["EndTime"]    = finished_time_iso if context.next_state.nil?
 
         level = context.output&.[]("Error") ? :error : :info
         logger.public_send(level, "Running state: [#{long_name}] with input [#{context.input}]...Complete #{context.next_state ? "- next state [#{context.next_state}]" : "workflow -"} output: [#{context.output}]")
@@ -83,7 +78,7 @@ module Floe
       end
 
       def started?
-        context.state.key?("EnteredTime")
+        context.state_started?
       end
 
       def ready?
@@ -91,7 +86,7 @@ module Floe
       end
 
       def finished?
-        context.state.key?("FinishedTime")
+        context.state_finished?
       end
 
       def waiting?

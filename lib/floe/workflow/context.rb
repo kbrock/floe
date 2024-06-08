@@ -84,6 +84,16 @@ module Floe
         status == "success"
       end
 
+      def state_started?
+        state.key?("EnteredTime")
+      end
+
+      # State#running? also checks docker to see if it is running.
+      # You possibly want to use that instead
+      def state_finished?
+        state.key?("FinishedTime")
+      end
+
       def state=(val)
         @context["State"] = val
       end

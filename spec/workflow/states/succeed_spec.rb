@@ -1,7 +1,7 @@
 RSpec.describe Floe::Workflow::States::Succeed do
   let(:input)    { {} }
   let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
-  let(:state)    { workflow.current_state }
+  let(:state)    { workflow.start_workflow.current_state }
   let(:workflow) { make_workflow(ctx, {"SuccessState" => {"Type" => "Succeed"}}) }
 
   it "#end?" do

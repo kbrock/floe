@@ -16,13 +16,6 @@ RSpec.describe Floe::Workflow do
       expect(ctx.ended?).to eq(false)
     end
 
-    # I would prefer this not be here, but it is, so lets test it
-    it "sets context to proper start_at" do
-      make_workflow(ctx, {"FirstState" => {"Type" => "Succeed"}})
-      expect(ctx.state_name).to eq("FirstState")
-      expect(ctx.input).to eq(input)
-    end
-
     it "sets credentials to empty hash if nil passed in" do
       workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Succeed"}}, :creds => nil)
       expect(workflow.credentials).to eq({})
@@ -156,6 +149,7 @@ RSpec.describe Floe::Workflow do
       expect(ctx.running?).to eq(false)
       expect(ctx.ended?).to eq(false)
 
+      workflow.start_workflow
       workflow.step_nonblock
 
       expect(workflow.output).to eq(input)
@@ -168,19 +162,19 @@ RSpec.describe Floe::Workflow do
       expect(ctx.ended?).to eq(true)
     end
 
-    context "with a workflow that hasn't started yet" do
-      it "starts the first step" do
-        workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
-        workflow.step_nonblock
+    it "bails from a block" do
+      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
+      workflow.start_workflow
+      workflow.step_nonblock
 
-        expect(workflow.status).to eq("running")
-        expect(workflow.end?).to   eq(false)
-      end
+      expect(workflow.status).to eq("running")
+      expect(workflow.end?).to   eq(false)
     end
 
     context "with a running state" do
       it "returns Try again" do
         workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
+        workflow.start_workflow
         expect(workflow.step_nonblock).to eq(Errno::EAGAIN)
       end
     end
@@ -229,6 +223,7 @@ RSpec.describe Floe::Workflow do
       expect(ctx.running?).to eq(false)
       expect(ctx.ended?).to eq(false)
 
+      workflow.start_workflow
       workflow.step_nonblock
 
       expect(ctx.status).to eq("running")
@@ -266,18 +261,17 @@ RSpec.describe Floe::Workflow do
 
     context "with a state that has finished" do
       it "return 0" do
-        ctx.state["EnteredTime"] = Time.now.utc.iso8601
         workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Succeed"}})
-        expect(workflow.current_state).to receive(:running?).and_return(false)
+        workflow.start_workflow
+        workflow.current_state.run_nonblock!
         expect(workflow.step_nonblock_wait).to eq(0)
       end
     end
 
     context "with a state that is running" do
       it "returns Try again" do
-        ctx.state["EnteredTime"] = Time.now.utc.iso8601
-        workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Task", "Resource" => "docker://agrare/hello-world:latest", "End" => true}})
-        expect(workflow.current_state).to receive(:running?).and_return(true)
+        workflow = make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "Seconds" => 10, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}})
+        workflow.run_nonblock
         expect(workflow.step_nonblock_wait(:timeout => 0)).to eq(Errno::EAGAIN)
       end
     end
@@ -293,8 +287,8 @@ RSpec.describe Floe::Workflow do
 
     context "with a state that has finished" do
       it "return true" do
-        ctx.state["EnteredTime"] = Time.now.utc.iso8601
         workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Succeed"}})
+        workflow.run_nonblock
         expect(workflow.current_state).to receive(:running?).and_return(false)
         expect(workflow.step_nonblock_ready?).to be_truthy
       end
@@ -302,9 +296,9 @@ RSpec.describe Floe::Workflow do
 
     context "with a state that is running" do
       it "returns false" do
-        ctx.state["EnteredTime"] = Time.now.utc.iso8601
-        workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Task", "Resource" => "docker://agrare/hello-world:latest", "End" => true}})
-        expect(workflow.current_state).to receive(:running?).and_return(true)
+        workflow = make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "Seconds" => 10, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}})
+        workflow.run_nonblock
+
         expect(workflow.step_nonblock_ready?).to be_falsey
       end
     end
@@ -353,8 +347,8 @@ RSpec.describe Floe::Workflow do
     end
 
     context "with one ready workflow and one that would block" do
-      let(:workflow_1) { make_workflow(Floe::Workflow::Context.new(:input => input), {"FirstState" => {"Type" => "Succeed"}}).tap(&:step_nonblock) }
-      let(:workflow_2) { make_workflow(Floe::Workflow::Context.new(:input => input), {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}}).tap(&:step_nonblock) }
+      let(:workflow_1) { make_workflow(Floe::Workflow::Context.new(:input => input), {"FirstState" => {"Type" => "Succeed"}}) }
+      let(:workflow_2) { make_workflow(Floe::Workflow::Context.new(:input => input), {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}}).start_workflow.tap(&:step_nonblock) }
 
       it "returns only the first workflow as ready to step" do
         expect(described_class.wait([workflow_1, workflow_2], :timeout => 0)).to eq([workflow_1])
@@ -362,7 +356,7 @@ RSpec.describe Floe::Workflow do
     end
 
     context "with a workflow that would block for 10 seconds" do
-      let(:workflow) { make_workflow(Floe::Workflow::Context.new(:input => input), {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}}).tap(&:step_nonblock) }
+      let(:workflow) { make_workflow(Floe::Workflow::Context.new(:input => input), {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}}).start_workflow.tap(&:step_nonblock) }
 
       it "returns no ready workflows with :timeout => 0" do
         expect(described_class.wait(workflow, :timeout => 0)).to be_empty

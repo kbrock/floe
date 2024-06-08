@@ -148,7 +148,7 @@ until running_workflows.empty?
   ready_workflows = Floe::Workflow.wait(running_workflows)
   # Step through the ready workflows until they would block
   ready_workflows.each do |workflow|
-    loop while workflow.step_nonblock == 0
+    workflow.run_nonblock
   end
   # Remove any finished workflows from the list of running_workflows
   running_workflows.reject!(&:end?)

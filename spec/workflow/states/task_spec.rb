@@ -257,6 +257,7 @@ RSpec.describe Floe::Workflow::States::Task do
           let(:retriers) { [{"ErrorEquals" => ["States.Timeout"], "MaxAttempts" => 3}, {"ErrorEquals" => ["Exception"], "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}] }
 
           it "resets the retrier if a different exception is raised" do
+            workflow.start_workflow
             expect(workflow.current_state).to receive(:wait_until!).twice.with(:seconds => 1)
             expect(workflow.current_state).to receive(:wait_until!).with(:seconds => 2.0)
 
@@ -284,6 +285,7 @@ RSpec.describe Floe::Workflow::States::Task do
         end
 
         it "fails the workflow if the number of retries is greater than MaxAttempts" do
+          workflow.start_workflow
           3.times { expect_run_async(input, :error => "States.Timeout") }
           expect(workflow.current_state).to receive(:wait_until!).times.with(:seconds => 1)
           expect(workflow.current_state).to receive(:wait_until!).times.with(:seconds => 2)
@@ -349,6 +351,7 @@ RSpec.describe Floe::Workflow::States::Task do
         it "retry preceeds catch" do
           expect_run_async(input, :error => "States.Timeout")
 
+          workflow.start_workflow
           workflow.step_nonblock
 
           expect(ctx.state_name).to          eq("State")
@@ -449,12 +452,14 @@ RSpec.describe Floe::Workflow::States::Task do
   describe "#end?" do
     it "with a normal state" do
       workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Task", "Resource" => resource, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}})
+      workflow.start_workflow
       state = workflow.current_state
       expect(state.end?).to be false
     end
 
     it "with an end state" do
       workflow = make_workflow(ctx, {"NextState" => {"Type" => "Task", "Resource" => resource, "End" => true}})
+      workflow.start_workflow
       state = workflow.current_state
       expect(state.end?).to be true
     end
