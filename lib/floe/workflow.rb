@@ -119,8 +119,11 @@ module Floe
     def step_nonblock
       return Errno::EPERM if end?
 
+      result = current_state.run_nonblock!
       step_next
-      current_state.run_nonblock!.tap { end_workflow }
+      end_workflow
+
+      result
     end
 
     # if this hasn't started (and we have no current_state yet), assume it is ready
@@ -181,13 +184,15 @@ module Floe
     private
 
     def step_next
-      if context.next_state
-        # if rerunning due to an error (and we are using Retry)
+      return if context.next_state.nil?
+
+      # if rerunning due to an error (and we are using Retry)
+      context.state =
         if context.state_name == context.next_state && context.failed? && context.state.key?("Retrier")
-          restore_values = context.state.slice("RetryCount", "Input", "Retrier")
+          context.state.slice("Name", "RetryCount", "Input", "Retrier")
+        else
+          {"Name" => context.next_state, "Input" => context.output}
         end
-        context.state = {"Name" => context.next_state, "Input" => context.output}.merge!(restore_values || {})
-      end
     end
   end
 end
