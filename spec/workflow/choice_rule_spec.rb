@@ -1,6 +1,6 @@
 RSpec.describe Floe::Workflow::ChoiceRule do
   let(:name)      { "FirstMatchState" }
-  let(:workflow)  { make_workflow({}, {name => {"Type" => "Choice", "Choices" => [payload], "Default" => name}}) }
+  let(:workflow)  { make_workflow({}, {name => {"Type" => "Choice", "Choices" => [payload]}}) }
   let(:validating_payload) { Floe::PayloadValidator.new(payload, workflow.states_by_name.keys) }
   describe ".build" do
     let(:payload) { {"Variable" => "$.foo", "StringEquals" => "foo", "Next" => name} }

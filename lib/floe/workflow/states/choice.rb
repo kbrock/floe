@@ -10,7 +10,7 @@ module Floe
           super
 
           @choices = payload.list!("Choices").map { |choice_payload| ChoiceRule.build(payload.for_rule("Choices", choice_payload)) }
-          @default = payload.state_ref!("Default")
+          @default = payload.state_ref!("Default", :required => false)
 
           @input_path  = payload.path!("InputPath", :default => "$")
           @output_path = payload.path!("OutputPath", :default => "$")
@@ -23,7 +23,8 @@ module Floe
           next_state = choices.detect { |choice| choice.true?(context, output) }&.next || default
 
           context.next_state = next_state
-          context.output     = output
+          context.output     = next_state ? output : {"Error" => "States.NoChoiceMatched", "Cause" => "No match found"}
+
           super
         end
 

@@ -76,5 +76,43 @@ RSpec.describe Floe::Workflow::States::Choice do
         expect(ctx.next_state).to eq("DefaultState")
       end
     end
+
+    context "with no default" do
+      let(:workflow) do
+        make_workflow(
+          ctx, {
+            "ChoiceState"     => {
+              "Type"    => "Choice",
+              "Choices" => [
+                {
+                  "Variable"      => "$.foo",
+                  "NumericEquals" => 1,
+                  "Next"          => "FirstMatchState"
+                }
+              ]
+            },
+            "FirstMatchState" => {"Type" => "Succeed"}
+          }
+        )
+      end
+
+      context "with an input value matching a condition" do
+        let(:input) { {"foo" => 1} }
+
+        it "returns the next state" do
+          state.run_nonblock!(ctx)
+          expect(ctx.next_state).to eq("FirstMatchState")
+        end
+      end
+
+      context "with an input value not matching a condition" do
+        let(:input) { {"foo" => 2} }
+
+        it "throws error when not found" do
+          state.run_nonblock!(ctx)
+          expect(ctx.failed?).to eq(true)
+        end
+      end
+    end
   end
 end
