@@ -120,8 +120,11 @@ module Floe
       return Errno::EPERM if end?
 
       result = current_state.run_nonblock!
-      step_next
-      end_workflow
+
+      if context.state_finished?
+        step_next
+        end_workflow
+      end
 
       result
     end
