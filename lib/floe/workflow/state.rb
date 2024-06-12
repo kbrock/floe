@@ -64,7 +64,7 @@ module Floe
         context.state["FinishedTime"] ||= finished_time.iso8601
         context.state["Duration"]       = finished_time - entered_time
 
-        level = context.output&.[]("Error") ? :error : :info
+        level = context.failed? ? :error : :info
         logger.public_send(level, "Running state: [#{long_name}] with input [#{context.input}]...Complete #{context.next_state ? "- next state [#{context.next_state}]" : "workflow -"} output: [#{context.output}]")
 
         0
