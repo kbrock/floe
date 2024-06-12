@@ -75,8 +75,13 @@ module Floe
       raise NotImplementedError, "Must be implemented in a subclass"
     end
 
-    def wait(timeout: nil, events: %i[create update delete])
-      raise NotImplementedError, "Must be implemented in a subclass"
-    end
+    # Optional Watcher for events that is run in another thread.
+    #
+    # @yield [event, runner_context]
+    # @yieldparam [Symbol] event values: :create :update :delete :unknown
+    # @yieldparam [Hash] runner_context context provided by runner
+    # def wait(timeout: nil, events: %i[create update delete])
+    #   raise NotImplementedError, "Must be implemented in a subclass"
+    # end
   end
 end
