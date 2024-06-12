@@ -264,21 +264,21 @@ RSpec.describe Floe::Workflow::States::Task do
             expect_run_async(input, :error => "States.Timeout")
             workflow.step_nonblock
 
-            expect(ctx.next_state).to          eq("State")
+            expect(ctx.state_name).to          eq("State")
             expect(ctx.state["Retrier"]).to    eq(["States.Timeout"])
             expect(ctx.state["RetryCount"]).to eq(1)
 
             expect_run_async(input, :error => "States.Timeout")
             workflow.step_nonblock
 
-            expect(ctx.next_state).to          eq("State")
+            expect(ctx.state_name).to          eq("State")
             expect(ctx.state["Retrier"]).to    eq(["States.Timeout"])
             expect(ctx.state["RetryCount"]).to eq(2)
 
             expect_run_async(input, :error => "Exception")
             workflow.step_nonblock
 
-            expect(ctx.next_state).to          eq("State")
+            expect(ctx.state_name).to          eq("State")
             expect(ctx.state["Retrier"]).to    eq(["Exception"])
             expect(ctx.state["RetryCount"]).to eq(1)
           end

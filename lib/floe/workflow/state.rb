@@ -44,6 +44,7 @@ module Floe
         end
       end
 
+      # @return for incomplete Errno::EAGAIN, for completed 0
       def run_nonblock!
         start(context.input) unless started?
         return Errno::EAGAIN unless ready?
@@ -52,8 +53,8 @@ module Floe
       end
 
       def start(_input)
-        context.state["Guid"]            = SecureRandom.uuid
-        context.state["EnteredTime"]     = Time.now.utc.iso8601
+        context.state["Guid"]        = SecureRandom.uuid
+        context.state["EnteredTime"] = Time.now.utc.iso8601
 
         logger.info("Running state: [#{long_name}] with input [#{context.input}]...")
       end
@@ -67,8 +68,6 @@ module Floe
 
         level = context.output&.[]("Error") ? :error : :info
         logger.public_send(level, "Running state: [#{long_name}] with input [#{context.input}]...Complete #{context.next_state ? "- next state [#{context.next_state}]" : "workflow -"} output: [#{context.output}]")
-
-        context.state_history << context.state
 
         0
       end

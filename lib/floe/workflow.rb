@@ -119,8 +119,14 @@ module Floe
     def step_nonblock
       return Errno::EPERM if end?
 
-      step_next
-      current_state.run_nonblock!.tap { end_workflow }
+      result = current_state.run_nonblock!
+      return result if result != 0
+
+      # if it completed the step
+      context.state_history << context.state
+      context.next_state ? step! : end_workflow!
+
+      result
     end
 
     # if this hasn't started (and we have no current_state yet), assume it is ready
@@ -164,15 +170,6 @@ module Floe
       self
     end
 
-    # Avoiding State#running? because that is potentially expensive.
-    # State#run_nonblock! already called running? via State#ready? and
-    # called State#finished -- which is what Context#state_finished? is detecting
-    def end_workflow
-      return unless context.state_finished? && context.next_state.nil?
-
-      context.execution["EndTime"] = context.state["FinishedTime"]
-    end
-
     # NOTE: Expecting the context to be initialized (via start_workflow) before this
     def current_state
       @states_by_name[context.state_name]
@@ -180,14 +177,24 @@ module Floe
 
     private
 
-    def step_next
-      if context.next_state
-        # if rerunning due to an error (and we are using Retry)
-        if context.state_name == context.next_state && context.failed? && context.state.key?("Retrier")
-          restore_values = context.state.slice("RetryCount", "Input", "Retrier")
-        end
-        context.state = {"Name" => context.next_state, "Input" => context.output}.merge!(restore_values || {})
+    def step!
+      next_state = {"Name" => context.next_state}
+
+      # if rerunning due to an error (and we are using Retry)
+      if context.state_name == context.next_state && context.failed? && context.state.key?("Retrier")
+        next_state.merge!(context.state.slice("RetryCount", "Input", "Retrier"))
+      else
+        next_state["Input"] = context.output
       end
+
+      context.state = next_state
+    end
+
+    # Avoiding State#running? because that is potentially expensive.
+    # State#run_nonblock! already called running? via State#ready? and
+    # called State#finished -- which is what Context#state_finished? is detecting
+    def end_workflow!
+      context.execution["EndTime"] = context.state["FinishedTime"]
     end
   end
 end

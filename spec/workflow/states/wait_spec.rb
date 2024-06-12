@@ -90,6 +90,19 @@ RSpec.describe Floe::Workflow::States::Pass do
         end
         expect(state.running?).to be_falsey
       end
+
+      it "runs" do
+        workflow.run_nonblock
+        expect(workflow.end?).to eq(false)
+        expect(workflow.context.state_history.size).to eq(0)
+
+        Timecop.travel(Time.now.utc + 10) do
+          workflow.run_nonblock
+        end
+
+        expect(workflow.end?).to eq(true)
+        expect(workflow.context.state_history.size).to eq(2)
+      end
     end
   end
 end
