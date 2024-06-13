@@ -5,11 +5,11 @@ module Floe
     class ChoiceRule
       class Data < Floe::Workflow::ChoiceRule
         TYPES       = {"String" => :is_string?, "Numeric" => :is_numeric?, "Boolean" => :is_boolean?, "Timestamp" => :is_timestamp?, "Present" => :is_present?, "Null" => :is_null?}.freeze
-        OPERATIONS  = ["Equals", "LessThan", "GreaterThan", "LessThanEquals", "GreaterThanEquals", "Matches"].freeze
+        OPERATIONS  = {"Equals" => :eq?, "LessThan" => :lt?, "GreaterThan" => :gt?, "LessThanEquals" => :lte?, "GreaterThanEquals" => :gte?, "Matches" => :matches?}.freeze
         UNARY_RULE  = /^(Is)(#{TYPES.keys.join("|")})$/.freeze
-        BINARY_RULE = /^(#{(TYPES.keys - %w[Null Present]).join("|")})(#{OPERATIONS.join("|")})(Path)?$/.freeze
+        BINARY_RULE = /^(#{(TYPES.keys - %w[Null Present]).join("|")})(#{OPERATIONS.keys.join("|")})(Path)?$/.freeze
 
-        attr_reader :compare_key, :type, :value, :path, :type_check
+        attr_reader :compare_key, :operation, :type, :value, :path, :type_check
 
         def initialize(payload)
           super
@@ -21,8 +21,10 @@ module Floe
           if operator
             @path = false
             @value = payload.boolean!(compare_key)
+            @operation = TYPES[@type]
           else
-            @type, _operator, @path = BINARY_RULE.match(compare_key)&.captures
+            @type, operator, @path = BINARY_RULE.match(compare_key)&.captures
+            @operation = OPERATIONS[operator]
             @type_check = TYPES[@type]
 
             if path
@@ -38,63 +40,33 @@ module Floe
           lhs = variable_value(context, input)
           rhs = compare_value(context, input)
 
-          case compare_key
-          when "IsNull" then is_null?(lhs)
-          when "IsPresent" then is_present?(lhs)
-          when "IsNumeric" then is_numeric?(lhs)
-          when "IsString" then is_string?(lhs)
-          when "IsBoolean" then is_boolean?(lhs)
-          when "IsTimestamp" then is_timestamp?(lhs)
-          when "StringEquals", "StringEqualsPath",
-               "NumericEquals", "NumericEqualsPath",
-               "BooleanEquals", "BooleanEqualsPath",
-               "TimestampEquals", "TimestampEqualsPath"
-            eq?(lhs, rhs)
-          when "StringLessThan", "StringLessThanPath",
-               "NumericLessThan", "NumericLessThanPath",
-               "TimestampLessThan", "TimestampLessThanPath"
-            lt?(lhs, rhs)
-          when "StringGreaterThan", "StringGreaterThanPath",
-               "NumericGreaterThan", "NumericGreaterThanPath",
-               "TimestampGreaterThan", "TimestampGreaterThanPath"
-            gt?(lhs, rhs)
-          when "StringLessThanEquals", "StringLessThanEqualsPath",
-               "NumericLessThanEquals", "NumericLessThanEqualsPath",
-               "TimestampLessThanEquals", "TimestampLessThanEqualsPath"
-            lte?(lhs, rhs)
-          when "StringGreaterThanEquals", "StringGreaterThanEqualsPath",
-               "NumericGreaterThanEquals", "NumericGreaterThanEqualsPath",
-               "TimestampGreaterThanEquals", "TimestampGreaterThanEqualsPath"
-            gte?(lhs, rhs)
-          when "StringMatches"
-            matches?(lhs, rhs)
-          end
+          send(operation, lhs, rhs)
         end
 
         private
 
-        def is_null?(value) # rubocop:disable Naming/PredicateName
+        def is_null?(value, _ = nil) # rubocop:disable Naming/PredicateName
           value.nil?
         end
 
-        def is_present?(value) # rubocop:disable Naming/PredicateName
+        def is_present?(value, _ = nil) # rubocop:disable Naming/PredicateName
           !value.nil?
         end
 
-        def is_numeric?(value) # rubocop:disable Naming/PredicateName
+        def is_numeric?(value, _ = nil) # rubocop:disable Naming/PredicateName
           value.kind_of?(Integer) || value.kind_of?(Float)
         end
 
-        def is_string?(value) # rubocop:disable Naming/PredicateName
+        def is_string?(value, _ = nil) # rubocop:disable Naming/PredicateName
           value.kind_of?(String)
         end
         alias is_path? is_string?
 
-        def is_boolean?(value) # rubocop:disable Naming/PredicateName
+        def is_boolean?(value, _ = nil) # rubocop:disable Naming/PredicateName
           [true, false].include?(value)
         end
 
-        def is_timestamp?(value) # rubocop:disable Naming/PredicateName
+        def is_timestamp?(value, _ = nil) # rubocop:disable Naming/PredicateName
           return false if value.nil?
 
           require "date"
