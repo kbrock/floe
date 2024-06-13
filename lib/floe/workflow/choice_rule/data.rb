@@ -5,13 +5,13 @@ module Floe
     class ChoiceRule
       class Data < Floe::Workflow::ChoiceRule
         TYPES      = {"String" => :is_string?, "Numeric" => :is_numeric?, "Boolean" => :is_boolean?, "Timestamp" => :is_timestamp?, "Present" => :is_present?, "Null" => :is_null?}.freeze
-        COMPARES   = ["Equals", "LessThan", "GreaterThan", "LessThanEquals", "GreaterThanEquals", "Matches"].freeze
+        COMPARES   = {"Equals" => :eq?, "LessThan" => :lt?, "GreaterThan" => :gt?, "LessThanEquals" => :lte?, "GreaterThanEquals" => :gte?, "Matches" => :matches?}.freeze
         # e.g.: (Is)(String), (Is)(Present)
         TYPE_CHECK = /^(Is)(#{TYPES.keys.join("|")})$/.freeze
         # e.g.: (String)(LessThan)(Path), (Numeric)(GreaterThanEquals)()
-        OPERATION  = /^(#{(TYPES.keys - %w[Null Present]).join("|")})(#{COMPARES.join("|")})(Path)?$/.freeze
+        OPERATION  = /^(#{(TYPES.keys - %w[Null Present]).join("|")})(#{COMPARES.keys.join("|")})(Path)?$/.freeze
 
-        attr_reader :variable, :compare_key, :type, :value, :path
+        attr_reader :variable, :compare_key, :operation, :type, :value, :path
 
         def initialize(_workflow, _name, payload)
           super
@@ -27,36 +27,7 @@ module Floe
           lhs = variable_value(context, input)
           rhs = compare_value(context, input)
 
-          case compare_key
-          when "IsNull" then is_null?(lhs, rhs)
-          when "IsNumeric" then is_numeric?(lhs, rhs)
-          when "IsString" then is_string?(lhs, rhs)
-          when "IsBoolean" then is_boolean?(lhs, rhs)
-          when "IsTimestamp" then is_timestamp?(lhs, rhs)
-          when "StringEquals", "StringEqualsPath",
-               "NumericEquals", "NumericEqualsPath",
-               "BooleanEquals", "BooleanEqualsPath",
-               "TimestampEquals", "TimestampEqualsPath"
-            lhs == rhs
-          when "StringLessThan", "StringLessThanPath",
-               "NumericLessThan", "NumericLessThanPath",
-               "TimestampLessThan", "TimestampLessThanPath"
-            lhs < rhs
-          when "StringGreaterThan", "StringGreaterThanPath",
-               "NumericGreaterThan", "NumericGreaterThanPath",
-               "TimestampGreaterThan", "TimestampGreaterThanPath"
-            lhs > rhs
-          when "StringLessThanEquals", "StringLessThanEqualsPath",
-               "NumericLessThanEquals", "NumericLessThanEqualsPath",
-               "TimestampLessThanEquals", "TimestampLessThanEqualsPath"
-            lhs <= rhs
-          when "StringGreaterThanEquals", "StringGreaterThanEqualsPath",
-               "NumericGreaterThanEquals", "NumericGreaterThanEqualsPath",
-               "TimestampGreaterThanEquals", "TimestampGreaterThanEqualsPath"
-            lhs >= rhs
-          when "StringMatches"
-            lhs.match?(Regexp.escape(rhs).gsub('\*', '.*?'))
-          end
+          send(operation, lhs, rhs)
         end
 
         private
@@ -111,6 +82,18 @@ module Floe
         # rubocop:enable Naming/PredicateName
         # rubocop:enable Style/OptionalBooleanParameter
 
+        # rubocop:disable Style/SingleLineMethods
+        def eq?(lhs, rhs); lhs == rhs; end
+        def lt?(lhs, rhs); lhs < rhs; end
+        def gt?(lhs, rhs); lhs > rhs; end
+        def lte?(lhs, rhs); lhs <= rhs; end
+        def gte?(lhs, rhs); lhs >= rhs; end
+        # rubocop:enable Style/SingleLineMethods
+
+        def matches?(lhs, rhs)
+          lhs.match?(Regexp.escape(rhs).gsub('\*', '.*?'))
+        end
+
         def variable_value(context, input)
           fetch_path("Variable", variable, context, input)
         end
@@ -129,10 +112,17 @@ module Floe
           @compare_key = payload.keys.detect { |key| key.match?(TYPE_CHECK) || key.match?(OPERATION) }
           parser_error!("requires a compare key") unless compare_key
 
-          @type, _operator, @path = OPERATION.match(compare_key)&.captures
-          # TYPE_CHECK doesn't match this regex, so @path = @type = nil
-          # @path.nil? means this the compare_value will always be a static value (true or false)
-          # @type.nil? means we won't type check the variable or compare value
+          @type, operator, @path = OPERATION.match(compare_key)&.captures
+          if operator
+            @operation = COMPARES[operator]
+          else
+            # the OPERATION match above assigned @path = @type = nil
+            # @path.nil? means this the compare_value will always be a static value (true or false in our case)
+            # @type.nil? means the path lookup won't type check the variable or compare value
+            # on this regex, still avoiding setting @type b/c we want to check the types in the operation itself.
+            _operator, type = TYPE_CHECK.match(compare_key)&.captures
+            @operation = TYPES[type]
+          end
         end
 
         def parse_compare_value
