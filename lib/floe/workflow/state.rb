@@ -33,7 +33,7 @@ module Floe
         raise Floe::InvalidWorkflowError, "State name [#{name[..79]}...] must be less than or equal to 80 characters" if name.length > 80
       end
 
-      def wait(timeout: nil)
+      def wait(context, timeout: nil)
         start = Time.now.utc
 
         loop do
@@ -45,7 +45,7 @@ module Floe
       end
 
       # @return for incomplete Errno::EAGAIN, for completed 0
-      def run_nonblock!
+      def run_nonblock!(context)
         start(context) unless context.state_started?
         return Errno::EAGAIN unless ready?(context)
 
@@ -87,7 +87,7 @@ module Floe
         context.state["WaitUntil"] && Time.now.utc <= Time.parse(context.state["WaitUntil"])
       end
 
-      def wait_until
+      def wait_until(context)
         context.state["WaitUntil"] && Time.parse(context.state["WaitUntil"])
       end
 
@@ -97,7 +97,7 @@ module Floe
 
       private
 
-      def wait_until!(seconds: nil, time: nil)
+      def wait_until!(context, seconds: nil, time: nil)
         context.state["WaitUntil"] =
           if seconds
             (Time.parse(context.state["EnteredTime"]) + seconds).iso8601
