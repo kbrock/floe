@@ -60,7 +60,7 @@ RSpec.describe Floe::Workflow do
     end
 
     it "raises an exception for invalid resource scheme in a Task state" do
-      payload = make_payload({"FirstState" => {"Type" => "Task", "Resource" => "invalid://foo"}})
+      payload = make_payload({"FirstState" => {"Type" => "Task", "Resource" => "invalid://foo", "End" => true}})
 
       expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Invalid resource scheme [invalid]")
     end
@@ -301,7 +301,7 @@ RSpec.describe Floe::Workflow do
 
   describe "#wait_until" do
     it "reads when the workflow will be ready to continue" do
-      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
+      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}})
       workflow.run_nonblock
 
       expect(workflow.wait_until).to be_within(1).of(Time.now.utc + 10)
@@ -317,7 +317,7 @@ RSpec.describe Floe::Workflow do
 
   describe "#waiting?" do
     it "reads when the workflow will be ready to continue" do
-      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true}})
+      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}})
       workflow.run_nonblock
 
       expect(workflow.waiting?).to be_truthy
