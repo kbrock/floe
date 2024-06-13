@@ -3,9 +3,11 @@
 module Floe
   class Workflow
     class Context
+      attr_accessor :credentials
+
       # @param context [Json|Hash] (default, create another with input and execution params)
       # @param input [Hash] (default: {})
-      def initialize(context = nil, input: nil)
+      def initialize(context = nil, input: nil, credentials: {})
         context = JSON.parse(context) if context.kind_of?(String)
 
         input ||= {}
@@ -18,6 +20,8 @@ module Floe
         self["StateHistory"]       ||= []
         self["StateMachine"]       ||= {}
         self["Task"]               ||= {}
+
+        @credentials = credentials || {}
       end
 
       def execution

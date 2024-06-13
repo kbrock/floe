@@ -59,8 +59,8 @@ RSpec.configure do |config|
 
   # factory methods
 
-  def make_workflow(ctx, payload, creds: {})
-    Floe::Workflow.new(make_payload(payload), ctx, creds)
+  def make_workflow(ctx, payload)
+    Floe::Workflow.new(make_payload(payload), ctx)
   end
 
   def make_payload(states)

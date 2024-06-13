@@ -16,11 +16,6 @@ RSpec.describe Floe::Workflow do
       expect(ctx.ended?).to eq(false)
     end
 
-    it "sets credentials to empty hash if nil passed in" do
-      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Succeed"}}, :creds => nil)
-      expect(workflow.credentials).to eq({})
-    end
-
     it "raises an exception for missing States" do
       payload = {"StartAt" => "Nothing"}
 
@@ -366,12 +361,12 @@ RSpec.describe Floe::Workflow do
 
   describe "#comment" do
     it "handles no comment" do
-      workflow = Floe::Workflow.new({"StartAt" => "First", "States" => {"First" => {"Type" => "Succeed"}}}, {})
+      workflow = Floe::Workflow.new({"StartAt" => "First", "States" => {"First" => {"Type" => "Succeed"}}})
       expect(workflow.comment).to be nil
     end
 
     it "handles a comment" do
-      workflow = Floe::Workflow.new({"StartAt" => "First", "Comment" => "great stuff", "States" => {"First" => {"Type" => "Succeed"}}}, {})
+      workflow = Floe::Workflow.new({"StartAt" => "First", "Comment" => "great stuff", "States" => {"First" => {"Type" => "Succeed"}}})
       expect(workflow.comment).to eq("great stuff")
     end
   end

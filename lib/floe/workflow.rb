@@ -85,12 +85,16 @@ module Floe
       end
     end
 
-    attr_reader :context, :credentials, :payload, :states, :states_by_name, :start_at, :name, :comment
+    attr_reader :context, :payload, :states, :states_by_name, :start_at, :name, :comment
 
-    def initialize(payload, context = nil, credentials = {}, name = nil)
+    def initialize(payload, context = nil, credentials = nil, name = nil)
       payload     = JSON.parse(payload)     if payload.kind_of?(String)
       credentials = JSON.parse(credentials) if credentials.kind_of?(String)
       context     = Context.new(context)    unless context.kind_of?(Context)
+
+      # backwards compatibility
+      # caller should really put credentials into context and not pass that variable
+      context.credentials = credentials if credentials
 
       raise Floe::InvalidWorkflowError, "Missing field \"States\""  if payload["States"].nil?
       raise Floe::InvalidWorkflowError, "Missing field \"StartAt\"" if payload["StartAt"].nil?
@@ -99,7 +103,6 @@ module Floe
       @name        = name
       @payload     = payload
       @context     = context
-      @credentials = credentials || {}
       @comment     = payload["Comment"]
       @start_at    = payload["StartAt"]
 
@@ -175,6 +178,10 @@ module Floe
       @states_by_name[context.state_name]
     end
 
+    # backwards compatibility. Caller should access directly from context
+    def credentials
+      @context.credentials
+    end
     private
 
     def step!
