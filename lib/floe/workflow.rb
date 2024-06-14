@@ -166,8 +166,10 @@ module Floe
     def start_workflow
       return if context.state_name
 
-      context.state["Name"] = start_at
+      context.state["Name"]  = start_at
       context.state["Input"] = context.execution["Input"].dup
+      context.state["Guid"]  = SecureRandom.uuid
+
       context.execution["StartTime"] = Time.now.utc.iso8601
 
       self
@@ -185,7 +187,7 @@ module Floe
     private
 
     def step!
-      next_state = {"Name" => context.next_state}
+      next_state = {"Name" => context.next_state, "Guid" => SecureRandom.uuid, "PreviousStateGuid" => context.state["Guid"]}
 
       # if rerunning due to an error (and we are using Retry)
       if context.state_name == context.next_state && context.failed? && context.state.key?("Retrier")
@@ -197,9 +199,6 @@ module Floe
       context.state = next_state
     end
 
-    # Avoiding State#running? because that is potentially expensive.
-    # State#run_nonblock! already called running? via State#ready? and
-    # called State#finished -- which is what Context#state_finished? is detecting
     def end_workflow!
       context.execution["EndTime"] = context.state["FinishedTime"]
     end
