@@ -12,16 +12,16 @@ RSpec.describe Floe::Workflow::States::Pass do
 
   describe "#start" do
     it "sets WaitUntil" do
-      state.start(ctx.input)
+      state.start(ctx)
 
-      expect(state.waiting?).to be_truthy
+      expect(state.waiting?(ctx)).to be_truthy
     end
   end
 
   describe "#finish" do
     it "transitions to the next state" do
-      state.start(ctx.input)
-      state.finish
+      state.start(ctx)
+      state.finish(ctx)
 
       expect(ctx.next_state).to eq("SuccessState")
     end
@@ -31,15 +31,15 @@ RSpec.describe Floe::Workflow::States::Pass do
     context "with seconds" do
       let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "Seconds" => 1, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
       it "is running before finished" do
-        state.start(ctx.input)
-        expect(state.running?).to be_truthy
+        state.start(ctx)
+        expect(state.running?(ctx)).to be_truthy
       end
 
       it "is not running after finished" do
         Timecop.travel(Time.now.utc - 10) do
-          state.start(ctx.input)
+          state.start(ctx)
         end
-        expect(state.running?).to be_falsey
+        expect(state.running?(ctx)).to be_falsey
       end
     end
 
@@ -47,15 +47,15 @@ RSpec.describe Floe::Workflow::States::Pass do
       let(:input)    { {"expire" => "1"} }
       let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "SecondsPath" => "$.expire", "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
       it "is running? before finished" do
-        state.start(ctx.input)
-        expect(state.running?).to be_truthy
+        state.start(ctx)
+        expect(state.running?(ctx)).to be_truthy
       end
 
       it "is not running after finished" do
         Timecop.travel(Time.now.utc - 10) do
-          state.start(ctx.input)
+          state.start(ctx)
         end
-        expect(state.running?).to be_falsey
+        expect(state.running?(ctx)).to be_falsey
       end
     end
 
@@ -63,15 +63,15 @@ RSpec.describe Floe::Workflow::States::Pass do
       let(:expiry) { Time.now.utc + 1 }
       let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "Timestamp" => expiry.iso8601, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
       it "is running? before finished" do
-        state.start(ctx.input)
-        expect(state.running?).to be_truthy
+        state.start(ctx)
+        expect(state.running?(ctx)).to be_truthy
       end
 
       it "is not running after finished" do
         Timecop.travel(Time.now.utc - 10) do
-          state.start(ctx.input)
+          state.start(ctx)
         end
-        expect(state.running?).to be_falsey
+        expect(state.running?(ctx)).to be_falsey
       end
     end
 
@@ -80,15 +80,15 @@ RSpec.describe Floe::Workflow::States::Pass do
       let(:input) { {"expire" => expiry.iso8601} }
       let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "TimestampPath" => "$.expire", "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
       it "is running? before finished" do
-        state.start(ctx.input)
-        expect(state.running?).to be_truthy
+        state.start(ctx)
+        expect(state.running?(ctx)).to be_truthy
       end
 
       it "is not running after finished" do
         Timecop.travel(Time.now.utc - 10) do
-          state.start(ctx.input)
+          state.start(ctx)
         end
-        expect(state.running?).to be_falsey
+        expect(state.running?(ctx)).to be_falsey
       end
 
       it "runs" do

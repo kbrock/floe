@@ -6,13 +6,13 @@ module Floe
       class Succeed < Floe::Workflow::State
         attr_reader :input_path, :output_path
 
-        def finish
+        def finish(context)
           context.next_state = nil
           context.output     = context.input
           super
         end
 
-        def running?
+        def running?(_)
           false
         end
 

@@ -21,15 +21,15 @@ module Floe
           @output_path = Path.new(payload.fetch("OutputPath", "$"))
           @result_path = ReferencePath.new(payload.fetch("ResultPath", "$"))
 
-          validate_state!
+          validate_state!(workflow)
         end
 
-        def finish
-          context.output = process_output(context.input.dup, result)
+        def finish(context)
+          context.output = process_output(context, result)
           super
         end
 
-        def running?
+        def running?(_)
           false
         end
 
@@ -39,8 +39,8 @@ module Floe
 
         private
 
-        def validate_state!
-          validate_state_next!
+        def validate_state!(workflow)
+          validate_state_next!(workflow)
         end
       end
     end

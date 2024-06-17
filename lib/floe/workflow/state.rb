@@ -20,24 +20,23 @@ module Floe
         end
       end
 
-      attr_reader :workflow, :comment, :name, :type, :payload
+      attr_reader :comment, :name, :type, :payload
 
       def initialize(workflow, name, payload)
-        @workflow = workflow
         @name     = name
         @payload  = payload
         @type     = payload["Type"]
         @comment  = payload["Comment"]
 
         raise Floe::InvalidWorkflowError, "Missing \"Type\" field in state [#{name}]" if payload["Type"].nil?
-        raise Floe::InvalidWorkflowError, "State name [#{name}] must be less than or equal to 80 characters" if name.length > 80
+        raise Floe::InvalidWorkflowError, "State name [#{name[..79]}...] must be less than or equal to 80 characters" if name.length > 80
       end
 
-      def wait(timeout: nil)
+      def wait(context, timeout: nil)
         start = Time.now.utc
 
         loop do
-          return 0             if ready?
+          return 0             if ready?(context)
           return Errno::EAGAIN if timeout && (timeout.zero? || Time.now.utc - start > timeout)
 
           sleep(1)
@@ -45,20 +44,20 @@ module Floe
       end
 
       # @return for incomplete Errno::EAGAIN, for completed 0
-      def run_nonblock!
-        start(context.input) unless started?
-        return Errno::EAGAIN unless ready?
+      def run_nonblock!(context)
+        start(context) unless context.state_started?
+        return Errno::EAGAIN unless ready?(context)
 
-        finish
+        finish(context)
       end
 
-      def start(_input)
+      def start(context)
         context.state["EnteredTime"] = Time.now.utc.iso8601
 
         logger.info("Running state: [#{long_name}] with input [#{context.input}]...")
       end
 
-      def finish
+      def finish(context)
         finished_time     = Time.now.utc
         entered_time      = Time.parse(context.state["EnteredTime"])
 
@@ -71,37 +70,29 @@ module Floe
         0
       end
 
-      def context
-        workflow.context
+      def ready?(context)
+        !context.state_started? || !running?(context)
       end
 
-      def started?
-        context.state_started?
+      def running?(context)
+        raise NotImplementedError, "Must be implemented in a subclass"
       end
 
-      def ready?
-        !started? || !running?
-      end
-
-      def finished?
-        context.state_finished?
-      end
-
-      def waiting?
+      def waiting?(context)
         context.state["WaitUntil"] && Time.now.utc <= Time.parse(context.state["WaitUntil"])
       end
 
-      def wait_until
+      def wait_until(context)
         context.state["WaitUntil"] && Time.parse(context.state["WaitUntil"])
       end
 
       def long_name
-        "#{payload["Type"]}:#{name}"
+        "#{@type}:#{name}"
       end
 
       private
 
-      def wait_until!(seconds: nil, time: nil)
+      def wait_until!(context, seconds: nil, time: nil)
         context.state["WaitUntil"] =
           if seconds
             (Time.parse(context.state["EnteredTime"]) + seconds).iso8601

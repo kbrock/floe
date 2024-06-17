@@ -23,28 +23,29 @@ module Floe
           @input_path  = Path.new(payload.fetch("InputPath", "$"))
           @output_path = Path.new(payload.fetch("OutputPath", "$"))
 
-          validate_state!
+          validate_state!(workflow)
         end
 
-        def start(input)
+        def start(context)
           super
 
           input = input_path.value(context, context.input)
 
           wait_until!(
+            context,
             :seconds => seconds_path ? seconds_path.value(context, input).to_i : seconds,
             :time    => timestamp_path ? timestamp_path.value(context, input) : timestamp
           )
         end
 
-        def finish
+        def finish(context)
           input          = input_path.value(context, context.input)
           context.output = output_path.value(context, input)
           super
         end
 
-        def running?
-          waiting?
+        def running?(context)
+          waiting?(context)
         end
 
         def end?
@@ -53,8 +54,8 @@ module Floe
 
         private
 
-        def validate_state!
-          validate_state_next!
+        def validate_state!(workflow)
+          validate_state_next!(workflow)
         end
       end
     end

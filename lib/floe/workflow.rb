@@ -108,6 +108,8 @@ module Floe
 
       @states         = payload["States"].to_a.map { |state_name, state| State.build!(self, state_name, state) }
       @states_by_name = @states.each_with_object({}) { |state, result| result[state.name] = state }
+    rescue Floe::InvalidWorkflowError
+      raise
     rescue => err
       raise Floe::InvalidWorkflowError, err.message
     end
@@ -122,7 +124,7 @@ module Floe
     def step_nonblock
       return Errno::EPERM if end?
 
-      result = current_state.run_nonblock!
+      result = current_state.run_nonblock!(context)
       return result if result != 0
 
       # if it completed the step
@@ -134,20 +136,20 @@ module Floe
 
     # if this hasn't started (and we have no current_state yet), assume it is ready
     def step_nonblock_wait(timeout: nil)
-      context.started? ? current_state.wait(:timeout => timeout) : 0
+      context.started? ? current_state.wait(context, :timeout => timeout) : 0
     end
 
     # if this hasn't started (and we have no current_state yet), assume it is ready
     def step_nonblock_ready?
-      !context.started? || current_state.ready?
+      !context.started? || current_state.ready?(context)
     end
 
     def waiting?
-      current_state.waiting?
+      current_state.waiting?(context)
     end
 
     def wait_until
-      current_state.wait_until
+      current_state.wait_until(context)
     end
 
     def status

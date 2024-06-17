@@ -29,35 +29,37 @@ module Floe
           @result_selector   = PayloadTemplate.new(payload["ResultSelector"]) if payload["ResultSelector"]
           @credentials       = PayloadTemplate.new(payload["Credentials"])    if payload["Credentials"]
 
-          validate_state!
+          validate_state!(workflow)
+        rescue ArgumentError => err
+          raise Floe::InvalidWorkflowError, err.message
         end
 
-        def start(input)
+        def start(context)
           super
 
-          input          = process_input(input)
-          runner_context = runner.run_async!(resource, input, credentials&.value({}, workflow.context.credentials), context)
+          input          = process_input(context)
+          runner_context = runner.run_async!(resource, input, credentials&.value({}, context.credentials), context)
 
           context.state["RunnerContext"] = runner_context
         end
 
-        def finish
+        def finish(context)
           output = runner.output(context.state["RunnerContext"])
 
-          if success?
+          if success?(context)
             output = parse_output(output)
-            context.output = process_output(context.input.dup, output)
+            context.output = process_output(context, output)
           else
             error = parse_error(output)
-            retry_state!(error) || catch_error!(error) || fail_workflow!(error)
+            retry_state!(context, error) || catch_error!(context, error) || fail_workflow!(context, error)
           end
           super
         ensure
           runner.cleanup(context.state["RunnerContext"])
         end
 
-        def running?
-          return true if waiting?
+        def running?(context)
+          return true if waiting?(context)
 
           runner.status!(context.state["RunnerContext"])
           runner.running?(context.state["RunnerContext"])
@@ -71,11 +73,11 @@ module Floe
 
         attr_reader :runner
 
-        def validate_state!
-          validate_state_next!
+        def validate_state!(workflow)
+          validate_state_next!(workflow)
         end
 
-        def success?
+        def success?(context)
           runner.success?(context.state["RunnerContext"])
         end
 
@@ -87,7 +89,7 @@ module Floe
           self.catch.detect { |c| (c.error_equals & [error, "States.ALL"]).any? }
         end
 
-        def retry_state!(error)
+        def retry_state!(context, error)
           retrier = find_retrier(error["Error"]) if error
           return if retrier.nil?
 
@@ -101,14 +103,14 @@ module Floe
 
           return if context["State"]["RetryCount"] > retrier.max_attempts
 
-          wait_until!(:seconds => retrier.sleep_duration(context["State"]["RetryCount"]))
+          wait_until!(context, :seconds => retrier.sleep_duration(context["State"]["RetryCount"]))
           context.next_state = context.state_name
           context.output     = error
-          logger.info("Running state: [#{long_name}] with input [#{context.input}] got error[#{context.output}]...Retry - delay: #{wait_until}")
+          logger.info("Running state: [#{long_name}] with input [#{context.input}] got error[#{context.output}]...Retry - delay: #{wait_until(context)}")
           true
         end
 
-        def catch_error!(error)
+        def catch_error!(context, error)
           catcher = find_catcher(error["Error"]) if error
           return if catcher.nil?
 
@@ -119,7 +121,7 @@ module Floe
           true
         end
 
-        def fail_workflow!(error)
+        def fail_workflow!(context, error)
           # next_state is nil, and will be set to nil again in super
           # keeping in here for completeness
           context.next_state = nil
