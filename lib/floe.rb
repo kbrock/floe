@@ -8,6 +8,7 @@ require_relative "floe/logging"
 require_relative "floe/runner"
 
 require_relative "floe/workflow"
+require_relative "floe/workflow/error_matcher_mixin"
 require_relative "floe/workflow/catcher"
 require_relative "floe/workflow/choice_rule"
 require_relative "floe/workflow/choice_rule/not"
