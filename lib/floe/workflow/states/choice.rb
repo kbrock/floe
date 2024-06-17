@@ -9,7 +9,7 @@ module Floe
         def initialize(workflow, name, payload)
           super
 
-          validate_state!
+          validate_state!(workflow)
 
           @choices = payload["Choices"].map { |choice| ChoiceRule.build(choice) }
           @default = payload["Default"]
@@ -37,9 +37,9 @@ module Floe
 
         private
 
-        def validate_state!
+        def validate_state!(workflow)
           validate_state_choices!
-          validate_state_default!
+          validate_state_default!(workflow)
         end
 
         def validate_state_choices!
@@ -47,7 +47,7 @@ module Floe
           raise Floe::InvalidWorkflowError, "\"Choices\" must be a non-empty array" unless payload["Choices"].kind_of?(Array) && !payload["Choices"].empty?
         end
 
-        def validate_state_default!
+        def validate_state_default!(workflow)
           raise Floe::InvalidWorkflowError, "\"Default\" not in \"States\"" unless workflow.payload["States"].include?(payload["Default"])
         end
       end

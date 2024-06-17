@@ -21,7 +21,7 @@ module Floe
           @output_path = Path.new(payload.fetch("OutputPath", "$"))
           @result_path = ReferencePath.new(payload.fetch("ResultPath", "$"))
 
-          validate_state!
+          validate_state!(workflow)
         end
 
         def finish
@@ -39,8 +39,8 @@ module Floe
 
         private
 
-        def validate_state!
-          validate_state_next!
+        def validate_state!(workflow)
+          validate_state_next!(workflow)
         end
       end
     end

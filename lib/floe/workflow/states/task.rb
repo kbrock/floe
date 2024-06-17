@@ -29,7 +29,7 @@ module Floe
           @result_selector   = PayloadTemplate.new(payload["ResultSelector"]) if payload["ResultSelector"]
           @credentials       = PayloadTemplate.new(payload["Credentials"])    if payload["Credentials"]
 
-          validate_state!
+          validate_state!(workflow)
         rescue ArgumentError => err
           raise Floe::InvalidWorkflowError, err.message
         end
@@ -73,8 +73,8 @@ module Floe
 
         attr_reader :runner
 
-        def validate_state!
-          validate_state_next!
+        def validate_state!(workflow)
+          validate_state_next!(workflow)
         end
 
         def success?

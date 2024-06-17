@@ -23,7 +23,7 @@ module Floe
           @input_path  = Path.new(payload.fetch("InputPath", "$"))
           @output_path = Path.new(payload.fetch("OutputPath", "$"))
 
-          validate_state!
+          validate_state!(workflow)
         end
 
         def start(input)
@@ -53,8 +53,8 @@ module Floe
 
         private
 
-        def validate_state!
-          validate_state_next!
+        def validate_state!(workflow)
+          validate_state_next!(workflow)
         end
       end
     end
