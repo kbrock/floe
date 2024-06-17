@@ -96,7 +96,7 @@ module Floe
       end
 
       def long_name
-        "#{payload["Type"]}:#{name}"
+        "#{@type}:#{name}"
       end
 
       private
