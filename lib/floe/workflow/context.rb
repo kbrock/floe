@@ -9,7 +9,7 @@ module Floe
 
       # @param context [Json|Hash] (default, create another with input and execution params)
       # @param input [Hash] (default: {})
-      def initialize(context = nil, input: nil, credentials: {})
+      def initialize(context = nil, input: nil, credentials: {}, logger: nil)
         context = JSON.parse(context) if context.kind_of?(String)
 
         input ||= {}
@@ -24,6 +24,8 @@ module Floe
         self["Task"]               ||= {}
 
         @credentials = credentials || {}
+
+        self.logger = logger if logger
       rescue JSON::ParserError => err
         raise Floe::InvalidWorkflowError, err.message
       end
