@@ -4,14 +4,14 @@ module Floe
   class Workflow
     class ChoiceRule
       class Data < Floe::Workflow::ChoiceRule
-        TYPES       = ["String", "Numeric", "Boolean", "Timestamp", "Present", "Null"].freeze
+        TYPES       = {"String" => :is_string?, "Numeric" => :is_numeric?, "Boolean" => :is_boolean?, "Timestamp" => :is_timestamp?, "Present" => :is_present?, "Null" => :is_null?}.freeze
         OPERATIONS  = ["Equals", "LessThan", "GreaterThan", "LessThanEquals", "GreaterThanEquals", "Matches"].freeze
-        UNARY_RULE  = /^(Is)(#{TYPES.join("|")})$/.freeze
-        BINARY_RULE = /^(#{(TYPES - %w[Null Present]).join("|")})(#{OPERATIONS.join("|")})(Path)?$/.freeze
+        UNARY_RULE  = /^(Is)(#{TYPES.keys.join("|")})$/.freeze
+        BINARY_RULE = /^(#{(TYPES.keys - %w[Null Present]).join("|")})(#{OPERATIONS.join("|")})(Path)?$/.freeze
 
-        attr_reader :compare_key, :type, :value, :path
+        attr_reader :compare_key, :type, :value, :path, :type_check
 
-        def initialize(*)
+        def initialize(payload)
           super
 
           @compare_key = payload.keys.detect { |key| key.match?(UNARY_RULE) || key.match?(BINARY_RULE) }
@@ -23,7 +23,14 @@ module Floe
             @value = payload.boolean!(compare_key)
           else
             @type, _operator, @path = BINARY_RULE.match(compare_key)&.captures
-            @value = @path ? payload.path!(compare_key) : payload[compare_key]
+            @type_check = TYPES[@type]
+
+            if path
+              @value = payload.path!(compare_key)
+            else
+              @value = payload[compare_key]
+              payload.error!("requires #{type} field \"#{compare_key}\" but got [#{value}]") unless send(type_check, value)
+            end
           end
         end
 
@@ -81,6 +88,7 @@ module Floe
         def is_string?(value) # rubocop:disable Naming/PredicateName
           value.kind_of?(String)
         end
+        alias is_path? is_string?
 
         def is_boolean?(value) # rubocop:disable Naming/PredicateName
           [true, false].include?(value)
@@ -98,27 +106,27 @@ module Floe
         end
 
         def eq?(lhs, rhs)
-          is_present?(lhs) && is_present?(rhs) && lhs == rhs
+          send(type_check, lhs) && send(type_check, rhs) && lhs == rhs
         end
 
         def lt?(lhs, rhs)
-          is_present?(lhs) && is_present?(rhs) && lhs < rhs
+          send(type_check, lhs) && send(type_check, rhs) && lhs < rhs
         end
 
         def gt?(lhs, rhs)
-          is_present?(lhs) && is_present?(rhs) && lhs > rhs
+          send(type_check, lhs) && send(type_check, rhs) && lhs > rhs
         end
 
         def lte?(lhs, rhs)
-          is_present?(lhs) && is_present?(rhs) && lhs <= rhs
+          send(type_check, lhs) && send(type_check, rhs) && lhs <= rhs
         end
 
         def gte?(lhs, rhs)
-          is_present?(lhs) && is_present?(rhs) && lhs >= rhs
+          send(type_check, lhs) && send(type_check, rhs) && lhs >= rhs
         end
 
         def matches?(lhs, rhs)
-          is_string?(lhs) && is_string?(rhs) &&
+          send(type_check, lhs) && send(type_check, rhs) &&
             lhs.match?(Regexp.escape(rhs).gsub('\*', '.*?'))
         end
 

@@ -615,6 +615,12 @@ RSpec.describe Floe::Workflow::ChoiceRule do
             expect(subject).to eq(false)
           end
         end
+
+        context "with invalid Path" do
+          let(:payload) { {"Variable" => "$.foo", "NumericGreaterThanPath" => "bogus", "Next" => "FirstMatchState"} }
+          let(:input) { {} }
+          it { expect { subject }.to raise_exception(Floe::InvalidWorkflowError, "State [FirstMatchState] Choices requires Path field \"NumericGreaterThanPath\" Path [bogus] must start with \"$\"") }
+        end
       end
 
       context "with a NumericLessThanEquals" do
@@ -771,6 +777,13 @@ RSpec.describe Floe::Workflow::ChoiceRule do
 
       context "with a StringMatches" do
         let(:payload) { {"Variable" => "$.foo", "StringMatches" => "*.log", "Next" => "FirstMatchState"} }
+
+        context "with invalid rule" do
+          let(:input) { {} }
+          let(:payload) { {"Variable" => "$.foo", "StringMatches" => 5, "Next" => "FirstMatchState"} }
+
+          it { expect { subject }.to raise_exception(Floe::InvalidWorkflowError, "State [FirstMatchState] Choices requires String field \"StringMatches\" but got [5]") }
+        end
 
         context "with missing lhs" do
           let(:input) { {} }
