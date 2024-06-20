@@ -6,9 +6,18 @@ module Floe
       class Succeed < Floe::Workflow::State
         attr_reader :input_path, :output_path
 
+        def initialize(workflow, name, payload)
+          super
+
+          @input_path  = Path.new(payload.fetch("InputPath", "$"))
+          @output_path = Path.new(payload.fetch("OutputPath", "$"))
+        end
+
         def finish(context)
+          input              = input_path.value(context, context.input)
+          context.output     = output_path.value(context, input)
           context.next_state = nil
-          context.output     = context.input
+
           super
         end
 
