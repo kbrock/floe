@@ -21,11 +21,6 @@ module Floe
       @children    = children
     end
 
-    # payload accessors
-    def fetch(key, default)
-      payload.fetch(key, default)
-    end
-
     def keys
       payload.keys
     end

@@ -1,24 +1,42 @@
 RSpec.describe Floe::Workflow::ChoiceRule do
   let(:name)      { "FirstMatchState" }
   let(:workflow)  { make_workflow({}, {name => {"Type" => "Choice", "Choices" => [payload], "Default" => name}}) }
-
+  let(:validating_payload) { Floe::PayloadValidator.new(payload, workflow.states_by_name.keys) }
   describe ".build" do
     let(:payload) { {"Variable" => "$.foo", "StringEquals" => "foo", "Next" => name} }
-    let(:subject) { described_class.build(payload) }
+    let(:subject) { described_class.build(validating_payload) }
 
     it "works with valid next" do
       subject
     end
+
+    context "with Variable missing" do
+      let(:payload) { {"Next" => name} }
+
+      it { expect { subject }.to raise_exception(Floe::InvalidWorkflowError, "State [FirstMatchState] Choices requires Path field \"Variable\" to exist") }
+    end
+
+    context "with non-path Variable missing" do
+      let(:payload) { {"Variable" => "wrong", "Next" => name} }
+
+      it { expect { subject }.to raise_exception(Floe::InvalidWorkflowError, "State [FirstMatchState] Choices requires Path field \"Variable\" Path [wrong] must start with \"$\"") }
+    end
+
+    context "with Next missing" do
+      let(:payload) { {"Variable" => "$.foo"} }
+
+      it { expect { subject }.to raise_exception(Floe::InvalidWorkflowError, "State [FirstMatchState] Choices requires field \"Next\"") }
+    end
   end
 
   describe "#true?" do
-    let(:subject) { described_class.build(payload).true?(context, input) }
+    let(:subject) { described_class.build(validating_payload).true?(context, input) }
     let(:context) { {} }
 
     context "with abstract top level class" do
       let(:payload) { {"Variable" => "$.foo", "StringEquals" => "foo", "Next" => name} }
       let(:input) { {} }
-      let(:subject) { described_class.new(payload).true?(context, input) }
+      let(:subject) { described_class.new(validating_payload).true?(context, input) }
       it "is not implemented" do
         expect { subject }.to raise_exception(NotImplementedError)
       end
