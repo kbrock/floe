@@ -4,6 +4,28 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.11.3] - 2024-06-20
+### Fixed
+- ResultPath=$ replaces complete output ([#199](https://github.com/ManageIQ/floe/pull/199))
+- Fix retrier backoff values ([#200](https://github.com/ManageIQ/floe/pull/200))
+- Fix Retry issues ([#202](https://github.com/ManageIQ/floe/pull/202))
+- Add Apache-2.0 license ([#217](https://github.com/ManageIQ/floe/pull/217))
+
+### Changed
+- Update gemspec summary ([#205](https://github.com/ManageIQ/floe/pull/205))
+- Simpler State#long_name ([#204](https://github.com/ManageIQ/floe/pull/204))
+- State only modifies Context#state - prep for Map/Parallel ([#206](https://github.com/ManageIQ/floe/pull/206))
+- Set StateHistory in Workflow not State ([#211](https://github.com/ManageIQ/floe/pull/211))
+- Make Runner#wait optional ([#190](https://github.com/ManageIQ/floe/pull/190))
+- Pass credentials around with context ([#203](https://github.com/ManageIQ/floe/pull/203))
+- Pass context to State without workflow ([#216](https://github.com/ManageIQ/floe/pull/216))
+- Move the guts of the CLI into a class for easy testing ([#220](https://github.com/ManageIQ/floe/pull/220))
+
+### Added
+- Set State PreviousStateGuid in StateHistory ([#208](https://github.com/ManageIQ/floe/pull/208))
+- Add a codeclimate config file ([#224](https://github.com/ManageIQ/floe/pull/224))
+- Add an Execution unique ID to Context ([#226](https://github.com/ManageIQ/floe/pull/226))
+
 ## [0.11.2] - 2024-05-24
 ### Fixed
 - Output now based upon raw input not effective input ([#191](https://github.com/ManageIQ/floe/pull/191))
@@ -177,7 +199,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.11.2...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.11.3...HEAD
+[0.11.3]: https://github.com/ManageIQ/floe/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/ManageIQ/floe/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/ManageIQ/floe/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/ManageIQ/floe/compare/v0.10.0...v0.11.0
