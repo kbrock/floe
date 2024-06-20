@@ -13,6 +13,8 @@ module Floe
           @error      = payload.string!("Error", :required => false)
           @cause_path = payload.path!("CausePath", :default => nil)
           @error_path = payload.path!("ErrorPath", :default => nil)
+
+          payload.no_unreferenced_fields!
         end
 
         def finish(context)

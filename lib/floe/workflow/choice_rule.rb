@@ -13,7 +13,7 @@ module Floe
             Floe::Workflow::ChoiceRule::Or.new(payload, build_children(payload, sub_payloads))
           else
             Floe::Workflow::ChoiceRule::Data.new(payload)
-          end
+          end.tap { payload.no_unreferenced_fields! }
         end
 
         def build_children(parent_payload, sub_payloads)

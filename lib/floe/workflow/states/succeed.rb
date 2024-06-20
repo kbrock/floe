@@ -9,9 +9,11 @@ module Floe
         def initialize(workflow, name, payload)
           super
 
-          # TODO: use these
+          # TODO: use succeed input/output parameters
           @input_path = payload.path!("InputPath", :default => nil)
           @output_path = payload.path!("OutputPath", :default => nil)
+
+          payload.no_unreferenced_fields!
         end
 
         def finish(context)

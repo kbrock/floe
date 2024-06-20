@@ -27,6 +27,12 @@ RSpec.describe Floe::Workflow::ChoiceRule do
 
       it { expect { subject }.to raise_exception(Floe::InvalidWorkflowError, "State [FirstMatchState] Choices requires field \"Next\"") }
     end
+
+    context "with second level Next" do
+      let(:payload) { {"Not" => {"Variable" => "$.foo", "StringEquals" => "bar", "Next" => "FirstMatchState"}, "Next" => "FirstMatchState"} }
+
+      it { expect { subject }.to raise_exception(Floe::InvalidWorkflowError, "State [FirstMatchState] Choices child rule does not recognize fields Next") }
+    end
   end
 
   describe "#true?" do
@@ -45,6 +51,12 @@ RSpec.describe Floe::Workflow::ChoiceRule do
     context "Boolean Expression" do
       context "Not" do
         let(:payload) { {"Not" => {"Variable" => "$.foo", "StringEquals" => "bar"}, "Next" => "FirstMatchState"} }
+
+        context "with a second level next" do
+          let(:input) { {"foo" => "foo"} }
+          let(:payload) { {"Not" => {"Variable" => "$.foo", "StringEquals" => "bar", "Next" => "FirstMatchState"}, "Next" => "FirstMatchState"} }
+          it { expect { subject }.to raise_exception(Floe::InvalidWorkflowError, "State [FirstMatchState] Choices child rule does not recognize fields Next") }
+        end
 
         context "that is not equal to 'bar'" do
           let(:input) { {"foo" => "foo"} }
