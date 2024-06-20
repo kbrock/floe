@@ -119,7 +119,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
         let(:input) { {"foo" => "bar"} }
 
         it "raises an exception" do
-          expect { subject }.to raise_exception(Floe::InvalidWorkflowError, "Data-test Expression Choice Rule must have a compare key")
+          expect { subject }.to raise_exception(Floe::InvalidWorkflowError, "State [FirstMatchState] Choices requires compare_key field")
         end
       end
 
