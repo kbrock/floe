@@ -26,8 +26,10 @@ module Floe
             [input, payload]
           end
 
-        results = JsonPath.on(obj, path)
+        # If path is $ then just return the entire input
+        return obj if path == "$"
 
+        results = JsonPath.on(obj, path)
         results.count < 2 ? results.first : results
       end
     end

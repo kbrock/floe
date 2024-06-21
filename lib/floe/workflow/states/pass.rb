@@ -25,7 +25,8 @@ module Floe
         end
 
         def finish(context)
-          context.output = process_output(context, result)
+          input = result.nil? ? process_input(context) : result
+          context.output = process_output(context, input)
           super
         end
 
