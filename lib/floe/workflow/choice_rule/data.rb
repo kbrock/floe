@@ -4,18 +4,27 @@ module Floe
   class Workflow
     class ChoiceRule
       class Data < Floe::Workflow::ChoiceRule
-        COMPARE_KEYS = %w[IsNull IsPresent IsNumeric IsString IsBoolean IsTimestamp String Numeric Boolean Timestamp].freeze
+        TYPES       = ["String", "Numeric", "Boolean", "Timestamp", "Present", "Null"].freeze
+        OPERATIONS  = ["Equals", "LessThan", "GreaterThan", "LessThanEquals", "GreaterThanEquals", "Matches"].freeze
+        UNARY_RULE  = /^(Is)(#{TYPES.join("|")})$/.freeze
+        BINARY_RULE = /^(#{(TYPES - %w[Null Present]).join("|")})(#{OPERATIONS.join("|")})(Path)?$/.freeze
 
-        attr_accessor :compare_key, :value, :path
+        attr_reader :compare_key, :type, :value, :path
 
         def initialize(*)
           super
 
-          @compare_key = payload.keys.detect { |key| key.match?(/^(#{COMPARE_KEYS.join("|")})/) }
+          @compare_key = payload.keys.detect { |key| key.match?(UNARY_RULE) || key.match?(BINARY_RULE) }
           payload.error!("requires compare_key field") if @compare_key.nil?
 
-          @path = @compare_key.end_with?("Path")
-          @value = @path ? payload.path!(compare_key) : payload[compare_key]
+          operator, @type = UNARY_RULE.match(compare_key)&.captures
+          if operator
+            @path = false
+            @value = payload.boolean!(compare_key)
+          else
+            @type, _operator, @path = BINARY_RULE.match(compare_key)&.captures
+            @value = @path ? payload.path!(compare_key) : payload[compare_key]
+          end
         end
 
         def true?(context, input)
@@ -54,8 +63,6 @@ module Floe
             lhs >= rhs
           when "StringMatches"
             lhs.match?(Regexp.escape(rhs).gsub('\*', '.*?'))
-          else
-            raise Floe::InvalidWorkflowError, "Invalid choice [#{compare_key}]"
           end
         end
 
