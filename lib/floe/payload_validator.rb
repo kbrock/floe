@@ -29,10 +29,6 @@ module Floe
       payload.keys
     end
 
-    def key?(name)
-      payload.key?(name)
-    end
-
     def [](key)
       referenced << key
       payload[key]
