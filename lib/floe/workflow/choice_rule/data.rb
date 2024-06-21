@@ -45,36 +45,36 @@ module Floe
 
         private
 
-        def is_null?(value, _ = nil) # rubocop:disable Naming/PredicateName
-          value.nil?
+        def is_null?(value, expected = true) # rubocop:disable Naming/PredicateName
+          value.nil? == expected
         end
 
-        def is_present?(value, _ = nil) # rubocop:disable Naming/PredicateName
-          !value.nil?
+        def is_present?(value, expected = true) # rubocop:disable Naming/PredicateName
+          !value.nil? == expected
         end
 
-        def is_numeric?(value, _ = nil) # rubocop:disable Naming/PredicateName
-          value.kind_of?(Integer) || value.kind_of?(Float)
+        def is_numeric?(value, expected = true) # rubocop:disable Naming/PredicateName
+          (value.kind_of?(Integer) || value.kind_of?(Float)) == expected
         end
 
-        def is_string?(value, _ = nil) # rubocop:disable Naming/PredicateName
-          value.kind_of?(String)
+        def is_string?(value, expected = true) # rubocop:disable Naming/PredicateName
+          value.kind_of?(String) == expected
         end
         alias is_path? is_string?
 
-        def is_boolean?(value, _ = nil) # rubocop:disable Naming/PredicateName
-          [true, false].include?(value)
+        def is_boolean?(value, expected = true) # rubocop:disable Naming/PredicateName
+          [true, false].include?(value) == expected
         end
 
-        def is_timestamp?(value, _ = nil) # rubocop:disable Naming/PredicateName
-          return false if value.nil?
+        def is_timestamp?(value, expected = true) # rubocop:disable Naming/PredicateName
+          return !expected if value.nil? 
 
           require "date"
 
           DateTime.rfc3339(value)
-          true
+          expected
         rescue TypeError, Date::Error
-          false
+          !expected
         end
 
         def eq?(lhs, rhs)
