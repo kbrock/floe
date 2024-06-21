@@ -22,8 +22,7 @@ module Floe
 
       workflows =
         workflows_inputs.each_slice(2).map do |workflow, input|
-          context = Floe::Workflow::Context.new(opts[:context], :input => input, :credentials => credentials)
-          Floe::Workflow.load(workflow, context)
+          create_workflow(workflow, opts[:context], input, credentials)
         end
 
       Floe::Workflow.wait(workflows, &:run_nonblock)
@@ -81,6 +80,11 @@ module Floe
       Floe::ContainerRunner.resolve_cli_options!(opts)
 
       return workflows_inputs, opts
+    end
+
+    def create_workflow(workflow, context_payload, input, credentials)
+      context = Floe::Workflow::Context.new(context_payload, :input => input, :credentials => credentials)
+      Floe::Workflow.load(workflow, context)
     end
   end
 end
