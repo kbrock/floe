@@ -17,6 +17,15 @@ RSpec.describe Floe::Workflow::Context do
     it "defaults credentials to {}" do
       expect(ctx.credentials).to eq({})
     end
+
+    context "with a simple string input" do
+      let(:input) { "\"foo\"" }
+
+      it "sets the input" do
+        expect(ctx.execution["Input"]).to eq("foo")
+        expect(ctx.state).not_to eq(nil)
+      end
+    end
   end
 
   describe "#started?" do

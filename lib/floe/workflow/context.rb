@@ -39,7 +39,7 @@ module Floe
       end
 
       def failed?
-        output&.key?("Error") || false
+        (output.kind_of?(Hash) && output.key?("Error")) || false
       end
 
       def ended?
