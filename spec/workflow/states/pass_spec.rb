@@ -121,6 +121,16 @@ RSpec.describe Floe::Workflow::States::Pass do
           expect(ctx.output).to eq("red")
         end
       end
+
+      context "with InputPath, ResultPath, and OutputPath" do
+        let(:input)   { {"color" => "red", "garbage" => nil} }
+        let(:payload) { {"Pass" => {"Type" => "Pass", "End" => true, "InputPath" => "$.color", "ResultPath" => "$.results", "OutputPath" => "$.results"}} }
+
+        it "Uses OutputPath to drop other keys" do
+          workflow.run_nonblock
+          expect(ctx.output).to eq("red")
+        end
+      end
     end
   end
 end
