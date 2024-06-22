@@ -8,6 +8,17 @@ module Floe
     include Logging
 
     class << self
+      # used by providers-workflow
+      def from_json(payload_str, context_str, credentials_str, name = nil)
+        payload = JSON.parse(payload_str)
+        context_hash = JSON.parse(context_str)
+        credentials = JSON.parse(credentials_str)
+        context = Context.new(context_hash, :credentials => credentials)
+
+        new(payload, context, nil, name)
+      end
+
+      # used by exe/floe
       def load(path_or_io, context = nil, credentials = {}, name = nil)
         payload = path_or_io.respond_to?(:read) ? path_or_io.read : File.read(path_or_io)
         payload = JSON.parse(payload)
