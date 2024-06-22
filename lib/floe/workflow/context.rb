@@ -10,12 +10,9 @@ module Floe
       def initialize(context = nil, input: nil, credentials: {})
         context = JSON.parse(context) if context.kind_of?(String)
 
-        input ||= {}
-        input = JSON.parse(input) if input.kind_of?(String)
-
         @context = context || {}
         self["Execution"]          ||= {}
-        self["Execution"]["Input"] ||= input
+        self["Execution"]["Input"] ||= input || {}
         self["State"]              ||= {}
         self["StateHistory"]       ||= []
         self["StateMachine"]       ||= {}

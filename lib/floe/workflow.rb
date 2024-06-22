@@ -10,6 +10,8 @@ module Floe
     class << self
       def load(path_or_io, context = nil, credentials = {}, name = nil)
         payload = path_or_io.respond_to?(:read) ? path_or_io.read : File.read(path_or_io)
+        payload = JSON.parse(payload)
+
         # default the name if it is a filename and none was passed in
         name ||= path_or_io.respond_to?(:read) ? "stream" : path_or_io.split("/").last.split(".").first
 
@@ -88,7 +90,6 @@ module Floe
     attr_reader :context, :payload, :states, :states_by_name, :start_at, :name, :comment
 
     def initialize(payload, context = nil, credentials = nil, name = nil)
-      payload     = JSON.parse(payload)     if payload.kind_of?(String)
       credentials = JSON.parse(credentials) if credentials.kind_of?(String)
       context     = Context.new(context)    unless context.kind_of?(Context)
 
