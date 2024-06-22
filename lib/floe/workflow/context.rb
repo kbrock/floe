@@ -5,11 +5,9 @@ module Floe
     class Context
       include Logging
 
-      # @param context [Json|Hash] (default, create another with input and execution params)
+      # @param context [String|Array|Hash] (default, create another with input and execution params)
       # @param input [Hash] (default: {})
       def initialize(context = nil, input: nil, credentials: nil, logger: nil)
-        context = JSON.parse(context) if context.kind_of?(String)
-
         @context = context || {}
         self["Credentials"]        ||= credentials || {}
         self["Execution"]          ||= {}
@@ -20,8 +18,6 @@ module Floe
         self["Task"]               ||= {}
 
         self.logger = logger if logger
-      rescue JSON::ParserError => err
-        raise Floe::InvalidExecutionInput, "Invalid State Machine Execution Input: #{err}: was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')"
       end
 
       def execution

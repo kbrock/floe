@@ -82,8 +82,7 @@ module Floe
     attr_reader :comment, :context
 
     def initialize(payload, context = nil, credentials = nil, name = nil)
-      credentials = JSON.parse(credentials) if credentials.kind_of?(String)
-      context     = Context.new(context)    unless context.kind_of?(Context)
+      context = Context.new(context) unless context.kind_of?(Context)
 
       # backwards compatibility
       # caller should really put credentials into context and not pass that variable

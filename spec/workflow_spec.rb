@@ -41,9 +41,9 @@ RSpec.describe Floe::Workflow do
     end
 
     it "raises an exception for invalid context" do
-      payload = {"StartAt" => "FirstState", "States" => {"FirstState" => {"Type" => "Succeed"}}}
+      payload = {"StartAt" => "FirstState", "States" => {"FirstState" => {"Type" => "Task", "Resource" => "invalid://foo", "End" => true}}}
 
-      expect { described_class.new(payload, "invalid context") }.to raise_error(Floe::InvalidExecutionInput, /Invalid State Machine Execution Input: unexpected .* was expecting \(JSON String, Number, Array, Object or token 'null', 'true' or 'false'\)/)
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "States.FirstState field \"Resource\" value \"invalid://foo\" Invalid resource scheme [invalid]")
     end
   end
 
