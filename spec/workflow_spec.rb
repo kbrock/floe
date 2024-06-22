@@ -1,7 +1,7 @@
 RSpec.describe Floe::Workflow do
   let(:now)   { Time.now.utc }
   let(:input) { {"input" => "value"}.freeze }
-  let(:ctx)   { Floe::Workflow::Context.new(:input => input.to_json) }
+  let(:ctx)   { Floe::Workflow::Context.new(:input => input) }
 
   describe "#new" do
     it "sets initial state" do
@@ -43,7 +43,7 @@ RSpec.describe Floe::Workflow do
     it "raises an exception for invalid context" do
       payload = {"StartAt" => "FirstState", "States" => {"FirstState" => {"Type" => "Succeed"}}}
 
-      expect { described_class.new(payload, "invalid context") }.to raise_error(Floe::InvalidExecutionInput, /Invalid State Machine Execution Input: unexpected character: /)
+      expect { described_class.new(payload, "invalid context") }.to raise_error(Floe::InvalidExecutionInput, /Invalid State Machine Execution Input: unexpected .* was expecting \(JSON String, Number, Array, Object or token 'null', 'true' or 'false'\)/)
     end
   end
 

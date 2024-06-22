@@ -1,7 +1,7 @@
 RSpec.describe Floe::Workflow::Context do
-  let(:ctx)         { described_class.new(:input => input.to_json) }
+  let(:ctx)         { described_class.new(:input => input) }
   let(:credentials) { {"username" => "user", "password" => "password"} }
-  let(:ctx_creds)   { described_class.new(:input => input.to_json, :credentials => credentials) }
+  let(:ctx_creds)   { described_class.new(:input => input, :credentials => credentials) }
   let(:input)       { {"x" => "y"}.freeze }
 
   describe "#new" do
@@ -11,7 +11,7 @@ RSpec.describe Floe::Workflow::Context do
     end
 
     it "with a context, sets input and keeps context" do
-      ctx = described_class.new({"Execution" => {"api" => "http://localhost/"}}, :input => input.to_json)
+      ctx = described_class.new({"Execution" => {"api" => "http://localhost/"}}, :input => input)
       expect(ctx.execution["api"]).to eq("http://localhost/")
       expect(ctx.state).not_to eq(nil)
     end

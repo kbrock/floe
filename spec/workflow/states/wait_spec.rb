@@ -1,6 +1,6 @@
 RSpec.describe Floe::Workflow::States::Pass do
   let(:input)    { {} }
-  let(:ctx)      { Floe::Workflow::Context.new(:input => input.to_json) }
+  let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
   let(:state)    { workflow.start_workflow.current_state }
   let(:workflow) { make_workflow(ctx, {"WaitState" => {"Type" => "Wait", "Seconds" => 10, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}}) }
 

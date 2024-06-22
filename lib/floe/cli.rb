@@ -103,6 +103,7 @@ module Floe
     end
 
     def create_workflow(workflow, context_payload, input, credentials)
+      input = input ? JSON.parse(input) : {}
       context = Floe::Workflow::Context.new(context_payload, :input => input, :credentials => credentials)
       Floe::Workflow.load(workflow, context)
     end

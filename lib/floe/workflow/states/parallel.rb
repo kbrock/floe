@@ -36,7 +36,7 @@ module Floe
 
           input = process_input(context)
 
-          context.state["BranchContext"] = branches.map { |_branch| Context.new({"Execution" => {"Id" => context.execution["Id"]}}, :input => input.to_json).to_h }
+          context.state["BranchContext"] = branches.map { |_branch| Context.new({"Execution" => {"Id" => context.execution["Id"]}}, :input => input).to_h }
         end
 
         def end?

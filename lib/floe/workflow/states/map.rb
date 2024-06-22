@@ -65,7 +65,7 @@ module Floe
 
             item_processor_input = item_selector ? item_selector.value(item_processor_context, context.state["Input"]) : item
 
-            Context.new(item_processor_context, :input => item_processor_input.to_json).to_h
+            Context.new(item_processor_context, :input => item_processor_input).to_h
           end
         end
 

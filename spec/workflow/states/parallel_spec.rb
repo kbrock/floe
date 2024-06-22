@@ -1,6 +1,6 @@
 RSpec.describe Floe::Workflow::States::Parallel do
   let(:input)    { [3, 2] }
-  let(:ctx)      { Floe::Workflow::Context.new(:input => input.to_json) }
+  let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
   let(:state)    { workflow.start_workflow.current_state }
   let(:workflow) do
     payload = {

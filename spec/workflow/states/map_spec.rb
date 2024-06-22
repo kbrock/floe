@@ -1,6 +1,6 @@
 RSpec.describe Floe::Workflow::States::Map do
   let(:input)    { {} }
-  let(:ctx)      { Floe::Workflow::Context.new(:input => input.to_json) }
+  let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
   let(:state)    { workflow.start_workflow.current_state }
   let(:input)    do
     {

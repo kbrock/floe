@@ -1,6 +1,6 @@
 RSpec.describe Floe::Workflow::ChoiceRule do
   let(:input)    { {} }
-  let(:ctx)      { Floe::Workflow::Context.new(:input => input.to_json) }
+  let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
   let(:state)    { workflow.start_workflow.current_state }
   let(:workflow) { make_workflow(ctx, payload) }
   let(:choices)  { [{"Variable" => "$.foo", "StringEquals" => "foo", "Next" => "FirstMatchState"}] }
