@@ -54,8 +54,16 @@ module Floe
         state["Input"]
       end
 
+      def json_input
+        input.to_json
+      end
+
       def output
         state["Output"]
+      end
+
+      def json_output
+        output.to_json
       end
 
       def output=(val)
