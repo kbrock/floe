@@ -157,7 +157,7 @@ module Floe
     end
 
     def output
-      context.output if end?
+      context.json_output if end?
     end
 
     def end?
