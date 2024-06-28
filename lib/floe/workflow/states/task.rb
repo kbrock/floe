@@ -82,11 +82,11 @@ module Floe
         end
 
         def find_retrier(error)
-          self.retry.detect { |r| (r.error_equals & [error, "States.ALL"]).any? }
+          self.retry.detect { |r| r.match_error?(error) }
         end
 
         def find_catcher(error)
-          self.catch.detect { |c| (c.error_equals & [error, "States.ALL"]).any? }
+          self.catch.detect { |c| c.match_error?(error) }
         end
 
         def retry_state!(context, error)
