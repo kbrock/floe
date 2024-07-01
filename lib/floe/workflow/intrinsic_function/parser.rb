@@ -33,12 +33,14 @@ module Floe
           ).repeat.as(:string) >> quote
         end
 
-        rule(:value) do
-          string | number | true_rule | false_rule | null
+        rule(:jsonpath) do
+          (
+            str('$') >> match('[^,)]').repeat(1)
+          ).as(:jsonpath)
         end
 
         rule(:arg) do
-          string | number | true_literal | false_literal | null_literal
+          string | number | jsonpath | true_literal | false_literal | null_literal
         end
 
         rule(:args) { arg >> (comma_sep >> arg).repeat }

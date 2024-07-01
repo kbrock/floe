@@ -12,13 +12,11 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
 
       it "with different types of args" do
-        result = described_class.evaluate("States.Array('string', 1, 1.5, true, false, null)")
-        expect(result).to eq(["string", 1, 1.5, true, false, nil])
+        result = described_class.evaluate("States.Array('string', 1, 1.5, true, false, null, $.input)", {"input" => {"foo" => "bar"}})
+        expect(result).to eq(["string", 1, 1.5, true, false, nil, {"foo" => "bar"}])
       end
 
       it "with jsonpath args" do
-        pending("jsonpath not yet implemented")
-
         result = described_class.evaluate("States.Array($.input)", {"input" => {"foo" => "bar"}})
         expect(result).to eq([{"foo" => "bar"}])
       end

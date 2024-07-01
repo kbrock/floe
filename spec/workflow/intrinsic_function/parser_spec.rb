@@ -132,6 +132,38 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     end
   end
 
+  describe "json_path" do
+    subject { described_class.new.jsonpath }
+
+    it do
+      expect(subject).to parse("$.input")
+      expect(subject).to parse("$.input.foo")
+      expect(subject).to parse("$$.input")
+      expect(subject).to parse("$$.input.foo")
+
+      expect(subject).to parse(%q|$.store.book|)
+      expect(subject).to parse(%q|$.store\.book|)
+      expect(subject).to parse(%q|$.\stor\e.boo\k|)
+      expect(subject).to parse(%q|$.store.book.title|)
+      expect(subject).to parse(%q|$.foo.\.bar|)
+      expect(subject).to parse(%q|$.foo\@bar.baz\[\[.\?pretty|)
+      expect(subject).to parse(%q|$.&Ж中.\uD800\uDF46|)
+      expect(subject).to parse(%q|$.ledgers.branch[0].pending.count|)
+      expect(subject).to parse(%q|$.ledgers.branch[0]|)
+      expect(subject).to parse(%q|$.ledgers[0][22][315].foo|)
+      expect(subject).to parse(%q|$['store']['book']|)
+      expect(subject).to parse(%q|$['store'][0]['book']|)
+
+      # TODO: These unlikely cases should work, but we need a more thorough parser.
+      expect(subject).to_not parse(%q|$['s,tore']|)
+      expect(subject).to_not parse(%q|$['s)tore']|)
+
+      expect(subject).to_not parse(%q|['input']|)
+      expect(subject).to_not parse(".input")
+      expect(subject).to_not parse("$")
+    end
+  end
+
   describe "arg" do
     subject { described_class.new.arg }
 
@@ -141,6 +173,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
       expect(subject).to parse("true")
       expect(subject).to parse("false")
       expect(subject).to parse("null")
+      expect(subject).to parse("$.input")
     end
   end
 
@@ -150,7 +183,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     it do
       expect(subject).to parse(%q|'str'|)
       expect(subject).to parse(%q|'str', 123|)
-      expect(subject).to parse(%q|'str', 123, true, false, null|)
+      expect(subject).to parse(%q|'str', 123, true, false, null, $.input|)
       expect(subject).to parse(%q|'str',   123,true|)
     end
   end
@@ -161,7 +194,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     it do
       expect(subject).to parse(%q|States.Array('str')|)
       expect(subject).to parse(%q|States.Array('str', 123)|)
-      expect(subject).to parse(%q|States.Array('str', 123, true, false, null)|)
+      expect(subject).to parse(%q|States.Array('str', 123, true, false, null, $.input)|)
       expect(subject).to parse(%q|States.Array('str',   123,true)|)
     end
   end
