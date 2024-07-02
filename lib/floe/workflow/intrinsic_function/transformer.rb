@@ -7,7 +7,7 @@ require "securerandom"
 
 module Floe
   class Workflow
-    module IntrinsicFunction
+    class IntrinsicFunction
       class Transformer < Parslet::Transform
         rule(:null_literal  => simple(:v)) { nil }
         rule(:true_literal  => simple(:v)) { true }
