@@ -40,10 +40,16 @@ module Floe
         end
 
         rule(:arg) do
-          string | number | jsonpath | true_literal | false_literal | null_literal | expression
+          (
+            string | number | jsonpath | true_literal | false_literal | null_literal | expression
+          ).as(:arg)
         end
 
-        rule(:args) { arg >> (comma_sep >> arg).repeat }
+        rule(:args) do
+          (
+            arg >> (comma_sep >> arg).repeat
+          ).maybe.as(:args)
+        end
 
         rule(:states_array) do
           (

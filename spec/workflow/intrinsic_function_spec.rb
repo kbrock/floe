@@ -21,9 +21,24 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
 
   describe ".value" do
     describe "States.Array" do
+      it "with no values" do
+        result = described_class.value("States.Array()")
+        expect(result).to eq([])
+      end
+
       it "with a single value" do
         result = described_class.value("States.Array(1)")
         expect(result).to eq([1])
+      end
+
+      it "with a single null value" do
+        result = described_class.value("States.Array(null)")
+        expect(result).to eq([nil])
+      end
+
+      it "with a single array value" do
+        result = described_class.value("States.Array(States.Array())")
+        expect(result).to eq([[]])
       end
 
       it "with multiple values" do
@@ -90,7 +105,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
 
     describe "with parsing errors" do
       it "does not parse missing parens" do
-        expect { described_class.value("States.UUID") }.to raise_error(Floe::InvalidWorkflowError, /Expected one of \[[A-Z_, ]+\] at line 1 char 1./)
+        expect { described_class.value("States.Array") }.to raise_error(Floe::InvalidWorkflowError, /Expected one of \[[A-Z_, ]+\] at line 1 char 1./)
       end
 
       it "does not parse missing closing paren" do
@@ -102,7 +117,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
 
       it "keeps the parslet error as the cause" do
-        error = described_class.value("States.UUID") rescue $! # rubocop:disable Style/RescueModifier, Style/SpecialGlobalVars
+        error = described_class.value("States.Array") rescue $! # rubocop:disable Style/RescueModifier, Style/SpecialGlobalVars
         expect(error.cause).to be_a(Parslet::ParseFailed)
       end
     end
