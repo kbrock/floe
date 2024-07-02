@@ -175,6 +175,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
       expect(subject).to parse("false")
       expect(subject).to parse("null")
       expect(subject).to parse("$.input")
+      expect(subject).to parse("States.Array()")
     end
   end
 
@@ -182,10 +183,14 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     subject { described_class.new.args }
 
     it do
+      expect(subject).to parse("")
       expect(subject).to parse(%q|'str'|)
       expect(subject).to parse(%q|'str', 123|)
       expect(subject).to parse(%q|'str', 123, true, false, null, $.input|)
+      expect(subject).to parse(%q|'str', 123, true, false, null, $.input, States.Array()|)
       expect(subject).to parse(%q|'str',   123,true|)
+      expect(subject).to parse("null")
+      expect(subject).to parse("States.Array()")
     end
   end
 
@@ -193,10 +198,13 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     subject { described_class.new.states_array }
 
     it do
+      expect(subject).to parse(%q|States.Array()|)
       expect(subject).to parse(%q|States.Array('str')|)
       expect(subject).to parse(%q|States.Array('str', 123)|)
       expect(subject).to parse(%q|States.Array('str', 123, true, false, null, $.input)|)
       expect(subject).to parse(%q|States.Array('str',   123,true)|)
+      expect(subject).to parse(%q|States.Array(null)|)
+      expect(subject).to parse(%q|States.Array(States.Array())|)
     end
   end
 
