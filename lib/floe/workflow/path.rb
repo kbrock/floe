@@ -4,6 +4,10 @@ module Floe
   class Workflow
     class Path
       class << self
+        def path?(payload)
+          payload.start_with?("$")
+        end
+
         def value(payload, context, input = {})
           new(payload).value(context, input)
         end

@@ -42,7 +42,7 @@ module Floe
       end
 
       def parse_payload_string(value)
-        return Path.new(value)              if value.start_with?("$")
+        return Path.new(value)              if Path.path?(value)
         return IntrinsicFunction.new(value) if IntrinsicFunction.intrinsic_function?(value)
 
         value
