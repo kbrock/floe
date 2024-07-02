@@ -4,6 +4,7 @@
 
 require "parslet"
 require "jsonpath"
+require "securerandom"
 
 module Floe
   class Workflow
@@ -21,6 +22,7 @@ module Floe
         end
 
         rule(:states_array => subtree(:args)) { args.kind_of?(Array) ? args : [args] }
+        rule(:states_uuid  => subtree(:args)) { SecureRandom.uuid }
       end
     end
   end

@@ -40,7 +40,7 @@ module Floe
         end
 
         rule(:arg) do
-          string | number | jsonpath | true_literal | false_literal | null_literal
+          string | number | jsonpath | true_literal | false_literal | null_literal | expression
         end
 
         rule(:args) { arg >> (comma_sep >> arg).repeat }
@@ -51,7 +51,11 @@ module Floe
           ).as(:states_array)
         end
 
-        rule(:expression) { states_array }
+        rule(:states_uuid) do
+          str("States.UUID()").as(:states_uuid)
+        end
+
+        rule(:expression) { states_array | states_uuid }
         root(:expression)
       end
     end

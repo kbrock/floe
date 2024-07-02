@@ -198,6 +198,17 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
       expect(subject).to parse(%q|States.Array('str',   123,true)|)
     end
   end
+
+  describe "states_uuid" do
+    subject { described_class.new.states_uuid }
+
+    it do
+      expect(subject).to parse("States.UUID()")
+
+      expect(subject).to_not parse("States.UUID")
+      expect(subject).to_not parse("States.UUID(1)")
+    end
+  end
 end
 
 # rubocop:enable Style/PercentLiteralDelimiters, Style/RedundantPercentQ
