@@ -2,7 +2,7 @@ require "parslet"
 
 module Floe
   class Workflow
-    module IntrinsicFunction
+    class IntrinsicFunction
       class Parser < Parslet::Parser
         rule(:spaces)  { str(' ').repeat(1) }
         rule(:spaces?) { spaces.maybe }

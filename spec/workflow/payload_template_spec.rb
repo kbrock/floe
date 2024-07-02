@@ -20,6 +20,16 @@ RSpec.describe Floe::Workflow::PayloadTemplate do
       end
     end
 
+    context "with intrinsic functions" do
+      let(:payload) { {"uuid.$" => "States.UUID()"} }
+      let(:context) { {} }
+      let(:inputs)  { {} }
+
+      it "calls the UUID intrinsic function" do
+        expect(subject.value(context, inputs)).to include("uuid" => a_string_matching(/^\h{8}-\h{4}-\h{4}-\h{4}-\h{12}$/))
+      end
+    end
+
     context "with dynamic values" do
       let(:payload) { {"foo.$" => "$.foo", "bar.$" => "$$.bar"} }
       let(:context) { {"bar" => "baz"} }

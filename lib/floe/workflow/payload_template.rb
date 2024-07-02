@@ -42,14 +42,17 @@ module Floe
       end
 
       def parse_payload_string(value)
-        value.start_with?("$") ? Path.new(value) : value
+        return Path.new(value)              if Path.path?(value)
+        return IntrinsicFunction.new(value) if IntrinsicFunction.intrinsic_function?(value)
+
+        value
       end
 
       def interpolate_value(value, context, inputs)
         case value
-        when Array then interpolate_value_array(value, context, inputs)
-        when Hash  then interpolate_value_hash(value, context, inputs)
-        when Path  then value.value(context, inputs)
+        when Array                   then interpolate_value_array(value, context, inputs)
+        when Hash                    then interpolate_value_hash(value, context, inputs)
+        when Path, IntrinsicFunction then value.value(context, inputs)
         else
           value
         end
