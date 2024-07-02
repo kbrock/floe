@@ -7,6 +7,7 @@ module Floe
       require "logger"
 
       Floe.logger = Logger.new($stdout)
+      Floe.logger.level = 0 if ENV["DEBUG"]
     end
 
     def run(args = ARGV)
