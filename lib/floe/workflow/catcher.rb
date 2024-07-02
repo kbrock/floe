@@ -8,7 +8,7 @@ module Floe
 
       attr_reader :error_equals, :next, :result_path, :name
 
-      def initialize(_workflow, name, payload)
+      def initialize(workflow, name, payload)
         @name         = name
         @payload      = payload
 
@@ -17,6 +17,14 @@ module Floe
         @result_path  = ReferencePath.new(payload.fetch("ResultPath", "$"))
 
         missing_field_error!("ErrorEquals") if !@error_equals.kind_of?(Array) || @error_equals.empty?
+        validate_state_next!(workflow)
+      end
+
+      private
+
+      def validate_state_next!(workflow)
+        missing_field_error!("Next") if @next.nil?
+        invalid_field_error!("Next", @next, "is not found in \"States\"") if @next && !workflow_state?(@next, workflow)
       end
     end
   end

@@ -349,6 +349,8 @@ RSpec.describe Floe::Workflow::States::Task do
       end
 
       context "with a Catch" do
+        let(:catchers) { [{"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}] }
+
         let(:workflow) do
           make_workflow(
             ctx, {
@@ -356,7 +358,7 @@ RSpec.describe Floe::Workflow::States::Task do
                 "Type"     => "Task",
                 "Resource" => resource,
                 "Retry"    => [{"ErrorEquals" => ["States.Timeout"]}],
-                "Catch"    => [{"ErrorEquals" => ["States.ALL"], "Next" => "FailState"}],
+                "Catch"    => catchers,
                 "Next"     => "SuccessState"
               },
               "FailState"    => {"Type" => "Succeed"},
@@ -389,19 +391,32 @@ RSpec.describe Floe::Workflow::States::Task do
 
     describe "Catch" do
       context "with specific errors" do
+        let(:catchers) { [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}] }
         let(:workflow) do
           make_workflow(
             ctx, {
               "State"        => {
                 "Type"     => "Task",
                 "Resource" => resource,
-                "Catch"    => [{"ErrorEquals" => ["States.Timeout"], "Next" => "FirstState"}],
+                "Catch"    => catchers,
                 "Next"     => "SuccessState"
               },
               "FirstState"   => {"Type" => "Succeed"},
               "SuccessState" => {"Type" => "Succeed"}
             }
           )
+        end
+
+        context "with invalid next" do
+          let(:catchers) { [{"ErrorEquals" => ["States.Timeout"], "Next" => "MissingState"}] }
+
+          it { expect { workflow }.to raise_error(Floe::InvalidWorkflowError, "States.State.Catch.0 field \"Next\" value \"MissingState\" is not found in \"States\"") }
+        end
+
+        context "with missing next" do
+          let(:catchers) { [{"ErrorEquals" => ["States.Timeout"]}] }
+
+          it { expect { workflow }.to raise_error(Floe::InvalidWorkflowError, "States.State.Catch.0 does not have required field \"Next\"") }
         end
 
         it "catches the exception" do
