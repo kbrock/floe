@@ -61,6 +61,11 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         result = described_class.evaluate("States.Array($.input.foo)", {"context" => {"baz" => "qux"}}, {"input" => {"foo" => "bar"}})
         expect(result).to eq(["bar"])
       end
+
+      it "handles invalid path references" do
+        result = described_class.evaluate("States.Array($.xxx)", {"context" => {"baz" => "qux"}}, {"input" => {"foo" => "bar"}})
+        expect(result).to eq([nil])
+      end
     end
 
     describe "with parsing errors" do
