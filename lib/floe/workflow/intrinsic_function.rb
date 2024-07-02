@@ -3,7 +3,7 @@ module Floe
     module IntrinsicFunction
       def self.evaluate(payload, context = {}, input = {})
         tree = Parser.new.parse(payload)
-        pp tree if ENV["DEBUG"]
+        Floe.logger.debug { "Parsed intrinsic function: #{payload.inspect} => #{tree.inspect}" }
         Transformer.new.apply(tree, :context => context, :input => input)
       end
     end
