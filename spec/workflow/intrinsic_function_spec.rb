@@ -62,5 +62,24 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq(["bar"])
       end
     end
+
+    describe "with parsing errors" do
+      it "does not parse missing parens" do
+        expect { described_class.evaluate("States.UUID") }.to raise_error(Floe::InvalidWorkflowError, /Expected one of \[[A-Z_, ]+\] at line 1 char 1./)
+      end
+
+      it "does not parse missing closing paren" do
+        expect { described_class.evaluate("States.Array(1, ") }.to raise_error(Floe::InvalidWorkflowError, /Expected one of \[[A-Z_, ]+\] at line 1 char 1./)
+      end
+
+      it "does not parse trailing commas in args" do
+        expect { described_class.evaluate("States.Array(1,)") }.to raise_error(Floe::InvalidWorkflowError, /Expected one of \[[A-Z_, ]+\] at line 1 char 1./)
+      end
+
+      it "keeps the parslet error as the cause" do
+        error = described_class.evaluate("States.UUID") rescue $! # rubocop:disable Style/RescueModifier, Style/SpecialGlobalVars
+        expect(error.cause).to be_a(Parslet::ParseFailed)
+      end
+    end
   end
 end
