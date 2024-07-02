@@ -54,6 +54,7 @@ module Floe
         [
           :states_array,           "States.Array",
           :states_array_partition, "States.ArrayPartition",
+          :states_array_contains,  "States.ArrayContains",
           :states_uuid,            "States.UUID",
         ].each_slice(2) do |function_symbol, function_name|
           rule(function_symbol) do
@@ -63,7 +64,7 @@ module Floe
           end
         end
 
-        rule(:expression) { states_array | states_array_partition | states_uuid }
+        rule(:expression) { states_array | states_array_partition | states_array_contains | states_uuid }
         root(:expression)
       end
     end

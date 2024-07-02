@@ -46,6 +46,16 @@ module Floe
           array.each_slice(chunk).to_a
         end
 
+        rule(:states_array_contains => {:args => subtree(:args)}) do
+          args = Transformer.resolve_args(args())
+          raise ArgumentError, "wrong number of arguments to States.ArrayContains (given #{args.size}, expected 2)" unless args.size == 2
+
+          array, target = *args
+          raise ArgumentError, "wrong type for first argument to States.ArrayContains (given #{array.class}, expected Array)" unless array.kind_of?(Array)
+
+          array.include?(target)
+        end
+
         rule(:states_uuid => {:args => subtree(:args)}) do
           args = Transformer.resolve_args(args())
           raise ArgumentError, "wrong number of arguments to States.UUID (given #{args.size}, expected 0)" unless args.empty?

@@ -98,6 +98,53 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
     end
 
+    describe "States.ArrayContains" do
+      # NOTE: The stepfunctions simulator fails with States.Array() passed as a parameter, but we support it
+
+      it "with an array containing the target value" do
+        result = described_class.value("States.ArrayContains(States.Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5)")
+        expect(result).to eq(true)
+      end
+
+      it "with an array missing the target value" do
+        result = described_class.value("States.ArrayContains(States.Array(1, 2, 3), 5)")
+        expect(result).to eq(false)
+      end
+
+      it "with an empty array" do
+        result = described_class.value("States.ArrayContains(States.Array(), 5)")
+        expect(result).to eq(false)
+      end
+
+      it "with jsonpath for the array" do
+        result = described_class.value("States.ArrayContains($.array, 5)", {}, {"array" => [1, 2, 3, 4, 5, 6, 7, 8, 9]})
+        expect(result).to eq(true)
+      end
+
+      it "with jsonpath for the array and target value" do
+        result = described_class.value("States.ArrayContains($.array, $.target)", {}, {"array" => [1, 2, 3, 4, 5, 6, 7, 8, 9], "target" => 5})
+        expect(result).to eq(true)
+      end
+
+      it "with string values in the array" do
+        result = described_class.value("States.ArrayContains($.array, '5')", {}, {"array" => %w[1 2 3 4 5 6 7 8 9]})
+        expect(result).to eq(true)
+      end
+
+      it "with string values in the array but an integer target value" do
+        result = described_class.value("States.ArrayContains($.array, 5)", {}, {"array" => %w[1 2 3 4 5 6 7 8 9]})
+        expect(result).to eq(false)
+      end
+
+      it "fails with invalid args" do
+        expect { described_class.value("States.ArrayContains()") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayContains (given 0, expected 2)")
+        expect { described_class.value("States.ArrayContains(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayContains (given 1, expected 2)")
+        expect { described_class.value("States.ArrayContains(States.Array(), 1, 'foo')") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayContains (given 3, expected 2)")
+
+        expect { described_class.value("States.ArrayContains(1, 5)") }.to raise_error(ArgumentError, "wrong type for first argument to States.ArrayContains (given Integer, expected Array)")
+      end
+    end
+
     describe "States.UUID" do
       it "returns a v4 UUID" do
         result = described_class.value("States.UUID()")

@@ -232,6 +232,26 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     end
   end
 
+  describe "states_array_contains" do
+    subject { described_class.new.states_array_contains }
+
+    it do
+      expect(subject).to parse("States.ArrayContains(States.Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5)")
+      expect(subject).to parse("States.ArrayContains(States.Array(1, 2, 3), 5)")
+      expect(subject).to parse("States.ArrayContains(States.Array(), 5)")
+      expect(subject).to parse("States.ArrayContains($.array, 5)")
+      expect(subject).to parse("States.ArrayContains($.array, $.target)")
+      expect(subject).to parse("States.ArrayContains($.array, '5')")
+
+      # Parser will properly parse, but will fail later at transform time due to incorrect args
+      expect(subject).to parse("States.ArrayContains()")
+      expect(subject).to parse("States.ArrayContains(1)")
+      expect(subject).to parse("States.ArrayContains(States.Array(), 1, 'foo')")
+
+      expect(subject).to_not parse("States.ArrayContains")
+    end
+  end
+
   describe "states_uuid" do
     subject { described_class.new.states_uuid }
 
