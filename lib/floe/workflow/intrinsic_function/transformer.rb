@@ -3,7 +3,6 @@
 # rubocop:disable Performance/RegexpMatch, Performance/RedundantMatch
 
 require "parslet"
-require "jsonpath"
 require "securerandom"
 
 module Floe
@@ -16,10 +15,7 @@ module Floe
 
         rule(:string   => simple(:v)) { v.to_s }
         rule(:number   => simple(:v)) { v.match(/[eE.]/) ? Float(v) : Integer(v) }
-        rule(:jsonpath => simple(:v)) do
-          results = JsonPath.on(input, v.to_s)
-          results.count < 2 ? results.first : results
-        end
+        rule(:jsonpath => simple(:v)) { Floe::Workflow::Path.value(v.to_s, context, input) }
 
         rule(:states_array => subtree(:args)) { args.kind_of?(Array) ? args : [args] }
         rule(:states_uuid  => subtree(:args)) { SecureRandom.uuid }

@@ -35,7 +35,7 @@ module Floe
 
         rule(:jsonpath) do
           (
-            str('$') >> match('[^,)]').repeat(1)
+            str('$') >> match('[^,)]').repeat(0)
           ).as(:jsonpath)
         end
 

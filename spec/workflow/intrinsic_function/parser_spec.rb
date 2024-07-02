@@ -136,6 +136,8 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     subject { described_class.new.jsonpath }
 
     it do
+      expect(subject).to parse("$")
+      expect(subject).to parse("$$")
       expect(subject).to parse("$.input")
       expect(subject).to parse("$.input.foo")
       expect(subject).to parse("$$.input")
@@ -160,7 +162,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
       expect(subject).to_not parse(%q|['input']|)
       expect(subject).to_not parse(".input")
-      expect(subject).to_not parse("$")
     end
   end
 

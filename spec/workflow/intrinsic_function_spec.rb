@@ -12,13 +12,8 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
 
       it "with different types of args" do
-        result = described_class.evaluate("States.Array('string', 1, 1.5, true, false, null, $.input)", {"input" => {"foo" => "bar"}})
+        result = described_class.evaluate("States.Array('string', 1, 1.5, true, false, null, $.input)", {}, {"input" => {"foo" => "bar"}})
         expect(result).to eq(["string", 1, 1.5, true, false, nil, {"foo" => "bar"}])
-      end
-
-      it "with jsonpath args" do
-        result = described_class.evaluate("States.Array($.input)", {"input" => {"foo" => "bar"}})
-        expect(result).to eq([{"foo" => "bar"}])
       end
 
       it "with nested States functions" do
@@ -38,6 +33,33 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
 
         uuid_version = match[1].to_i(16) >> 12
         expect(uuid_version).to eq(4)
+      end
+    end
+
+    describe "with jsonpath args" do
+      it "fetches values from the input" do
+        result = described_class.evaluate("States.Array($.input)", {"context" => {"baz" => "qux"}}, {"input" => {"foo" => "bar"}})
+        expect(result).to eq([{"foo" => "bar"}])
+      end
+
+      it "fetches values from the context" do
+        result = described_class.evaluate("States.Array($$.context)", {"context" => {"baz" => "qux"}}, {"input" => {"foo" => "bar"}})
+        expect(result).to eq([{"baz" => "qux"}])
+      end
+
+      it "can return the entire input" do
+        result = described_class.evaluate("States.Array($)", {"context" => {"baz" => "qux"}}, {"input" => {"foo" => "bar"}})
+        expect(result).to eq([{"input" => {"foo" => "bar"}}])
+      end
+
+      it "can return the entire context" do
+        result = described_class.evaluate("States.Array($$)", {"context" => {"baz" => "qux"}}, {"input" => {"foo" => "bar"}})
+        expect(result).to eq([{"context" => {"baz" => "qux"}}])
+      end
+
+      it "fetches deep values" do
+        result = described_class.evaluate("States.Array($.input.foo)", {"context" => {"baz" => "qux"}}, {"input" => {"foo" => "bar"}})
+        expect(result).to eq(["bar"])
       end
     end
   end
