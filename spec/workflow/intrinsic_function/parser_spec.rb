@@ -252,6 +252,37 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     end
   end
 
+  describe "states_array_range" do
+    subject { described_class.new.states_array_range }
+
+    it do
+      expect(subject).to parse("States.ArrayRange(1, 9, 2)")
+      expect(subject).to parse("States.ArrayRange(-1, 9, 2)")
+      expect(subject).to parse("States.ArrayRange(-9, -1, 2)")
+      expect(subject).to parse("States.ArrayRange(9, 1, -2)")
+      expect(subject).to parse("States.ArrayRange(9, -1, -2)")
+      expect(subject).to parse("States.ArrayRange(-1, -9, -2)")
+      expect(subject).to parse("States.ArrayRange(1, 9, -2)")
+      expect(subject).to parse("States.ArrayRange(-9, -1, -2)")
+      expect(subject).to parse("States.ArrayRange(9, 1, 2)")
+      expect(subject).to parse("States.ArrayRange(-1, -9, 2)")
+      expect(subject).to parse("States.ArrayRange($.start, $.end, $.increment)")
+
+      # Parser will properly parse, but will fail later at transform time due to incorrect args
+      expect(subject).to parse("States.ArrayRange()")
+      expect(subject).to parse("States.ArrayRange(1)")
+      expect(subject).to parse("States.ArrayRange(1, 9)")
+      expect(subject).to parse("States.ArrayRange(1, 9, 2, 4)")
+      expect(subject).to parse("States.ArrayRange('1', '9', '2')")
+      expect(subject).to parse("States.ArrayRange('1', 9, 2)")
+      expect(subject).to parse("States.ArrayRange(1, '9', 2)")
+      expect(subject).to parse("States.ArrayRange(1, 9, '2')")
+      expect(subject).to parse("States.ArrayRange(1, 9, 0)")
+
+      expect(subject).to_not parse("States.ArrayRange")
+    end
+  end
+
   describe "states_uuid" do
     subject { described_class.new.states_uuid }
 

@@ -56,6 +56,19 @@ module Floe
           array.include?(target)
         end
 
+        rule(:states_array_range => {:args => subtree(:args)}) do
+          args = Transformer.resolve_args(args())
+          raise ArgumentError, "wrong number of arguments to States.ArrayRange (given #{args.size}, expected 3)" unless args.size == 3
+
+          range_begin, range_end, increment = *args
+          raise ArgumentError, "wrong type for first argument to States.ArrayRange (given #{range_begin.class}, expected Integer)" unless range_begin.kind_of?(Integer)
+          raise ArgumentError, "wrong type for second argument to States.ArrayRange (given #{range_end.class}, expected Integer)" unless range_end.kind_of?(Integer)
+          raise ArgumentError, "wrong type for third argument to States.ArrayRange (given #{increment.class}, expected Integer)" unless increment.kind_of?(Integer)
+          raise ArgumentError, "invalid value for third argument to States.ArrayRange (given #{increment}, expected a non-zero Integer)" if increment.zero?
+
+          (range_begin..range_end).step(increment).to_a
+        end
+
         rule(:states_uuid => {:args => subtree(:args)}) do
           args = Transformer.resolve_args(args())
           raise ArgumentError, "wrong number of arguments to States.UUID (given #{args.size}, expected 0)" unless args.empty?

@@ -145,6 +145,82 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
     end
 
+    describe "States.ArrayRange" do
+      it "with a positive ascending range, incrementing" do
+        result = described_class.value("States.ArrayRange(1, 9, 2)")
+        expect(result).to eq([1, 3, 5, 7, 9])
+      end
+
+      it "with a spanning ascending range, incrementing" do
+        result = described_class.value("States.ArrayRange(-1, 9, 2)")
+        expect(result).to eq([-1, 1, 3, 5, 7, 9])
+      end
+
+      it "with a negative ascending range, incrementing" do
+        result = described_class.value("States.ArrayRange(-9, -1, 2)")
+        expect(result).to eq([-9, -7, -5, -3, -1])
+      end
+
+      it "with a postive descending range, decrementing" do
+        result = described_class.value("States.ArrayRange(9, 1, -2)")
+        expect(result).to eq([9, 7, 5, 3, 1])
+      end
+
+      it "with a spanning descending range, decrementing" do
+        result = described_class.value("States.ArrayRange(9, -1, -2)")
+        expect(result).to eq([9, 7, 5, 3, 1, -1])
+      end
+
+      it "with a negative descending range, decrementing" do
+        result = described_class.value("States.ArrayRange(-1, -9, -2)")
+        expect(result).to eq([-1, -3, -5, -7, -9])
+      end
+
+      it "with a positive ascending range, decrementing" do
+        result = described_class.value("States.ArrayRange(1, 9, -2)")
+        expect(result).to eq([])
+      end
+
+      it "with a negative ascending range, decrementing" do
+        result = described_class.value("States.ArrayRange(-9, -1, -2)")
+        expect(result).to eq([])
+      end
+
+      it "with a positive descending range, incrementing" do
+        result = described_class.value("States.ArrayRange(9, 1, 2)")
+        expect(result).to eq([])
+      end
+
+      it "with a negative descending range, incrementing" do
+        result = described_class.value("States.ArrayRange(-1, -9, 2)")
+        expect(result).to eq([])
+      end
+
+      it "with jsonpath for the range start, range end, and increment" do
+        result = described_class.value("States.ArrayRange($.start, $.end, $.increment)", {}, {"start" => 1, "end" => 9, "increment" => 2})
+        expect(result).to eq([1, 3, 5, 7, 9])
+      end
+
+      it "with an increment that doesn't land evenly" do
+        result = described_class.value("States.ArrayRange(1, 9, 3)")
+        expect(result).to eq([1, 4, 7])
+      end
+
+      it "fails with invalid args" do
+        expect { described_class.value("States.ArrayRange()") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayRange (given 0, expected 3)")
+        expect { described_class.value("States.ArrayRange(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayRange (given 1, expected 3)")
+        expect { described_class.value("States.ArrayRange(1, 9)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayRange (given 2, expected 3)")
+        expect { described_class.value("States.ArrayRange(1, 9, 2, 4)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayRange (given 4, expected 3)")
+
+        expect { described_class.value("States.ArrayRange('1', '9', '2')") }.to raise_error(ArgumentError, "wrong type for first argument to States.ArrayRange (given String, expected Integer)")
+        expect { described_class.value("States.ArrayRange('1', 9, 2)") }.to raise_error(ArgumentError, "wrong type for first argument to States.ArrayRange (given String, expected Integer)")
+        expect { described_class.value("States.ArrayRange(1, '9', 2)") }.to raise_error(ArgumentError, "wrong type for second argument to States.ArrayRange (given String, expected Integer)")
+        expect { described_class.value("States.ArrayRange(1, 9, '2')") }.to raise_error(ArgumentError, "wrong type for third argument to States.ArrayRange (given String, expected Integer)")
+
+        expect { described_class.value("States.ArrayRange(1, 9, 0)") }.to raise_error(ArgumentError, "invalid value for third argument to States.ArrayRange (given 0, expected a non-zero Integer)")
+      end
+    end
+
     describe "States.UUID" do
       it "returns a v4 UUID" do
         result = described_class.value("States.UUID()")
