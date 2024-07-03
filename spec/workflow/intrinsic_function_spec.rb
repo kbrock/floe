@@ -221,6 +221,45 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
     end
 
+    describe "States.ArrayGetItem" do
+      # NOTE: The stepfunctions simulator fails with States.Array() passed as a parameter, but we support it
+
+      it "with an index in range" do
+        result = described_class.value("States.ArrayGetItem(States.Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5)")
+        expect(result).to eq(6)
+      end
+
+      it "with an index out of range" do
+        result = described_class.value("States.ArrayGetItem(States.Array(1, 2, 3), 5)")
+        expect(result).to eq(nil)
+      end
+
+      it "with an empty array" do
+        result = described_class.value("States.ArrayGetItem(States.Array(), 5)")
+        expect(result).to eq(nil)
+      end
+
+      it "with jsonpath for the array" do
+        result = described_class.value("States.ArrayGetItem($.array, 5)", {}, {"array" => [1, 2, 3, 4, 5, 6, 7, 8, 9]})
+        expect(result).to eq(6)
+      end
+
+      it "with jsonpath for the array and index" do
+        result = described_class.value("States.ArrayGetItem($.array, $.index)", {}, {"array" => [1, 2, 3, 4, 5, 6, 7, 8, 9], "index" => 5})
+        expect(result).to eq(6)
+      end
+
+      it "fails with invalid args" do
+        expect { described_class.value("States.ArrayGetItem()") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayGetItem (given 0, expected 2)")
+        expect { described_class.value("States.ArrayGetItem(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayGetItem (given 1, expected 2)")
+        expect { described_class.value("States.ArrayGetItem(States.Array(), 1, 'foo')") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayGetItem (given 3, expected 2)")
+
+        expect { described_class.value("States.ArrayGetItem(States.Array(), '5')") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.ArrayGetItem (given String, expected Integer)")
+
+        expect { described_class.value("States.ArrayGetItem(States.Array(), -1)") }.to raise_error(ArgumentError, "invalid value for argument 2 to States.ArrayGetItem (given -1, expected 0 or a positive Integer)")
+      end
+    end
+
     describe "States.UUID" do
       it "returns a v4 UUID" do
         result = described_class.value("States.UUID()")

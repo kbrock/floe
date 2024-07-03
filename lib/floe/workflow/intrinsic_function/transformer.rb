@@ -71,6 +71,14 @@ module Floe
           (range_begin..range_end).step(increment).to_a
         end
 
+        rule(:states_array_get_item => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.ArrayGetItem", [Array, Integer])
+          array, index = *args
+          raise ArgumentError, "invalid value for argument 2 to States.ArrayGetItem (given #{index}, expected 0 or a positive Integer)" unless index >= 0
+
+          array[index]
+        end
+
         rule(:states_uuid => {:args => subtree(:args)}) do
           Transformer.process_args(args, "States.UUID", [])
 

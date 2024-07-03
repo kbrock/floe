@@ -56,6 +56,7 @@ module Floe
           :states_array_partition, "States.ArrayPartition",
           :states_array_contains,  "States.ArrayContains",
           :states_array_range,     "States.ArrayRange",
+          :states_array_get_item,  "States.ArrayGetItem",
           :states_uuid,            "States.UUID",
         ].each_slice(2) do |function_symbol, function_name|
           rule(function_symbol) do
@@ -70,6 +71,7 @@ module Floe
             states_array_partition |
             states_array_contains |
             states_array_range |
+            states_array_get_item |
             states_uuid
         end
 
