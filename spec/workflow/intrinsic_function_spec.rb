@@ -90,11 +90,11 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect { described_class.value("States.ArrayPartition(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayPartition (given 1, expected 2)")
         expect { described_class.value("States.ArrayPartition(States.Array(), 1, 'foo')") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayPartition (given 3, expected 2)")
 
-        expect { described_class.value("States.ArrayPartition(1, 4)") }.to raise_error(ArgumentError, "wrong type for first argument to States.ArrayPartition (given Integer, expected Array)")
-        expect { described_class.value("States.ArrayPartition(States.Array(), 'foo')") }.to raise_error(ArgumentError, "wrong type for second argument to States.ArrayPartition (given String, expected Integer)")
+        expect { described_class.value("States.ArrayPartition(1, 4)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.ArrayPartition (given Integer, expected Array)")
+        expect { described_class.value("States.ArrayPartition(States.Array(), 'foo')") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.ArrayPartition (given String, expected Integer)")
 
-        expect { described_class.value("States.ArrayPartition(States.Array(), -1)") }.to raise_error(ArgumentError, "invalid value for second argument to States.ArrayPartition (given -1, expected a positive Integer)")
-        expect { described_class.value("States.ArrayPartition(States.Array(), 0)") }.to raise_error(ArgumentError, "invalid value for second argument to States.ArrayPartition (given 0, expected a positive Integer)")
+        expect { described_class.value("States.ArrayPartition(States.Array(), -1)") }.to raise_error(ArgumentError, "invalid value for argument 2 to States.ArrayPartition (given -1, expected a positive Integer)")
+        expect { described_class.value("States.ArrayPartition(States.Array(), 0)") }.to raise_error(ArgumentError, "invalid value for argument 2 to States.ArrayPartition (given 0, expected a positive Integer)")
       end
     end
 
@@ -141,7 +141,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect { described_class.value("States.ArrayContains(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayContains (given 1, expected 2)")
         expect { described_class.value("States.ArrayContains(States.Array(), 1, 'foo')") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayContains (given 3, expected 2)")
 
-        expect { described_class.value("States.ArrayContains(1, 5)") }.to raise_error(ArgumentError, "wrong type for first argument to States.ArrayContains (given Integer, expected Array)")
+        expect { described_class.value("States.ArrayContains(1, 5)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.ArrayContains (given Integer, expected Array)")
       end
     end
 
@@ -212,12 +212,12 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect { described_class.value("States.ArrayRange(1, 9)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayRange (given 2, expected 3)")
         expect { described_class.value("States.ArrayRange(1, 9, 2, 4)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayRange (given 4, expected 3)")
 
-        expect { described_class.value("States.ArrayRange('1', '9', '2')") }.to raise_error(ArgumentError, "wrong type for first argument to States.ArrayRange (given String, expected Integer)")
-        expect { described_class.value("States.ArrayRange('1', 9, 2)") }.to raise_error(ArgumentError, "wrong type for first argument to States.ArrayRange (given String, expected Integer)")
-        expect { described_class.value("States.ArrayRange(1, '9', 2)") }.to raise_error(ArgumentError, "wrong type for second argument to States.ArrayRange (given String, expected Integer)")
-        expect { described_class.value("States.ArrayRange(1, 9, '2')") }.to raise_error(ArgumentError, "wrong type for third argument to States.ArrayRange (given String, expected Integer)")
+        expect { described_class.value("States.ArrayRange('1', '9', '2')") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.ArrayRange (given String, expected Integer)")
+        expect { described_class.value("States.ArrayRange('1', 9, 2)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.ArrayRange (given String, expected Integer)")
+        expect { described_class.value("States.ArrayRange(1, '9', 2)") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.ArrayRange (given String, expected Integer)")
+        expect { described_class.value("States.ArrayRange(1, 9, '2')") }.to raise_error(ArgumentError, "wrong type for argument 3 to States.ArrayRange (given String, expected Integer)")
 
-        expect { described_class.value("States.ArrayRange(1, 9, 0)") }.to raise_error(ArgumentError, "invalid value for third argument to States.ArrayRange (given 0, expected a non-zero Integer)")
+        expect { described_class.value("States.ArrayRange(1, 9, 0)") }.to raise_error(ArgumentError, "invalid value for argument 3 to States.ArrayRange (given 0, expected a non-zero Integer)")
       end
     end
 

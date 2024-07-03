@@ -9,17 +9,31 @@ module Floe
   class Workflow
     class IntrinsicFunction
       class Transformer < Parslet::Transform
-        def self.resolve_args(args)
-          if args.nil?
-            # 0 args
-            []
-          elsif args.kind_of?(Array)
-            # >1 arg
-            args.map { |a| a[:arg] }
-          else
-            # 1 arg
-            [args[:arg]]
+        def self.process_args(args, function, signature = nil)
+          # Force args into an array
+          args =
+            if args.nil?
+              # 0 args
+              []
+            elsif args.kind_of?(Array)
+              # >1 arg
+              args.map { |a| a[:arg] }
+            else
+              # 1 arg
+              [args[:arg]]
+            end
+
+          if signature
+            # Check arity
+            raise ArgumentError, "wrong number of arguments to #{function} (given #{args.size}, expected #{signature.size})" unless args.size == signature.size
+
+            # Check types
+            args.zip(signature).each_with_index do |(arg, type), index|
+              raise ArgumentError, "wrong type for argument #{index + 1} to #{function} (given #{arg.class}, expected #{type})" unless arg.kind_of?(type)
+            end
           end
+
+          args
         end
 
         rule(:null_literal  => simple(:v)) { nil }
@@ -31,47 +45,34 @@ module Floe
         rule(:jsonpath => simple(:v)) { Floe::Workflow::Path.value(v.to_s, context, input) }
 
         rule(:states_array => {:args => subtree(:args)}) do
-          Transformer.resolve_args(args)
+          Transformer.process_args(args, "States.Array")
         end
 
         rule(:states_array_partition => {:args => subtree(:args)}) do
-          args = Transformer.resolve_args(args())
-          raise ArgumentError, "wrong number of arguments to States.ArrayPartition (given #{args.size}, expected 2)" unless args.size == 2
-
+          args = Transformer.process_args(args(), "States.ArrayPartition", [Array, Integer])
           array, chunk = *args
-          raise ArgumentError, "wrong type for first argument to States.ArrayPartition (given #{array.class}, expected Array)" unless array.kind_of?(Array)
-          raise ArgumentError, "wrong type for second argument to States.ArrayPartition (given #{chunk.class}, expected Integer)" unless chunk.kind_of?(Integer)
-          raise ArgumentError, "invalid value for second argument to States.ArrayPartition (given #{chunk}, expected a positive Integer)" unless chunk.positive?
+          raise ArgumentError, "invalid value for argument 2 to States.ArrayPartition (given #{chunk}, expected a positive Integer)" unless chunk.positive?
 
           array.each_slice(chunk).to_a
         end
 
         rule(:states_array_contains => {:args => subtree(:args)}) do
-          args = Transformer.resolve_args(args())
-          raise ArgumentError, "wrong number of arguments to States.ArrayContains (given #{args.size}, expected 2)" unless args.size == 2
-
+          args = Transformer.process_args(args(), "States.ArrayContains", [Array, Object])
           array, target = *args
-          raise ArgumentError, "wrong type for first argument to States.ArrayContains (given #{array.class}, expected Array)" unless array.kind_of?(Array)
 
           array.include?(target)
         end
 
         rule(:states_array_range => {:args => subtree(:args)}) do
-          args = Transformer.resolve_args(args())
-          raise ArgumentError, "wrong number of arguments to States.ArrayRange (given #{args.size}, expected 3)" unless args.size == 3
-
+          args = Transformer.process_args(args(), "States.ArrayRange", [Integer, Integer, Integer])
           range_begin, range_end, increment = *args
-          raise ArgumentError, "wrong type for first argument to States.ArrayRange (given #{range_begin.class}, expected Integer)" unless range_begin.kind_of?(Integer)
-          raise ArgumentError, "wrong type for second argument to States.ArrayRange (given #{range_end.class}, expected Integer)" unless range_end.kind_of?(Integer)
-          raise ArgumentError, "wrong type for third argument to States.ArrayRange (given #{increment.class}, expected Integer)" unless increment.kind_of?(Integer)
-          raise ArgumentError, "invalid value for third argument to States.ArrayRange (given #{increment}, expected a non-zero Integer)" if increment.zero?
+          raise ArgumentError, "invalid value for argument 3 to States.ArrayRange (given #{increment}, expected a non-zero Integer)" if increment.zero?
 
           (range_begin..range_end).step(increment).to_a
         end
 
         rule(:states_uuid => {:args => subtree(:args)}) do
-          args = Transformer.resolve_args(args())
-          raise ArgumentError, "wrong number of arguments to States.UUID (given #{args.size}, expected 0)" unless args.empty?
+          Transformer.process_args(args, "States.UUID", [])
 
           SecureRandom.uuid
         end
