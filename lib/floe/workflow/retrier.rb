@@ -5,10 +5,11 @@ module Floe
     class Retrier
       include Floe::Workflow::ErrorMatcherMixin
 
-      attr_reader :error_equals, :interval_seconds, :max_attempts, :backoff_rate
+      attr_reader :error_equals, :interval_seconds, :max_attempts, :backoff_rate, :name
 
-      def initialize(payload)
-        @payload = payload
+      def initialize(_workflow, name, payload)
+        @name             = name
+        @payload          = payload
 
         @error_equals     = payload["ErrorEquals"]
         @interval_seconds = payload["IntervalSeconds"] || 1.0

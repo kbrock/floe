@@ -100,14 +100,16 @@ module Floe
       raise Floe::InvalidWorkflowError, "Missing field \"StartAt\"" if payload["StartAt"].nil?
       raise Floe::InvalidWorkflowError, "\"StartAt\" not in the \"States\" field" unless payload["States"].key?(payload["StartAt"])
 
-      @name        = name
+      @name        = name || "State Machine"
       @payload     = payload
       @context     = context
       @comment     = payload["Comment"]
       @start_at    = payload["StartAt"]
 
-      @states         = payload["States"].to_a.map { |state_name, state| State.build!(self, state_name, state) }
-      @states_by_name = @states.each_with_object({}) { |state, result| result[state.name] = state }
+      # NOTE: Everywhere else we include our name (i.e.: parent name) when building the child name.
+      #       When creating the states, we are dropping our name (i.e.: the workflow name)
+      @states         = payload["States"].to_a.map { |state_name, state| State.build!(self, ["States", state_name], state) }
+      @states_by_name = @states.each_with_object({}) { |state, result| result[state.short_name] = state }
     rescue Floe::InvalidWorkflowError
       raise
     rescue => err
@@ -187,6 +189,7 @@ module Floe
     def credentials
       @context.credentials
     end
+
     private
 
     def step!

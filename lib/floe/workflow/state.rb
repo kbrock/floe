@@ -8,7 +8,7 @@ module Floe
       class << self
         def build!(workflow, name, payload)
           state_type = payload["Type"]
-          raise Floe::InvalidWorkflowError, "Missing \"Type\" field in state [#{name}]" if payload["Type"].nil?
+          raise Floe::InvalidWorkflowError, "Missing \"Type\" field in state [#{name.last}]" if payload["Type"].nil?
 
           begin
             klass = Floe::Workflow::States.const_get(state_type)
@@ -22,14 +22,14 @@ module Floe
 
       attr_reader :comment, :name, :type, :payload
 
-      def initialize(workflow, name, payload)
+      def initialize(_workflow, name, payload)
         @name     = name
         @payload  = payload
         @type     = payload["Type"]
         @comment  = payload["Comment"]
 
-        raise Floe::InvalidWorkflowError, "Missing \"Type\" field in state [#{name}]" if payload["Type"].nil?
-        raise Floe::InvalidWorkflowError, "State name [#{name[..79]}...] must be less than or equal to 80 characters" if name.length > 80
+        raise Floe::InvalidWorkflowError, "Missing \"Type\" field in state [#{short_name}]" if payload["Type"].nil?
+        raise Floe::InvalidWorkflowError, "State name [#{short_name[..79]}...] must be less than or equal to 80 characters" if short_name.length > 80
       end
 
       def wait(context, timeout: nil)
@@ -86,8 +86,12 @@ module Floe
         context.state["WaitUntil"] && Time.parse(context.state["WaitUntil"])
       end
 
+      def short_name
+        name.last
+      end
+
       def long_name
-        "#{@type}:#{name}"
+        "#{type}:#{short_name}"
       end
 
       private

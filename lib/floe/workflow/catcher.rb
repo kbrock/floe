@@ -5,10 +5,11 @@ module Floe
     class Catcher
       include Floe::Workflow::ErrorMatcherMixin
 
-      attr_reader :error_equals, :next, :result_path
+      attr_reader :error_equals, :next, :result_path, :name
 
-      def initialize(payload)
-        @payload = payload
+      def initialize(_workflow, name, payload)
+        @name         = name
+        @payload      = payload
 
         @error_equals = payload["ErrorEquals"]
         @next         = payload["Next"]

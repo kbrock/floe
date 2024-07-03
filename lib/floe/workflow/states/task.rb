@@ -20,8 +20,8 @@ module Floe
           @resource          = payload["Resource"]
           @runner            = Floe::Runner.for_resource(@resource)
           @timeout_seconds   = payload["TimeoutSeconds"]
-          @retry             = payload["Retry"].to_a.map { |retrier| Retrier.new(retrier) }
-          @catch             = payload["Catch"].to_a.map { |catcher| Catcher.new(catcher) }
+          @retry             = payload["Retry"].to_a.map.with_index { |retrier, i| Retrier.new(workflow, name + ["Retry", i.to_s], retrier) }
+          @catch             = payload["Catch"].to_a.map.with_index { |catcher, i| Catcher.new(workflow, name + ["Catch", i.to_s], catcher) }
           @input_path        = Path.new(payload.fetch("InputPath", "$"))
           @output_path       = Path.new(payload.fetch("OutputPath", "$"))
           @result_path       = ReferencePath.new(payload.fetch("ResultPath", "$"))

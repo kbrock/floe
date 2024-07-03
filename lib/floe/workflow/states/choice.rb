@@ -11,7 +11,7 @@ module Floe
 
           validate_state!(workflow)
 
-          @choices = payload["Choices"].map { |choice| ChoiceRule.build(choice) }
+          @choices = payload["Choices"].map.with_index { |choice, i| ChoiceRule.build(workflow, name + ["Choices", i.to_s], choice) }
           @default = payload["Default"]
 
           @input_path  = Path.new(payload.fetch("InputPath", "$"))
