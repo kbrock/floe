@@ -2,6 +2,23 @@ RSpec.describe Floe::Workflow::States::Task do
   let(:input)    { {"foo" => {"bar" => "baz"}, "bar" => {"baz" => "foo"}} }
   let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
   let(:resource) { "docker://hello-world:latest" }
+  let(:workflow) { make_workflow(ctx, payload) }
+
+  describe "#initialize" do
+    context "with missing resource" do
+      let(:payload) { {"FirstState" => {"Type" => "Task", "End" => true}} }
+      it do
+        expect { workflow }.to raise_error(Floe::InvalidWorkflowError, "States.FirstState does not have required field \"Resource\"")
+      end
+    end
+
+    context "with invalid resource scheme" do
+      let(:payload) { {"FirstState" => {"Type" => "Task", "Resource" => "invalid://foo", "End" => true}} }
+      it do
+        expect { workflow }.to raise_error(Floe::InvalidWorkflowError, "States.FirstState field \"Resource\" value \"invalid://foo\" Invalid resource scheme [invalid]")
+      end
+    end
+  end
 
   describe "#run_async!" do
     let(:mock_runner) { double("Floe::Runner") }

@@ -2,50 +2,45 @@ RSpec.describe Floe::Workflow::States::Choice do
   let(:input)    { {} }
   let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
   let(:state)    { workflow.start_workflow.current_state }
-  let(:workflow) do
-    make_workflow(
-      ctx, {
-        "ChoiceState"      => {
-          "Type"    => "Choice",
-          "Choices" => [
-            {
-              "Variable"      => "$.foo",
-              "NumericEquals" => 1,
-              "Next"          => "FirstMatchState"
-            },
-            {
-              "Variable"      => "$.foo",
-              "NumericEquals" => 2,
-              "Next"          => "SecondMatchState"
-            },
-          ],
-          "Default" => "DefaultState"
-        },
-        "FirstMatchState"  => {"Type" => "Succeed"},
-        "SecondMatchState" => {"Type" => "Succeed"},
-        "DefaultState"     => {"Type" => "Succeed"}
-      }
-    )
+  let(:workflow) { make_workflow(ctx, payload) }
+  let(:choices) do
+    [
+      {"Variable" => "$.foo", "NumericEquals" => 1, "Next" => "FirstMatchState"},
+      {"Variable" => "$.foo", "NumericEquals" => 2, "Next" => "SecondMatchState"},
+    ]
   end
 
-  it "raises an exception if Choices is missing" do
-    payload = {"Choice1" => {"Type" => "Choice", "Default" => "DefaultState"}, "DefaultState" => {"type" => "Succeed"}}
-    expect { make_workflow(ctx, payload) }.to raise_error(Floe::InvalidWorkflowError, "Choice state must have \"Choices\"")
+  let(:payload) do
+    {
+      "Choice1"          => {
+        "Type"    => "Choice",
+        "Choices" => choices,
+        "Default" => "DefaultState"
+      },
+      "FirstMatchState"  => {"Type" => "Succeed"},
+      "SecondMatchState" => {"Type" => "Succeed"},
+      "DefaultState"     => {"Type" => "Succeed"}
+    }
   end
 
-  it "raises an exception if Choices is not an array" do
-    payload = {"Choice1" => {"Type" => "Choice", "Choices" => {}, "Default" => "DefaultState"}, "DefaultState" => {"type" => "Succeed"}}
-    expect { make_workflow(ctx, payload) }.to raise_error(Floe::InvalidWorkflowError, "\"Choices\" must be a non-empty array")
+  context "with missing Choices" do
+    let(:payload) { {"Choice1" => {"Type" => "Choice", "Default" => "DefaultState"}, "DefaultState" => {"type" => "Succeed"}} }
+    it { expect { workflow }.to raise_error(Floe::InvalidWorkflowError, "States.Choice1 does not have required field \"Choices\"") }
   end
 
-  it "raises an exception if Choices is an empty array" do
-    payload = {"Choice1" => {"Type" => "Choice", "Choices" => [], "Default" => "DefaultState"}, "DefaultState" => {"type" => "Succeed"}}
-    expect { make_workflow(ctx, payload) }.to raise_error(Floe::InvalidWorkflowError, "\"Choices\" must be a non-empty array")
+  context "with non-array Choices" do
+    let(:choices) { {} }
+    it { expect { workflow }.to raise_error(Floe::InvalidWorkflowError, "States.Choice1 field \"Choices\" must be a non-empty array") }
   end
 
-  it "raises an exception if Default isn't a valid state" do
-    payload = {"Choice1" => {"Type" => "Choice", "Choices" => [{"Variable" => "$.foo", "NumericEquals" => 1, "Next" => "FirstMatchState"}], "Default" => "MissingState"}, "FirstMatchState" => {"Type" => "Success"}}
-    expect { make_workflow(ctx, payload) }.to raise_error(Floe::InvalidWorkflowError, "\"Default\" not in \"States\"")
+  context "with an empty Choices array" do
+    let(:choices) { [] }
+    it { expect { workflow }.to raise_error(Floe::InvalidWorkflowError, "States.Choice1 field \"Choices\" must be a non-empty array") }
+  end
+
+  context "with an invalid Default" do
+    let(:payload) { {"Choice1" => {"Type" => "Choice", "Choices" => choices, "Default" => "MissingState"}, "FirstMatchState" => {"Type" => "Succeed"}, "SecondMatchState" => {"Type" => "Succeed"}} }
+    it { expect { workflow }.to raise_error(Floe::InvalidWorkflowError, "States.Choice1 field \"Default\" value \"MissingState\" is not found in \"States\"") }
   end
 
   it "#end?" do

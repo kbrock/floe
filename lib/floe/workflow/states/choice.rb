@@ -11,7 +11,7 @@ module Floe
 
           validate_state!(workflow)
 
-          @choices = payload["Choices"].map { |choice| ChoiceRule.build(choice) }
+          @choices = payload["Choices"].map.with_index { |choice, i| ChoiceRule.build(workflow, name + ["Choices", i.to_s], choice) }
           @default = payload["Default"]
 
           @input_path  = Path.new(payload.fetch("InputPath", "$"))
@@ -44,12 +44,12 @@ module Floe
         end
 
         def validate_state_choices!
-          raise Floe::InvalidWorkflowError, "Choice state must have \"Choices\"" unless payload.key?("Choices")
-          raise Floe::InvalidWorkflowError, "\"Choices\" must be a non-empty array" unless payload["Choices"].kind_of?(Array) && !payload["Choices"].empty?
+          missing_field_error!("Choices") unless payload.key?("Choices")
+          invalid_field_error!("Choices", nil, "must be a non-empty array") unless payload["Choices"].kind_of?(Array) && !payload["Choices"].empty?
         end
 
         def validate_state_default!(workflow)
-          raise Floe::InvalidWorkflowError, "\"Default\" not in \"States\"" unless workflow.payload["States"].include?(payload["Default"])
+          invalid_field_error!("Default", payload["Default"], "is not found in \"States\"") if payload["Default"] && !workflow_state?(payload["Default"], workflow)
         end
       end
     end

@@ -19,51 +19,31 @@ RSpec.describe Floe::Workflow do
     it "raises an exception for missing States" do
       payload = {"StartAt" => "Nothing"}
 
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Missing field \"States\"")
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "State Machine does not have required field \"States\"")
     end
 
     it "raises an exception for invalid States" do
       payload = make_payload({"FirstState" => {"Type" => "Invalid"}})
 
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Invalid state type: [Invalid]")
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "States.FirstState field \"Type\" value \"Invalid\" is not valid")
     end
 
     it "raises an exception for missing StartAt" do
       payload = {"States" => {"FirstState" => {"Type" => "Succeed"}}}
 
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Missing field \"StartAt\"")
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "State Machine does not have required field \"StartAt\"")
     end
 
     it "raises an exception for StartAt not in States" do
       payload = {"StartAt" => "Foo", "States" => {"FirstState" => {"Type" => "Succeed"}}}
 
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "\"StartAt\" not in the \"States\" field")
-    end
-
-    it "raises an exception for a State missing a Type field" do
-      payload = make_payload({"FirstState" => {}})
-
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Missing \"Type\" field in state [FirstState]")
-    end
-
-    it "raises an exception for an invalid State name" do
-      state_name = "a" * 81
-      truncated_state_name = "#{"a" * 80}..."
-      payload = make_payload({state_name => {"Type" => "Succeed"}})
-
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "State name [#{truncated_state_name}] must be less than or equal to 80 characters")
+      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "State Machine field \"StartAt\" value \"Foo\" is not found in \"States\"")
     end
 
     it "raises an exception for invalid context" do
       payload = make_payload({"FirstState" => {"Type" => "Success"}})
 
       expect { described_class.new(payload, "invalid context") }.to raise_error(Floe::InvalidWorkflowError, "unexpected token at 'invalid context'")
-    end
-
-    it "raises an exception for invalid resource scheme in a Task state" do
-      payload = make_payload({"FirstState" => {"Type" => "Task", "Resource" => "invalid://foo", "End" => true}})
-
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "Invalid resource scheme [invalid]")
     end
   end
 

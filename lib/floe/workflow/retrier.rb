@@ -3,18 +3,21 @@
 module Floe
   class Workflow
     class Retrier
-      include Floe::Workflow::ErrorMatcherMixin
+      include ErrorMatcherMixin
+      include ValidationMixin
 
-      attr_reader :error_equals, :interval_seconds, :max_attempts, :backoff_rate
+      attr_reader :error_equals, :interval_seconds, :max_attempts, :backoff_rate, :name
 
-      def initialize(payload)
-        @payload = payload
+      def initialize(_workflow, name, payload)
+        @name             = name
+        @payload          = payload
 
         @error_equals     = payload["ErrorEquals"]
         @interval_seconds = payload["IntervalSeconds"] || 1.0
         @max_attempts     = payload["MaxAttempts"] || 3
         @backoff_rate     = payload["BackoffRate"] || 2.0
-        raise Floe::InvalidWorkflowError, "State requires ErrorEquals" if !@error_equals.kind_of?(Array) || @error_equals.empty?
+
+        missing_field_error!("ErrorEquals") if !@error_equals.kind_of?(Array) || @error_equals.empty?
       end
 
       # @param [Integer] attempt 1 for the first attempt
