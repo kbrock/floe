@@ -58,6 +58,7 @@ module Floe
           :states_array_range,     "States.ArrayRange",
           :states_array_get_item,  "States.ArrayGetItem",
           :states_array_length,    "States.ArrayLength",
+          :states_array_unique,    "States.ArrayUnique",
           :states_uuid,            "States.UUID",
         ].each_slice(2) do |function_symbol, function_name|
           rule(function_symbol) do
@@ -74,6 +75,7 @@ module Floe
             states_array_range |
             states_array_get_item |
             states_array_length |
+            states_array_unique |
             states_uuid
         end
 

@@ -86,6 +86,13 @@ module Floe
           array.size
         end
 
+        rule(:states_array_unique => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.ArrayUnique", [Array])
+          array = args.first
+
+          array.uniq
+        end
+
         rule(:states_uuid => {:args => subtree(:args)}) do
           Transformer.process_args(args, "States.UUID", [])
 

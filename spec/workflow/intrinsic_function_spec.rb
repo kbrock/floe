@@ -286,6 +286,32 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
     end
 
+    describe "States.ArrayUnique" do
+      # NOTE: The stepfunctions simulator fails with States.Array() passed as a parameter, but we support it
+
+      it "with an array" do
+        result = described_class.value("States.ArrayUnique(States.Array(1, 2, 3, 3, 3, 3, 3, 3, 4))")
+        expect(result).to eq([1, 2, 3, 4])
+      end
+
+      it "with an empty array" do
+        result = described_class.value("States.ArrayUnique(States.Array())")
+        expect(result).to eq([])
+      end
+
+      it "with jsonpath for the array" do
+        result = described_class.value("States.ArrayUnique($.array)", {}, {"array" => [1, 2, 3, 3, 3, 3, 3, 3, 4]})
+        expect(result).to eq([1, 2, 3, 4])
+      end
+
+      it "fails with invalid args" do
+        expect { described_class.value("States.ArrayUnique()") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayUnique (given 0, expected 1)")
+        expect { described_class.value("States.ArrayUnique(States.Array(), 1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayUnique (given 2, expected 1)")
+
+        expect { described_class.value("States.ArrayUnique(1)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.ArrayUnique (given Integer, expected Array)")
+      end
+    end
+
     describe "States.UUID" do
       it "returns a v4 UUID" do
         result = described_class.value("States.UUID()")

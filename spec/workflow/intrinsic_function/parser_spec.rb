@@ -321,6 +321,23 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     end
   end
 
+  describe "states_array_unique" do
+    subject { described_class.new.states_array_unique }
+
+    it do
+      expect(subject).to parse("States.ArrayUnique(States.Array(1, 2, 3, 3, 3, 3, 3, 3, 4))")
+      expect(subject).to parse("States.ArrayUnique(States.Array())")
+      expect(subject).to parse("States.ArrayUnique($.array)")
+
+      # Parser will properly parse, but will fail later at transform time due to incorrect args
+      expect(subject).to parse("States.ArrayUnique()")
+      expect(subject).to parse("States.ArrayUnique(1)")
+      expect(subject).to parse("States.ArrayUnique(States.Array(), 1)")
+
+      expect(subject).to_not parse("States.ArrayUnique")
+    end
+  end
+
   describe "states_uuid" do
     subject { described_class.new.states_uuid }
 
