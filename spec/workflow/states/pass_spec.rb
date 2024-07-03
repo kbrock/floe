@@ -3,7 +3,7 @@ RSpec.describe Floe::Workflow::States::Pass do
   let(:ctx)      { Floe::Workflow::Context.new(:input => input) }
   let(:state)    { workflow.start_workflow.current_state }
   let(:workflow) { make_workflow(ctx, payload) }
-  let(:payload)  do
+  let(:payload) do
     {
       "PassState"    => {
         "Type"       => "Pass",
@@ -16,6 +16,76 @@ RSpec.describe Floe::Workflow::States::Pass do
       },
       "SuccessState" => {"Type" => "Succeed"}
     }
+  end
+
+  describe "#initialize" do
+    context "without no Next nor End" do
+      let(:payload)  do
+        {
+          "PassState" => {
+            "Type" => "Pass"
+          }
+        }
+      end
+
+      it { expect { workflow }.to raise_error(Floe::InvalidWorkflowError, "States.PassState does not have required field \"Next\"") }
+    end
+
+    context "With a valid Next" do
+      let(:payload) do
+        {
+          "PassState"    => {
+            "Type" => "Pass",
+            "Next" => "SuccessState"
+          },
+          "SuccessState" => {"Type" => "Succeed"}
+        }
+      end
+
+      it { expect(workflow.states.first).not_to be_end }
+    end
+
+    context "With an unknown Next" do
+      let(:payload) do
+        {
+          "PassState" => {
+            "Type" => "Pass",
+            "Next" => "MissingState"
+          }
+        }
+      end
+
+      it { expect { workflow }.to raise_error(Floe::InvalidWorkflowError, "States.PassState field \"Next\" value \"MissingState\" is not found in \"States\"") }
+    end
+
+    context "With an End" do
+      let(:payload) do
+        {
+          "PassState" => {
+            "Type" => "Pass",
+            "End"  => true
+          }
+        }
+      end
+
+      it { expect(workflow.states.first).to be_end }
+    end
+
+    # TODO: implement check for Next and End
+    # context "With both Next and End" do
+    #   let(:payload) do
+    #     {
+    #       "PassState"    => {
+    #         "Type" => "Pass",
+    #         "Next" => "SuccessState",
+    #         "End"  => true
+    #       },
+    #       "SuccessState" => {"Type" => "Succeed"}
+    #     }
+    #   end
+
+    #   it { expect { workflow }.to raise_error(Floe::InvalidWorkflowError, "States.PassState error") }
+    # end
   end
 
   describe "#end?" do

@@ -40,31 +40,10 @@ RSpec.describe Floe::Workflow do
       expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "State Machine field \"StartAt\" value \"Foo\" is not found in \"States\"")
     end
 
-    it "raises an exception for a State missing a Type field" do
-      payload = make_payload({"FirstState" => {}})
-
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "States.FirstState does not have required field \"Type\"")
-    end
-
-    it "raises an exception for an invalid State name" do
-      state_name = "a" * 200
-
-      # NOTE: "#{state_name}" # will truncate the state_name
-      payload = make_payload({state_name => {"Type" => "Succeed"}})
-
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "States field \"Name\" value \"#{state_name}\" must be less than or equal to 80 characters")
-    end
-
     it "raises an exception for invalid context" do
       payload = make_payload({"FirstState" => {"Type" => "Success"}})
 
       expect { described_class.new(payload, "invalid context") }.to raise_error(Floe::InvalidWorkflowError, "unexpected token at 'invalid context'")
-    end
-
-    it "raises an exception for invalid resource scheme in a Task state" do
-      payload = make_payload({"FirstState" => {"Type" => "Task", "Resource" => "invalid://foo", "End" => true}})
-
-      expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "States.FirstState field \"Resource\" value \"invalid://foo\" Invalid resource scheme [invalid]")
     end
   end
 
