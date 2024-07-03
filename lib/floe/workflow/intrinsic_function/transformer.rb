@@ -30,9 +30,16 @@ module Floe
         rule(:number   => simple(:v)) { v.match(/[eE.]/) ? Float(v) : Integer(v) }
         rule(:jsonpath => simple(:v)) { Floe::Workflow::Path.value(v.to_s, context, input) }
 
-        rule(:states_array => {:args => subtree(:args)}) { Transformer.resolve_args(args) }
+        rule(:states_array => {:args => subtree(:args)}) do
+          Transformer.resolve_args(args)
+        end
 
-        rule(:states_uuid  => subtree(:args)) { SecureRandom.uuid }
+        rule(:states_uuid => {:args => subtree(:args)}) do
+          args = Transformer.resolve_args(args())
+          raise ArgumentError, "wrong number of arguments to States.UUID (given #{args.size}, expected 0)" unless args.empty?
+
+          SecureRandom.uuid
+        end
       end
     end
   end

@@ -51,14 +51,15 @@ module Floe
           ).maybe.as(:args)
         end
 
-        rule(:states_array) do
-          (
-            str("States.Array") >> str('(') >> args >> str(')')
-          ).as(:states_array)
-        end
-
-        rule(:states_uuid) do
-          str("States.UUID()").as(:states_uuid)
+        [
+          :states_array, "States.Array",
+          :states_uuid,  "States.UUID",
+        ].each_slice(2) do |function_symbol, function_name|
+          rule(function_symbol) do
+            (
+              str(function_name) >> str('(') >> args >> str(')')
+            ).as(function_symbol)
+          end
         end
 
         rule(:expression) { states_array | states_uuid }

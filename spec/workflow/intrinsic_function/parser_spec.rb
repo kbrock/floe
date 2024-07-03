@@ -198,13 +198,15 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     subject { described_class.new.states_array }
 
     it do
-      expect(subject).to parse(%q|States.Array()|)
+      expect(subject).to parse("States.Array()")
       expect(subject).to parse(%q|States.Array('str')|)
       expect(subject).to parse(%q|States.Array('str', 123)|)
       expect(subject).to parse(%q|States.Array('str', 123, true, false, null, $.input)|)
       expect(subject).to parse(%q|States.Array('str',   123,true)|)
-      expect(subject).to parse(%q|States.Array(null)|)
-      expect(subject).to parse(%q|States.Array(States.Array())|)
+      expect(subject).to parse("States.Array(null)")
+      expect(subject).to parse("States.Array(States.Array())")
+
+      expect(subject).to_not parse("States.Array")
     end
   end
 
@@ -214,8 +216,10 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     it do
       expect(subject).to parse("States.UUID()")
 
+      # Parser will properly parse, but will fail later at transform time due to incorrect args
+      expect(subject).to parse("States.UUID(1)")
+
       expect(subject).to_not parse("States.UUID")
-      expect(subject).to_not parse("States.UUID(1)")
     end
   end
 end

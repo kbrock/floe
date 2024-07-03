@@ -69,6 +69,12 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         uuid_version = match[1].to_i(16) >> 12
         expect(uuid_version).to eq(4)
       end
+
+      it "fails with invalid args" do
+        expect { described_class.value("States.UUID(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.UUID (given 1, expected 0)")
+        expect { described_class.value("States.UUID(null)") }.to raise_error(ArgumentError, "wrong number of arguments to States.UUID (given 1, expected 0)")
+        expect { described_class.value("States.UUID(1, 2)") }.to raise_error(ArgumentError, "wrong number of arguments to States.UUID (given 2, expected 0)")
+      end
     end
 
     describe "with jsonpath args" do
