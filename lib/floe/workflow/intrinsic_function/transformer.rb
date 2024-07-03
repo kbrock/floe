@@ -79,6 +79,13 @@ module Floe
           array[index]
         end
 
+        rule(:states_array_length => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.ArrayLength", [Array])
+          array = args.first
+
+          array.size
+        end
+
         rule(:states_uuid => {:args => subtree(:args)}) do
           Transformer.process_args(args, "States.UUID", [])
 
