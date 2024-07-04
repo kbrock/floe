@@ -317,6 +317,30 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
     end
 
+    describe "States.Base64Encode" do
+      it "with a string" do
+        result = described_class.value("States.Base64Encode('Data to encode')")
+        expect(result).to eq("RGF0YSB0byBlbmNvZGU=")
+      end
+
+      it "with an empty string" do
+        result = described_class.value("States.Base64Encode('')")
+        expect(result).to eq("")
+      end
+
+      it "with json path as the string" do
+        result = described_class.value("States.Base64Encode($.str)", {}, {"str" => "Data to encode"})
+        expect(result).to eq("RGF0YSB0byBlbmNvZGU=")
+      end
+
+      it "fails with invalid args" do
+        expect { described_class.value("States.Base64Encode()") }.to raise_error(ArgumentError, "wrong number of arguments to States.Base64Encode (given 0, expected 1)")
+        expect { described_class.value("States.Base64Encode('str', 1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.Base64Encode (given 2, expected 1)")
+
+        expect { described_class.value("States.Base64Encode(1)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.Base64Encode (given Integer, expected String)")
+      end
+    end
+
     describe "States.UUID" do
       it "returns a v4 UUID" do
         result = described_class.value("States.UUID()")
@@ -369,15 +393,15 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
 
     describe "with parsing errors" do
       it "does not parse missing parens" do
-        expect { described_class.value("States.Array") }.to raise_error(Floe::InvalidWorkflowError, /Expected one of \[[A-Z_, ]+\] at line 1 char 1./)
+        expect { described_class.value("States.Array") }.to raise_error(Floe::InvalidWorkflowError, /Expected one of \[[A-Z0-9_, ]+\] at line 1 char 1./)
       end
 
       it "does not parse missing closing paren" do
-        expect { described_class.value("States.Array(1, ") }.to raise_error(Floe::InvalidWorkflowError, /Expected one of \[[A-Z_, ]+\] at line 1 char 1./)
+        expect { described_class.value("States.Array(1, ") }.to raise_error(Floe::InvalidWorkflowError, /Expected one of \[[A-Z0-9_, ]+\] at line 1 char 1./)
       end
 
       it "does not parse trailing commas in args" do
-        expect { described_class.value("States.Array(1,)") }.to raise_error(Floe::InvalidWorkflowError, /Expected one of \[[A-Z_, ]+\] at line 1 char 1./)
+        expect { described_class.value("States.Array(1,)") }.to raise_error(Floe::InvalidWorkflowError, /Expected one of \[[A-Z0-9_, ]+\] at line 1 char 1./)
       end
 
       it "keeps the parslet error as the cause" do

@@ -4,6 +4,7 @@
 
 require "parslet"
 require "securerandom"
+require "base64"
 
 module Floe
   class Workflow
@@ -91,6 +92,13 @@ module Floe
           array = args.first
 
           array.uniq
+        end
+
+        rule(:states_base64_encode => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.Base64Encode", [String])
+          str = args.first
+
+          Base64.strict_encode64(str).force_encoding("UTF-8")
         end
 
         rule(:states_uuid => {:args => subtree(:args)}) do

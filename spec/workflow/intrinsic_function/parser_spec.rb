@@ -342,6 +342,23 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     end
   end
 
+  describe "states_base64_encode" do
+    subject { described_class.new.states_base64_encode }
+
+    it do
+      expect(subject).to parse("States.Base64Encode('Data to encode')")
+      expect(subject).to parse("States.Base64Encode('')")
+      expect(subject).to parse("States.Base64Encode($.str)")
+
+      # Parser will properly parse, but will fail later at transform time due to incorrect args
+      expect(subject).to parse("States.Base64Encode()")
+      expect(subject).to parse("States.Base64Encode(1)")
+      expect(subject).to parse("States.Base64Encode('', 1)")
+
+      expect(subject).to_not parse("States.Base64Encode")
+    end
+  end
+
   describe "states_uuid" do
     subject { described_class.new.states_uuid }
 
