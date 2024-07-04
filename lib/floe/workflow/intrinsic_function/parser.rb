@@ -62,6 +62,7 @@ module Floe
           :states_array_length,    "States.ArrayLength",
           :states_array_unique,    "States.ArrayUnique",
           :states_base64_encode,   "States.Base64Encode",
+          :states_base64_decode,   "States.Base64Decode",
           :states_uuid,            "States.UUID",
         ].each_slice(2) do |function_symbol, function_name|
           rule(function_symbol) do
@@ -80,6 +81,7 @@ module Floe
             states_array_length |
             states_array_unique |
             states_base64_encode |
+            states_base64_decode |
             states_uuid
         end
 

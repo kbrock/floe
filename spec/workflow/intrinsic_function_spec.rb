@@ -335,9 +335,35 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
 
       it "fails with invalid args" do
         expect { described_class.value("States.Base64Encode()") }.to raise_error(ArgumentError, "wrong number of arguments to States.Base64Encode (given 0, expected 1)")
-        expect { described_class.value("States.Base64Encode('str', 1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.Base64Encode (given 2, expected 1)")
+        expect { described_class.value("States.Base64Encode('', 1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.Base64Encode (given 2, expected 1)")
 
         expect { described_class.value("States.Base64Encode(1)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.Base64Encode (given Integer, expected String)")
+      end
+    end
+
+    describe "States.Base64Decode" do
+      it "with a string" do
+        result = described_class.value("States.Base64Decode('RGF0YSB0byBlbmNvZGU=')")
+        expect(result).to eq("Data to encode")
+      end
+
+      it "with an empty string" do
+        result = described_class.value("States.Base64Decode('')")
+        expect(result).to eq("")
+      end
+
+      it "with json path as the string" do
+        result = described_class.value("States.Base64Decode($.str)", {}, {"str" => "RGF0YSB0byBlbmNvZGU="})
+        expect(result).to eq("Data to encode")
+      end
+
+      it "fails with invalid args" do
+        expect { described_class.value("States.Base64Decode()") }.to raise_error(ArgumentError, "wrong number of arguments to States.Base64Decode (given 0, expected 1)")
+        expect { described_class.value("States.Base64Decode('', 1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.Base64Decode (given 2, expected 1)")
+
+        expect { described_class.value("States.Base64Decode(1)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.Base64Decode (given Integer, expected String)")
+
+        expect { described_class.value("States.Base64Decode('garbage')") }.to raise_error(ArgumentError, "invalid value for argument 1 to States.Base64Decode (invalid base64)")
       end
     end
 

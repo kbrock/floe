@@ -101,6 +101,17 @@ module Floe
           Base64.strict_encode64(str).force_encoding("UTF-8")
         end
 
+        rule(:states_base64_decode => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.Base64Decode", [String])
+          str = args.first
+
+          begin
+            Base64.strict_decode64(str)
+          rescue ArgumentError => err
+            raise ArgumentError, "invalid value for argument 1 to States.Base64Decode (#{err})"
+          end
+        end
+
         rule(:states_uuid => {:args => subtree(:args)}) do
           Transformer.process_args(args, "States.UUID", [])
 
