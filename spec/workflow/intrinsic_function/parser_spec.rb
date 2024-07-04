@@ -395,6 +395,31 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     end
   end
 
+  describe "states_math_random" do
+    subject { described_class.new.states_math_random }
+
+    it do
+      expect(subject).to parse("States.MathRandom(1, 999)")
+      expect(subject).to parse("States.MathRandom(1, 999, 1234)")
+      expect(subject).to parse("States.MathRandom(-1, 999)")
+      expect(subject).to parse("States.MathRandom(-999, -1)")
+      expect(subject).to parse("States.MathRandom($.start, $.end)")
+      expect(subject).to parse("States.MathRandom($.start, $.end, $.seed)")
+
+      # Parser will properly parse, but will fail later at transform time due to incorrect args
+      expect(subject).to parse("States.MathRandom()")
+      expect(subject).to parse("States.MathRandom(1)")
+      expect(subject).to parse("States.MathRandom(1, 2, '1234', 4)")
+      expect(subject).to parse("States.MathRandom(1, '2')")
+      expect(subject).to parse("States.MathRandom('1', 2)")
+      expect(subject).to parse("States.MathRandom(1, 2, '1234')")
+      expect(subject).to parse("States.MathRandom(1, 1)")
+      expect(subject).to parse("States.MathRandom(999, 1)")
+
+      expect(subject).to_not parse("States.MathRandom")
+    end
+  end
+
   describe "states_uuid" do
     subject { described_class.new.states_uuid }
 

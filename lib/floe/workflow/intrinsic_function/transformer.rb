@@ -8,6 +8,8 @@ module Floe
   class Workflow
     class IntrinsicFunction
       class Transformer < Parslet::Transform
+        OptionalArg = Struct.new(:type)
+
         def self.process_args(args, function, signature = nil)
           # Force args into an array
           args =
@@ -24,10 +26,19 @@ module Floe
 
           if signature
             # Check arity
-            raise ArgumentError, "wrong number of arguments to #{function} (given #{args.size}, expected #{signature.size})" unless args.size == signature.size
+            if signature.any?(OptionalArg)
+              signature_without_optional = signature.reject { |a| a.kind_of?(OptionalArg) }
+              signature_size = (signature_without_optional.size..signature.size)
+
+              raise ArgumentError, "wrong number of arguments to #{function} (given #{args.size}, expected #{signature_size})" unless signature_size.include?(args.size)
+            else
+              raise ArgumentError, "wrong number of arguments to #{function} (given #{args.size}, expected #{signature.size})" unless signature.size == args.size
+            end
 
             # Check types
             args.zip(signature).each_with_index do |(arg, type), index|
+              type = type.type if type.kind_of?(OptionalArg)
+
               raise ArgumentError, "wrong type for argument #{index + 1} to #{function} (given #{arg.class}, expected #{type})" unless arg.kind_of?(type)
             end
           end
@@ -129,6 +140,17 @@ module Floe
           algorithm = algorithm.sub("-", "")
           data = data.to_json unless data.kind_of?(String)
           OpenSSL::Digest.hexdigest(algorithm, data)
+        end
+
+        rule(:states_math_random => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.MathRandom", [Integer, Integer, OptionalArg[Integer]])
+          range_start, range_end, seed = *args
+          unless range_start < range_end
+            raise ArgumentError, "invalid values for arguments to States.MathRandom (start must be less than end)"
+          end
+
+          seed ||= Random.new_seed
+          Random.new(seed).rand(range_start..range_end)
         end
 
         rule(:states_uuid => {:args => subtree(:args)}) do

@@ -64,6 +64,7 @@ module Floe
           :states_base64_encode,   "States.Base64Encode",
           :states_base64_decode,   "States.Base64Decode",
           :states_hash,            "States.Hash",
+          :states_math_random,     "States.MathRandom",
           :states_uuid,            "States.UUID",
         ].each_slice(2) do |function_symbol, function_name|
           rule(function_symbol) do
@@ -84,6 +85,7 @@ module Floe
             states_base64_encode |
             states_base64_decode |
             states_hash |
+            states_math_random |
             states_uuid
         end
 

@@ -450,6 +450,71 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
     end
 
+    describe "States.MathRandom" do
+      it "with a start and end" do
+        result = described_class.value("States.MathRandom(1, 999)")
+        expect(result).to be_between(1, 999)
+      end
+
+      it "with a start, end, and seed" do
+        result = described_class.value("States.MathRandom(1, 999, 1234)")
+        expect(result).to be_between(1, 999)
+      end
+
+      it "with a spanning start and end" do
+        result = described_class.value("States.MathRandom(-1, 999)")
+        expect(result).to be_between(-1, 999)
+      end
+
+      it "with a negative start and end" do
+        result = described_class.value("States.MathRandom(-999, -1)")
+        expect(result).to be_between(-999, -1)
+      end
+
+      it "with a zero seed" do
+        result = described_class.value("States.MathRandom(1, 999, 0)")
+        expect(result).to be_between(1, 999)
+      end
+
+      it "with a negative seed" do
+        result = described_class.value("States.MathRandom(1, 999, -1234)")
+        expect(result).to be_between(1, 999)
+      end
+
+      it "with jsonpath for the start and end" do
+        result = described_class.value("States.MathRandom($.start, $.end)", {}, {"start" => 1, "end" => 999})
+        expect(result).to be_between(1, 999)
+      end
+
+      it "with jsonpath for the start, end, and seed" do
+        result = described_class.value("States.MathRandom($.start, $.end, $.seed)", {}, {"start" => 1, "end" => 999, "seed" => 1234})
+        expect(result).to be_between(1, 999)
+      end
+
+      it "is within the range, inclusive" do
+        counts = Hash.new(0)
+        50.times do
+          result = described_class.value("States.MathRandom(1, 3)")
+          expect(result).to be_between(1, 3)
+          counts[result] += 1
+        end
+        counts.each_key { |n| expect(counts[n]).to be > 0 }
+      end
+
+      it "fails with invalid args" do
+        expect { described_class.value("States.MathRandom()") }.to raise_error(ArgumentError, "wrong number of arguments to States.MathRandom (given 0, expected 2..3)")
+        expect { described_class.value("States.MathRandom(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.MathRandom (given 1, expected 2..3)")
+        expect { described_class.value("States.MathRandom(1, 2, 1234, 4)") }.to raise_error(ArgumentError, "wrong number of arguments to States.MathRandom (given 4, expected 2..3)")
+
+        expect { described_class.value("States.MathRandom('1', 2)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.MathRandom (given String, expected Integer)")
+        expect { described_class.value("States.MathRandom(1, '2')") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.MathRandom (given String, expected Integer)")
+        expect { described_class.value("States.MathRandom(1, 2, '1234')") }.to raise_error(ArgumentError, "wrong type for argument 3 to States.MathRandom (given String, expected Integer)")
+
+        expect { described_class.value("States.MathRandom(1, 1)") }.to raise_error(ArgumentError, "invalid values for arguments to States.MathRandom (start must be less than end)")
+        expect { described_class.value("States.MathRandom(999, 1)") }.to raise_error(ArgumentError, "invalid values for arguments to States.MathRandom (start must be less than end)")
+      end
+    end
+
     describe "States.UUID" do
       it "returns a v4 UUID" do
         result = described_class.value("States.UUID()")
