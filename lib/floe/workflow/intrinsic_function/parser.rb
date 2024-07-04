@@ -28,9 +28,11 @@ module Floe
         end
 
         rule(:string) do
-          quote >> (
-            (str('\\') >> any) | (quote.absent? >> any)
-          ).repeat.as(:string) >> quote
+          (
+            quote >> (
+              (str('\\') >> any) | (quote.absent? >> any)
+            ).repeat >> quote
+          ).as(:string)
         end
 
         rule(:jsonpath) do

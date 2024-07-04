@@ -130,6 +130,10 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
       # TODO: Many more test cases
     end
+
+    it "handles empty strings" do
+      expect(subject.parse(%q|''|)).to eq({:string => Parslet::Slice.new(0, %q|''|)})
+    end
   end
 
   describe "json_path" do

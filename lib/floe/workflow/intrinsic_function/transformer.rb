@@ -40,7 +40,7 @@ module Floe
         rule(:true_literal  => simple(:v)) { true }
         rule(:false_literal => simple(:v)) { false }
 
-        rule(:string   => simple(:v)) { v.to_s }
+        rule(:string   => simple(:v)) { v.to_s[1..-2] }
         rule(:number   => simple(:v)) { v.match(/[eE.]/) ? Float(v) : Integer(v) }
         rule(:jsonpath => simple(:v)) { Floe::Workflow::Path.value(v.to_s, context, input) }
 

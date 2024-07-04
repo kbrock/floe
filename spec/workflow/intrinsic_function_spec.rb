@@ -36,6 +36,11 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq([nil])
       end
 
+      it "with an empty string" do
+        result = described_class.value("States.Array('')")
+        expect(result).to eq([""])
+      end
+
       it "with a single array value" do
         result = described_class.value("States.Array(States.Array())")
         expect(result).to eq([[]])
