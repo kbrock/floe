@@ -328,7 +328,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq("")
       end
 
-      it "with json path as the string" do
+      it "with jsonpath for the string" do
         result = described_class.value("States.Base64Encode($.str)", {}, {"str" => "Data to encode"})
         expect(result).to eq("RGF0YSB0byBlbmNvZGU=")
       end
@@ -352,7 +352,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq("")
       end
 
-      it "with json path as the string" do
+      it "with jsonpath for the string" do
         result = described_class.value("States.Base64Decode($.str)", {}, {"str" => "RGF0YSB0byBlbmNvZGU="})
         expect(result).to eq("Data to encode")
       end
@@ -364,6 +364,89 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect { described_class.value("States.Base64Decode(1)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.Base64Decode (given Integer, expected String)")
 
         expect { described_class.value("States.Base64Decode('garbage')") }.to raise_error(ArgumentError, "invalid value for argument 1 to States.Base64Decode (invalid base64)")
+      end
+    end
+
+    describe "States.Hash" do
+      it "with MD5" do
+        result = described_class.value("States.Hash('input data', 'MD5')")
+        expect(result).to eq("812f45842bc6d66ee14572ce20db8e86")
+      end
+
+      it "with SHA-1" do
+        result = described_class.value("States.Hash('input data', 'SHA-1')")
+        expect(result).to eq("aaff4a450a104cd177d28d18d74485e8cae074b7")
+      end
+
+      it "with SHA-256" do
+        result = described_class.value("States.Hash('input data', 'SHA-256')")
+        expect(result).to eq("b4a697a057313163aee33cd8d40c66e9f0f177e00cac2de32475ffff6169c3e3")
+      end
+
+      it "with SHA-384" do
+        result = described_class.value("States.Hash('input data', 'SHA-384')")
+        expect(result).to eq("d28a7d5cf25a74f11a50a18452b75e04bb3d70c9dd0510d6123aa008c756511b87525bdc835ebb27e1fb9e9374a15562")
+      end
+
+      it "with SHA-512" do
+        result = described_class.value("States.Hash('input data', 'SHA-512')")
+        expect(result).to eq("6ce4adb348546d4f449c4d25aad9a7c9cb711d9e91982d3f0b29ca2f3f47d4ce2deba23bf2954f0f1d593fc50283731a533d30d425402d4f91316d871303aac4")
+      end
+
+      it "with an empty string" do
+        result = described_class.value("States.Hash('', 'SHA-1')")
+        expect(result).to eq("da39a3ee5e6b4b0d3255bfef95601890afd80709")
+      end
+
+      it "with jsonpath for the data and algorithm" do
+        result = described_class.value("States.Hash($.data, $.algorithm)", {}, {"data" => "input data", "algorithm" => "SHA-1"})
+        expect(result).to eq("aaff4a450a104cd177d28d18d74485e8cae074b7")
+      end
+
+      it "with an integer" do
+        result = described_class.value("States.Hash($.data, 'SHA-1')", {}, {"data" => 1})
+        expect(result).to eq("356a192b7913b04c54574d18c28d46e6395428ab")
+      end
+
+      it "with a float" do
+        result = described_class.value("States.Hash($.data, 'SHA-1')", {}, {"data" => 1.5})
+        expect(result).to eq("aa8f289ebe6d4db1b4a1038b8931ec8c2b5399fb")
+      end
+
+      it "with an array" do
+        result = described_class.value("States.Hash($.data, 'SHA-1')", {}, {"data" => [1, 2, 3]})
+        expect(result).to eq("9ef50cc82ae474279fb8e82896142702bccbb33a")
+
+        result = described_class.value("States.Hash($.data, 'SHA-1')", {}, {"data" => ["1", "2", "3"]})
+        expect(result).to eq("339177d03debd051467d9f6cbcffca24d94f4ab2")
+      end
+
+      it "with a hash" do
+        pending("Not implemented yet")
+
+        result = described_class.value("States.Hash($.data, 'SHA-1')", {}, {"data" => {"foo" => "bar"}})
+        expect(result).to eq("dc2935b70ad43836e2e74df2d9758b1e51397997")
+      end
+
+      it "with true" do
+        result = described_class.value("States.Hash($.data, 'SHA-1')", {}, {"data" => true})
+        expect(result).to eq("5ffe533b830f08a0326348a9160afafc8ada44db")
+      end
+
+      it "with false" do
+        result = described_class.value("States.Hash($.data, 'SHA-1')", {}, {"data" => false})
+        expect(result).to eq("7cb6efb98ba5972a9b5090dc2e517fe14d12cb04")
+      end
+
+      it "fails with invalid args" do
+        expect { described_class.value("States.Hash()") }.to raise_error(ArgumentError, "wrong number of arguments to States.Hash (given 0, expected 2)")
+        expect { described_class.value("States.Hash('')") }.to raise_error(ArgumentError, "wrong number of arguments to States.Hash (given 1, expected 2)")
+        expect { described_class.value("States.Hash('', 'SHA-1', 1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.Hash (given 3, expected 2)")
+
+        expect { described_class.value("States.Hash('', 1)") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.Hash (given Integer, expected String)")
+
+        expect { described_class.value("States.Hash(null, 'SHA-1')") }.to raise_error(ArgumentError, "invalid value for argument 1 to States.Hash (given null, expected non-null)")
+        expect { described_class.value("States.Hash('', 'FOO')") }.to raise_error(ArgumentError, 'invalid value for argument 2 to States.Hash (given "FOO", expected one of "MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512")')
       end
     end
 

@@ -3,8 +3,6 @@
 # rubocop:disable Performance/RegexpMatch, Performance/RedundantMatch
 
 require "parslet"
-require "securerandom"
-require "base64"
 
 module Floe
   class Workflow
@@ -98,6 +96,7 @@ module Floe
           args = Transformer.process_args(args(), "States.Base64Encode", [String])
           str = args.first
 
+          require "base64"
           Base64.strict_encode64(str).force_encoding("UTF-8")
         end
 
@@ -105,6 +104,7 @@ module Floe
           args = Transformer.process_args(args(), "States.Base64Decode", [String])
           str = args.first
 
+          require "base64"
           begin
             Base64.strict_decode64(str)
           rescue ArgumentError => err
@@ -112,9 +112,29 @@ module Floe
           end
         end
 
+        rule(:states_hash => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.Hash", [Object, String])
+          data, algorithm = *args
+          raise NotImplementedError if data.kind_of?(Hash)
+          if data.nil?
+            raise ArgumentError, "invalid value for argument 1 to States.Hash (given null, expected non-null)"
+          end
+
+          algorithms = %w[MD5 SHA-1 SHA-256 SHA-384 SHA-512]
+          unless algorithms.include?(algorithm)
+            raise ArgumentError, "invalid value for argument 2 to States.Hash (given #{algorithm.inspect}, expected one of #{algorithms.map(&:inspect).join(", ")})"
+          end
+
+          require "openssl"
+          algorithm = algorithm.sub("-", "")
+          data = data.to_json unless data.kind_of?(String)
+          OpenSSL::Digest.hexdigest(algorithm, data)
+        end
+
         rule(:states_uuid => {:args => subtree(:args)}) do
           Transformer.process_args(args, "States.UUID", [])
 
+          require "securerandom"
           SecureRandom.uuid
         end
       end
