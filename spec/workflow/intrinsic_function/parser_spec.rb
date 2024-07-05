@@ -308,6 +308,17 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     end
   end
 
+  describe "states_math_add" do
+    subject { described_class.new.states_math_add }
+
+    it do
+      expect(subject).to parse("States.MathAdd(111, -1)")
+      expect(subject).to parse("States.MathAdd(111, 1)")
+
+      expect(subject).to_not parse("States.MathAdd")
+    end
+  end
+
   describe "states_uuid" do
     subject { described_class.new.states_uuid }
 

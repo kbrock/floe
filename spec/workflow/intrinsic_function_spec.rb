@@ -515,6 +515,40 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
     end
 
+    describe "States.MathAdd" do
+      it "with positive integers" do
+        result = described_class.value("States.MathAdd(111, 1)")
+        expect(result).to eq(112)
+      end
+
+      it "with positive and negative integers" do
+        result = described_class.value("States.MathAdd(111, -1)")
+        expect(result).to eq(110)
+      end
+
+      it "with negative integers" do
+        result = described_class.value("States.MathAdd(-111, -1)")
+        expect(result).to eq(-112)
+      end
+
+      it "with jsonpath for the values" do
+        result = described_class.value("States.MathAdd($.value, $.step)", {}, {"value" => 111, "step" => -1})
+        expect(result).to eq(110)
+      end
+
+      it "fails with invalid args" do
+        expect { described_class.value("States.MathAdd()") }.to raise_error(ArgumentError, "wrong number of arguments to States.MathAdd (given 0, expected 2)")
+        expect { described_class.value("States.MathAdd(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.MathAdd (given 1, expected 2)")
+        expect { described_class.value("States.MathAdd(1, 2, 3)") }.to raise_error(ArgumentError, "wrong number of arguments to States.MathAdd (given 3, expected 2)")
+
+        expect { described_class.value("States.MathAdd('1', 2)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.MathAdd (given String, expected Integer)")
+        expect { described_class.value("States.MathAdd(1, '2')") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.MathAdd (given String, expected Integer)")
+
+        # NOTE: The stepfunctions simulator does weird stuff with floats, so they are just failures for now.
+        expect { described_class.value("States.MathAdd(1.5, 1)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.MathAdd (given Float, expected Integer)")
+      end
+    end
+
     describe "States.UUID" do
       it "returns a v4 UUID" do
         result = described_class.value("States.UUID()")

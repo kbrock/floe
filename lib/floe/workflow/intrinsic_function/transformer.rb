@@ -153,6 +153,12 @@ module Floe
           Random.new(seed).rand(range_start..range_end)
         end
 
+        rule(:states_math_add => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.MathAdd", [Integer, Integer])
+
+          args.sum
+        end
+
         rule(:states_uuid => {:args => subtree(:args)}) do
           Transformer.process_args(args, "States.UUID", [])
 
