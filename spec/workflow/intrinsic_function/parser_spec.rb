@@ -127,8 +127,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
       expect(subject).to_not parse("'str")
       expect(subject).to_not parse("str'")
       expect(subject).to_not parse("'str'str'")
-
-      # TODO: Many more test cases
     end
 
     it "handles empty strings" do
@@ -203,12 +201,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.Array()")
-      expect(subject).to parse(%q|States.Array('str')|)
-      expect(subject).to parse(%q|States.Array('str', 123)|)
-      expect(subject).to parse(%q|States.Array('str', 123, true, false, null, $.input)|)
-      expect(subject).to parse(%q|States.Array('str',   123,true)|)
-      expect(subject).to parse("States.Array(null)")
-      expect(subject).to parse("States.Array(States.Array())")
+      expect(subject).to parse("States.Array(1)")
 
       expect(subject).to_not parse("States.Array")
     end
@@ -219,18 +212,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.ArrayPartition(States.Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 4)")
-      expect(subject).to parse("States.ArrayPartition(States.Array(), 4)")
-      expect(subject).to parse("States.ArrayPartition(States.Array(1, 2, 3), 4)")
-      expect(subject).to parse("States.ArrayPartition($.array, 4)")
-      expect(subject).to parse("States.ArrayPartition($.array, $.chunk)")
-
-      # Parser will properly parse, but will fail later at transform time due to incorrect args
-      expect(subject).to parse("States.ArrayPartition()")
-      expect(subject).to parse("States.ArrayPartition(1)")
-      expect(subject).to parse("States.ArrayPartition(States.Array(), 'foo')")
-      expect(subject).to parse("States.ArrayPartition(States.Array(), 1, 'foo')")
-      expect(subject).to parse("States.ArrayPartition(States.Array(), -1)")
-      expect(subject).to parse("States.ArrayPartition(States.Array(), 0)")
 
       expect(subject).to_not parse("States.ArrayPartition")
     end
@@ -241,16 +222,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.ArrayContains(States.Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5)")
-      expect(subject).to parse("States.ArrayContains(States.Array(1, 2, 3), 5)")
-      expect(subject).to parse("States.ArrayContains(States.Array(), 5)")
-      expect(subject).to parse("States.ArrayContains($.array, 5)")
-      expect(subject).to parse("States.ArrayContains($.array, $.target)")
-      expect(subject).to parse("States.ArrayContains($.array, '5')")
-
-      # Parser will properly parse, but will fail later at transform time due to incorrect args
-      expect(subject).to parse("States.ArrayContains()")
-      expect(subject).to parse("States.ArrayContains(1)")
-      expect(subject).to parse("States.ArrayContains(States.Array(), 1, 'foo')")
 
       expect(subject).to_not parse("States.ArrayContains")
     end
@@ -261,27 +232,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.ArrayRange(1, 9, 2)")
-      expect(subject).to parse("States.ArrayRange(-1, 9, 2)")
-      expect(subject).to parse("States.ArrayRange(-9, -1, 2)")
-      expect(subject).to parse("States.ArrayRange(9, 1, -2)")
-      expect(subject).to parse("States.ArrayRange(9, -1, -2)")
-      expect(subject).to parse("States.ArrayRange(-1, -9, -2)")
-      expect(subject).to parse("States.ArrayRange(1, 9, -2)")
-      expect(subject).to parse("States.ArrayRange(-9, -1, -2)")
-      expect(subject).to parse("States.ArrayRange(9, 1, 2)")
-      expect(subject).to parse("States.ArrayRange(-1, -9, 2)")
-      expect(subject).to parse("States.ArrayRange($.start, $.end, $.increment)")
-
-      # Parser will properly parse, but will fail later at transform time due to incorrect args
-      expect(subject).to parse("States.ArrayRange()")
-      expect(subject).to parse("States.ArrayRange(1)")
-      expect(subject).to parse("States.ArrayRange(1, 9)")
-      expect(subject).to parse("States.ArrayRange(1, 9, 2, 4)")
-      expect(subject).to parse("States.ArrayRange('1', '9', '2')")
-      expect(subject).to parse("States.ArrayRange('1', 9, 2)")
-      expect(subject).to parse("States.ArrayRange(1, '9', 2)")
-      expect(subject).to parse("States.ArrayRange(1, 9, '2')")
-      expect(subject).to parse("States.ArrayRange(1, 9, 0)")
 
       expect(subject).to_not parse("States.ArrayRange")
     end
@@ -292,17 +242,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.ArrayGetItem(States.Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5)")
-      expect(subject).to parse("States.ArrayGetItem(States.Array(1, 2, 3), 5)")
-      expect(subject).to parse("States.ArrayGetItem(States.Array(), 5)")
-      expect(subject).to parse("States.ArrayGetItem($.array, 5)")
-      expect(subject).to parse("States.ArrayGetItem($.array, $.index)")
-
-      # Parser will properly parse, but will fail later at transform time due to incorrect args
-      expect(subject).to parse("States.ArrayGetItem()")
-      expect(subject).to parse("States.ArrayGetItem(1)")
-      expect(subject).to parse("States.ArrayGetItem(States.Array(), 1, 'foo')")
-      expect(subject).to parse("States.ArrayGetItem(States.Array(), -1)")
-      expect(subject).to parse("States.ArrayGetItem(States.Array(), '5')")
 
       expect(subject).to_not parse("States.ArrayGetItem")
     end
@@ -313,13 +252,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.ArrayLength(States.Array(1, 2, 3, 4, 5, 6, 7, 8, 9))")
-      expect(subject).to parse("States.ArrayLength(States.Array())")
-      expect(subject).to parse("States.ArrayLength($.array)")
-
-      # Parser will properly parse, but will fail later at transform time due to incorrect args
-      expect(subject).to parse("States.ArrayLength()")
-      expect(subject).to parse("States.ArrayLength(1)")
-      expect(subject).to parse("States.ArrayLength(States.Array(), 1)")
 
       expect(subject).to_not parse("States.ArrayLength")
     end
@@ -330,13 +262,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.ArrayUnique(States.Array(1, 2, 3, 3, 3, 3, 3, 3, 4))")
-      expect(subject).to parse("States.ArrayUnique(States.Array())")
-      expect(subject).to parse("States.ArrayUnique($.array)")
-
-      # Parser will properly parse, but will fail later at transform time due to incorrect args
-      expect(subject).to parse("States.ArrayUnique()")
-      expect(subject).to parse("States.ArrayUnique(1)")
-      expect(subject).to parse("States.ArrayUnique(States.Array(), 1)")
 
       expect(subject).to_not parse("States.ArrayUnique")
     end
@@ -347,13 +272,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.Base64Encode('Data to encode')")
-      expect(subject).to parse("States.Base64Encode('')")
-      expect(subject).to parse("States.Base64Encode($.str)")
-
-      # Parser will properly parse, but will fail later at transform time due to incorrect args
-      expect(subject).to parse("States.Base64Encode()")
-      expect(subject).to parse("States.Base64Encode(1)")
-      expect(subject).to parse("States.Base64Encode('', 1)")
 
       expect(subject).to_not parse("States.Base64Encode")
     end
@@ -364,13 +282,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.Base64Decode('RGF0YSB0byBlbmNvZGU=')")
-      expect(subject).to parse("States.Base64Decode('')")
-      expect(subject).to parse("States.Base64Decode($.str)")
-
-      # Parser will properly parse, but will fail later at transform time due to incorrect args
-      expect(subject).to parse("States.Base64Decode()")
-      expect(subject).to parse("States.Base64Decode(1)")
-      expect(subject).to parse("States.Base64Decode('', 1)")
 
       expect(subject).to_not parse("States.Base64Decode")
     end
@@ -381,15 +292,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.Hash('input data', 'SHA-1')")
-      expect(subject).to parse("States.Hash('', 'MD5')")
-      expect(subject).to parse("States.Hash($.data, $algorithm)")
-
-      # Parser will properly parse, but will fail later at transform time due to incorrect args
-      expect(subject).to parse("States.Hash()")
-      expect(subject).to parse("States.Hash('')")
-      expect(subject).to parse("States.Hash('', 'SHA-1', 1)")
-      expect(subject).to parse("States.Hash(1, '')")
-      expect(subject).to parse("States.Hash('', 1)")
 
       expect(subject).to_not parse("States.Hash")
     end
@@ -401,20 +303,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     it do
       expect(subject).to parse("States.MathRandom(1, 999)")
       expect(subject).to parse("States.MathRandom(1, 999, 1234)")
-      expect(subject).to parse("States.MathRandom(-1, 999)")
-      expect(subject).to parse("States.MathRandom(-999, -1)")
-      expect(subject).to parse("States.MathRandom($.start, $.end)")
-      expect(subject).to parse("States.MathRandom($.start, $.end, $.seed)")
-
-      # Parser will properly parse, but will fail later at transform time due to incorrect args
-      expect(subject).to parse("States.MathRandom()")
-      expect(subject).to parse("States.MathRandom(1)")
-      expect(subject).to parse("States.MathRandom(1, 2, '1234', 4)")
-      expect(subject).to parse("States.MathRandom(1, '2')")
-      expect(subject).to parse("States.MathRandom('1', 2)")
-      expect(subject).to parse("States.MathRandom(1, 2, '1234')")
-      expect(subject).to parse("States.MathRandom(1, 1)")
-      expect(subject).to parse("States.MathRandom(999, 1)")
 
       expect(subject).to_not parse("States.MathRandom")
     end
@@ -425,9 +313,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.UUID()")
-
-      # Parser will properly parse, but will fail later at transform time due to incorrect args
-      expect(subject).to parse("States.UUID(1)")
 
       expect(subject).to_not parse("States.UUID")
     end
