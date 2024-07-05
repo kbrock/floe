@@ -10,9 +10,19 @@ module Floe
       class Transformer < Parslet::Transform
         OptionalArg = Struct.new(:type)
 
-        def self.process_args(args, function, signature = nil)
-          # Force args into an array
-          args =
+        class << self
+          def process_args(args, function, signature = nil)
+            args = resolve_args(args)
+            if signature
+              check_arity(args, function, signature)
+              check_types(args, function, signature)
+            end
+            args
+          end
+
+          private
+
+          def resolve_args(args)
             if args.nil?
               # 0 args
               []
@@ -23,9 +33,9 @@ module Floe
               # 1 arg
               [args[:arg]]
             end
+          end
 
-          if signature
-            # Check arity
+          def check_arity(args, function, signature)
             if signature.any?(OptionalArg)
               signature_without_optional = signature.reject { |a| a.kind_of?(OptionalArg) }
               signature_size = (signature_without_optional.size..signature.size)
@@ -34,16 +44,15 @@ module Floe
             else
               raise ArgumentError, "wrong number of arguments to #{function} (given #{args.size}, expected #{signature.size})" unless signature.size == args.size
             end
+          end
 
-            # Check types
+          def check_types(args, function, signature)
             args.zip(signature).each_with_index do |(arg, type), index|
               type = type.type if type.kind_of?(OptionalArg)
 
               raise ArgumentError, "wrong type for argument #{index + 1} to #{function} (given #{arg.class}, expected #{type})" unless arg.kind_of?(type)
             end
           end
-
-          args
         end
 
         rule(:null_literal  => simple(:v)) { nil }
