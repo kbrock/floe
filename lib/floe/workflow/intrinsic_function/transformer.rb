@@ -159,6 +159,20 @@ module Floe
           args.sum
         end
 
+        rule(:states_string_split => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.StringSplit", [String, String])
+          str, delimeter = *args
+
+          case delimeter.size
+          when 0
+            str.empty? ? [] : [str]
+          when 1
+            str.split(delimeter)
+          else
+            str.split(/[#{Regexp.escape(delimeter)}]+/)
+          end
+        end
+
         rule(:states_uuid => {:args => subtree(:args)}) do
           Transformer.process_args(args, "States.UUID", [])
 

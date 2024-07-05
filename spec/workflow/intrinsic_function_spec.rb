@@ -549,6 +549,67 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
     end
 
+    describe "States.StringSplit" do
+      it "with a splittable string" do
+        result = described_class.value("States.StringSplit('1,2,3,4,5', ',')")
+        expect(result).to eq(%w[1 2 3 4 5])
+      end
+
+      it "with a not-splittable string" do
+        result = described_class.value("States.StringSplit('foo', ',')")
+        expect(result).to eq(["foo"])
+      end
+
+      it "with an empty string" do
+        result = described_class.value("States.StringSplit('', ',')")
+        expect(result).to eq([]) # This matches the stepfunctions simulator and is not [""]
+      end
+
+      it "with spaces around the split" do
+        result = described_class.value("States.StringSplit('1, 2, 3, 4, 5', ',')")
+        expect(result).to eq(["1", " 2", " 3", " 4", " 5"])
+      end
+
+      it "with consecutive delimeters" do
+        result = described_class.value("States.StringSplit('1    2 3 4 5', ' ')")
+        expect(result).to eq(%w[1 2 3 4 5])
+      end
+
+      it "with multiple delimeters" do
+        result = described_class.value("States.StringSplit('1-2]3:4+5', '-]:+')") # Regexp characters chosen here intentionally
+        expect(result).to eq(%w[1 2 3 4 5])
+      end
+
+      it "with multiple consecutive delimeters" do
+        result = described_class.value("States.StringSplit('1--2]+3:4]+5', '-]:+')") # Regexp characters chosen here intentionally
+        expect(result).to eq(%w[1 2 3 4 5])
+      end
+
+      it "with empty splitter" do
+        result = described_class.value("States.StringSplit('1,2,3,4,5', '')")
+        expect(result).to eq(["1,2,3,4,5"])
+      end
+
+      it "with empty string and splitter" do
+        result = described_class.value("States.StringSplit('', '')")
+        expect(result).to eq([]) # This matches the stepfunctions simulator and is not [""]
+      end
+
+      it "with jsonpath for the string and splitter" do
+        result = described_class.value("States.StringSplit($.string, $.splitter)", {}, {"string" => "1,2,3,4,5", "splitter" => ","})
+        expect(result).to eq(%w[1 2 3 4 5])
+      end
+
+      it "fails with invalid args" do
+        expect { described_class.value("States.StringSplit()") }.to raise_error(ArgumentError, "wrong number of arguments to States.StringSplit (given 0, expected 2)")
+        expect { described_class.value("States.StringSplit('')") }.to raise_error(ArgumentError, "wrong number of arguments to States.StringSplit (given 1, expected 2)")
+        expect { described_class.value("States.StringSplit('', ',', '')") }.to raise_error(ArgumentError, "wrong number of arguments to States.StringSplit (given 3, expected 2)")
+
+        expect { described_class.value("States.StringSplit(1, ',')") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.StringSplit (given Integer, expected String)")
+        expect { described_class.value("States.StringSplit('', 2)") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.StringSplit (given Integer, expected String)")
+      end
+    end
+
     describe "States.UUID" do
       it "returns a v4 UUID" do
         result = described_class.value("States.UUID()")

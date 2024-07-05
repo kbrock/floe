@@ -319,6 +319,16 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     end
   end
 
+  describe "states_string_split" do
+    subject { described_class.new.states_string_split }
+
+    it do
+      expect(subject).to parse("States.StringSplit('1,2,3,4,5', ',')")
+
+      expect(subject).to_not parse("States.StringSplit")
+    end
+  end
+
   describe "states_uuid" do
     subject { described_class.new.states_uuid }
 
