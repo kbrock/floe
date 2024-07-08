@@ -12,11 +12,7 @@ RSpec.describe Floe::Workflow::States::Choice do
 
   let(:payload) do
     {
-      "Choice1"          => {
-        "Type"    => "Choice",
-        "Choices" => choices,
-        "Default" => "DefaultState"
-      },
+      "Choice1"          => {"Type" => "Choice", "Choices" => choices, "Default" => "DefaultState"},
       "FirstMatchState"  => {"Type" => "Succeed"},
       "SecondMatchState" => {"Type" => "Succeed"},
       "DefaultState"     => {"Type" => "Succeed"}
