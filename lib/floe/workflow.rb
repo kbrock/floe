@@ -111,7 +111,7 @@ module Floe
       validate_workflow
 
       @states_by_name = @states.each_with_object({}) { |state, result| result[state.short_name] = state }
-    rescue Floe::InvalidWorkflowError
+    rescue Floe::Error
       raise
     rescue => err
       raise Floe::InvalidWorkflowError, err.message
