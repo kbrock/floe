@@ -1,24 +1,31 @@
 RSpec.describe Floe::Workflow::ChoiceRule do
-  let(:name)      { "FirstMatchState" }
-  let(:workflow)  { make_workflow({}, {name => {"Type" => "Choice", "Choices" => [payload], "Default" => name}}) }
+  let(:input)    { {} }
+  let(:ctx)      { Floe::Workflow::Context.new(:input => input.to_json) }
+  let(:state)    { workflow.start_workflow.current_state }
+  let(:workflow) { make_workflow(ctx, payload) }
+  let(:choices)  { [{"Variable" => "$.foo", "StringEquals" => "foo", "Next" => "FirstMatchState"}] }
+  let(:payload) do
+    {
+      "Choice1"         => {"Type" => "Choice", "Choices" => choices, "Default" => "Default"},
+      "Default"         => {"Type" => "Succeed"},
+      "FirstMatchState" => {"Type" => "Succeed"}
+    }
+  end
 
-  describe ".build" do
-    let(:payload) { {"Variable" => "$.foo", "StringEquals" => "foo", "Next" => name} }
-    let(:subject) { described_class.build(workflow, [name, "Choices", 1], payload) }
-
+  describe "#initialize" do
     it "works with valid next" do
-      subject
+      workflow
     end
   end
 
   describe "#true?" do
-    let(:subject) { described_class.build(workflow, [name, "Choices", 1], payload).true?(context, input) }
+    let(:choice)  { workflow.states.first.choices.first }
+    let(:subject) { choice.true?(context, input) }
     let(:context) { {} }
 
     context "with abstract top level class" do
-      let(:payload) { {"Variable" => "$.foo", "StringEquals" => "foo", "Next" => name} }
       let(:input) { {} }
-      let(:subject) { described_class.new(workflow, [name, "Choices", 1], payload).true?(context, input) }
+      let(:subject) { described_class.new(workflow, ["Choice1", "Choices", 1], choices.first).true?(context, input) }
 
       it "is not implemented" do
         expect { subject }.to raise_exception(NotImplementedError)
@@ -27,7 +34,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
 
     context "Boolean Expression" do
       context "Not" do
-        let(:payload) { {"Not" => {"Variable" => "$.foo", "StringEquals" => "bar"}, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Not" => {"Variable" => "$.foo", "StringEquals" => "bar"}, "Next" => "FirstMatchState"}] }
 
         context "that is not equal to 'bar'" do
           let(:input) { {"foo" => "foo"} }
@@ -50,7 +57,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
         let(:input) { {"foo" => "foo", "bar" => "bar"} }
 
         context "with all sub-choices being true" do
-          let(:payload) { {"And" => [{"Variable" => "$.foo", "StringEquals" => "foo"}, {"Variable" => "$.bar", "StringEquals" => "bar"}], "Next" => "FirstMatchState"} }
+          let(:choices) { [{"And" => [{"Variable" => "$.foo", "StringEquals" => "foo"}, {"Variable" => "$.bar", "StringEquals" => "bar"}], "Next" => "FirstMatchState"}] }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -58,7 +65,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
         end
 
         context "with one sub-choice false" do
-          let(:payload) { {"And" => [{"Variable" => "$.foo", "StringEquals" => "foo"}, {"Variable" => "$.bar", "StringEquals" => "foo"}], "Next" => "FirstMatchState"} }
+          let(:choices) { [{"And" => [{"Variable" => "$.foo", "StringEquals" => "foo"}, {"Variable" => "$.bar", "StringEquals" => "foo"}], "Next" => "FirstMatchState"}] }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -70,7 +77,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
         let(:input) { {"foo" => "foo", "bar" => "bar"} }
 
         context "with one sub-choice being true" do
-          let(:payload) { {"Or" => [{"Variable" => "$.foo", "StringEquals" => "foo"}, {"Variable" => "$.bar", "StringEquals" => "foo"}], "Next" => "FirstMatchState"} }
+          let(:choices) { [{"Or" => [{"Variable" => "$.foo", "StringEquals" => "foo"}, {"Variable" => "$.bar", "StringEquals" => "foo"}], "Next" => "FirstMatchState"}] }
 
           it "returns true" do
             expect(subject).to eq(true)
@@ -78,7 +85,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
         end
 
         context "with no sub-choices being true" do
-          let(:payload) { {"Or" => [{"Variable" => "$.foo", "StringEquals" => "bar"}, {"Variable" => "$.bar", "StringEquals" => "foo"}], "Next" => "FirstMatchState"} }
+          let(:choices) { [{"Or" => [{"Variable" => "$.foo", "StringEquals" => "bar"}, {"Variable" => "$.bar", "StringEquals" => "foo"}], "Next" => "FirstMatchState"}] }
 
           it "returns false" do
             expect(subject).to eq(false)
@@ -89,7 +96,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
 
     context "Data-Test Expression" do
       context "with a missing variable" do
-        let(:payload) { {"Variable" => "$.foo", "NumericEquals" => 1, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "NumericEquals" => 1, "Next" => "FirstMatchState"}] }
         let(:input) { {} }
 
         it "raises an exception" do
@@ -98,7 +105,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with IsNull" do
-        let(:payload) { {"Variable" => "$.foo", "IsNull" => true, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "IsNull" => true, "Next" => "FirstMatchState"}] }
 
         context "with null" do
           let(:input) { {"foo" => nil} }
@@ -119,7 +126,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
 
       context "with IsPresent" do
         let(:positive) { true }
-        let(:payload) { {"Variable" => "$.foo", "IsPresent" => positive, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "IsPresent" => positive, "Next" => "FirstMatchState"}] }
 
         context "with null" do
           let(:input) { {"foo" => nil} }
@@ -167,7 +174,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with IsNumeric" do
-        let(:payload) { {"Variable" => "$.foo", "IsNumeric" => true, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "IsNumeric" => true, "Next" => "FirstMatchState"}] }
 
         context "with an integer" do
           let(:input) { {"foo" => 1} }
@@ -195,7 +202,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with IsString" do
-        let(:payload) { {"Variable" => "$.foo", "IsString" => true, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "IsString" => true, "Next" => "FirstMatchState"}] }
 
         context "with a string" do
           let(:input) { {"foo" => "bar"} }
@@ -215,7 +222,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with IsBoolean" do
-        let(:payload) { {"Variable" => "$.foo", "IsBoolean" => true, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "IsBoolean" => true, "Next" => "FirstMatchState"}] }
 
         context "with a boolean" do
           let(:input) { {"foo" => true} }
@@ -235,7 +242,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with IsTimestamp" do
-        let(:payload) { {"Variable" => "$.foo", "IsTimestamp" => true, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "IsTimestamp" => true, "Next" => "FirstMatchState"}] }
 
         context "with a timestamp" do
           let(:input) { {"foo" => "2016-03-14T01:59:00Z"} }
@@ -271,7 +278,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with a NumericEquals" do
-        let(:payload) { {"Variable" => "$.foo", "NumericEquals" => 1, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "NumericEquals" => 1, "Next" => "FirstMatchState"}] }
 
         context "that equals the variable" do
           let(:input) { {"foo" => 1} }
@@ -291,7 +298,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with a NumericEqualsPath" do
-        let(:payload) { {"Variable" => "$.foo", "NumericEqualsPath" => "$.bar", "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "NumericEqualsPath" => "$.bar", "Next" => "FirstMatchState"}] }
 
         context "that equals the variable" do
           let(:input) { {"foo" => 1, "bar" => 1} }
@@ -316,7 +323,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with a NumericLessThan" do
-        let(:payload) { {"Variable" => "$.foo", "NumericLessThan" => 1, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "NumericLessThan" => 1, "Next" => "FirstMatchState"}] }
 
         context "that is true" do
           let(:input) { {"foo" => 0} }
@@ -336,7 +343,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with a NumericLessThanPath" do
-        let(:payload) { {"Variable" => "$.foo", "NumericLessThanPath" => "$.bar", "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "NumericLessThanPath" => "$.bar", "Next" => "FirstMatchState"}] }
 
         context "that is true" do
           let(:input) { {"foo" => 0, "bar" => 1} }
@@ -356,7 +363,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with a NumericGreaterThan" do
-        let(:payload) { {"Variable" => "$.foo", "NumericGreaterThan" => 1, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "NumericGreaterThan" => 1, "Next" => "FirstMatchState"}] }
 
         context "that is true" do
           let(:input) { {"foo" => 2} }
@@ -376,7 +383,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with a NumericGreaterThanPath" do
-        let(:payload) { {"Variable" => "$.foo", "NumericGreaterThanPath" => "$.bar", "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "NumericGreaterThanPath" => "$.bar", "Next" => "FirstMatchState"}] }
 
         context "that is true" do
           let(:input) { {"foo" => 2, "bar" => 1} }
@@ -396,7 +403,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with a NumericLessThanEquals" do
-        let(:payload) { {"Variable" => "$.foo", "NumericLessThanEquals" => 1, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "NumericLessThanEquals" => 1, "Next" => "FirstMatchState"}] }
 
         context "that is true" do
           let(:input) { {"foo" => 1} }
@@ -416,7 +423,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with a NumericLessThanEqualsPath" do
-        let(:payload) { {"Variable" => "$.foo", "NumericLessThanEqualsPath" => "$.bar", "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "NumericLessThanEqualsPath" => "$.bar", "Next" => "FirstMatchState"}] }
 
         context "that is true" do
           let(:input) { {"foo" => 1, "bar" => 1} }
@@ -436,7 +443,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with a NumericGreaterThanEquals" do
-        let(:payload) { {"Variable" => "$.foo", "NumericGreaterThanEquals" => 1, "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "NumericGreaterThanEquals" => 1, "Next" => "FirstMatchState"}] }
 
         context "that is true" do
           let(:input) { {"foo" => 1} }
@@ -456,7 +463,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with a NumericGreaterThanEqualsPath" do
-        let(:payload) { {"Variable" => "$.foo", "NumericGreaterThanEqualsPath" => "$.bar", "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "NumericGreaterThanEqualsPath" => "$.bar", "Next" => "FirstMatchState"}] }
 
         context "that is true" do
           let(:input) { {"foo" => 1, "bar" => 1} }
@@ -476,7 +483,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with a StringMatches" do
-        let(:payload) { {"Variable" => "$.foo", "StringMatches" => "*.log", "Next" => "FirstMatchState"} }
+        let(:choices) { [{"Variable" => "$.foo", "StringMatches" => "*.log", "Next" => "FirstMatchState"}] }
 
         context "that is true" do
           let(:input) { {"foo" => "audit.log"} }
