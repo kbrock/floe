@@ -28,9 +28,11 @@ module Floe
         end
 
         rule(:string) do
-          quote >> (
-            (str('\\') >> any) | (quote.absent? >> any)
-          ).repeat.as(:string) >> quote
+          (
+            quote >> (
+              (str('\\') >> any) | (quote.absent? >> any)
+            ).repeat >> quote
+          ).as(:string)
         end
 
         rule(:jsonpath) do
@@ -52,8 +54,20 @@ module Floe
         end
 
         [
-          :states_array, "States.Array",
-          :states_uuid,  "States.UUID",
+          :states_array,           "States.Array",
+          :states_array_partition, "States.ArrayPartition",
+          :states_array_contains,  "States.ArrayContains",
+          :states_array_range,     "States.ArrayRange",
+          :states_array_get_item,  "States.ArrayGetItem",
+          :states_array_length,    "States.ArrayLength",
+          :states_array_unique,    "States.ArrayUnique",
+          :states_base64_encode,   "States.Base64Encode",
+          :states_base64_decode,   "States.Base64Decode",
+          :states_hash,            "States.Hash",
+          :states_math_random,     "States.MathRandom",
+          :states_math_add,        "States.MathAdd",
+          :states_string_split,    "States.StringSplit",
+          :states_uuid,            "States.UUID",
         ].each_slice(2) do |function_symbol, function_name|
           rule(function_symbol) do
             (
@@ -62,7 +76,23 @@ module Floe
           end
         end
 
-        rule(:expression) { states_array | states_uuid }
+        rule(:expression) do
+          states_array |
+            states_array_partition |
+            states_array_contains |
+            states_array_range |
+            states_array_get_item |
+            states_array_length |
+            states_array_unique |
+            states_base64_encode |
+            states_base64_decode |
+            states_hash |
+            states_math_random |
+            states_math_add |
+            states_string_split |
+            states_uuid
+        end
+
         root(:expression)
       end
     end

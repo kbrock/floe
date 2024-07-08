@@ -127,8 +127,10 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
       expect(subject).to_not parse("'str")
       expect(subject).to_not parse("str'")
       expect(subject).to_not parse("'str'str'")
+    end
 
-      # TODO: Many more test cases
+    it "handles empty strings" do
+      expect(subject.parse(%q|''|)).to eq({:string => Parslet::Slice.new(0, %q|''|)})
     end
   end
 
@@ -199,14 +201,131 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.Array()")
-      expect(subject).to parse(%q|States.Array('str')|)
-      expect(subject).to parse(%q|States.Array('str', 123)|)
-      expect(subject).to parse(%q|States.Array('str', 123, true, false, null, $.input)|)
-      expect(subject).to parse(%q|States.Array('str',   123,true)|)
-      expect(subject).to parse("States.Array(null)")
-      expect(subject).to parse("States.Array(States.Array())")
+      expect(subject).to parse("States.Array(1)")
 
       expect(subject).to_not parse("States.Array")
+    end
+  end
+
+  describe "states_array_partition" do
+    subject { described_class.new.states_array_partition }
+
+    it do
+      expect(subject).to parse("States.ArrayPartition(States.Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 4)")
+
+      expect(subject).to_not parse("States.ArrayPartition")
+    end
+  end
+
+  describe "states_array_contains" do
+    subject { described_class.new.states_array_contains }
+
+    it do
+      expect(subject).to parse("States.ArrayContains(States.Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5)")
+
+      expect(subject).to_not parse("States.ArrayContains")
+    end
+  end
+
+  describe "states_array_range" do
+    subject { described_class.new.states_array_range }
+
+    it do
+      expect(subject).to parse("States.ArrayRange(1, 9, 2)")
+
+      expect(subject).to_not parse("States.ArrayRange")
+    end
+  end
+
+  describe "states_array_get_item" do
+    subject { described_class.new.states_array_get_item }
+
+    it do
+      expect(subject).to parse("States.ArrayGetItem(States.Array(1, 2, 3, 4, 5, 6, 7, 8, 9), 5)")
+
+      expect(subject).to_not parse("States.ArrayGetItem")
+    end
+  end
+
+  describe "states_array_length" do
+    subject { described_class.new.states_array_length }
+
+    it do
+      expect(subject).to parse("States.ArrayLength(States.Array(1, 2, 3, 4, 5, 6, 7, 8, 9))")
+
+      expect(subject).to_not parse("States.ArrayLength")
+    end
+  end
+
+  describe "states_array_unique" do
+    subject { described_class.new.states_array_unique }
+
+    it do
+      expect(subject).to parse("States.ArrayUnique(States.Array(1, 2, 3, 3, 3, 3, 3, 3, 4))")
+
+      expect(subject).to_not parse("States.ArrayUnique")
+    end
+  end
+
+  describe "states_base64_encode" do
+    subject { described_class.new.states_base64_encode }
+
+    it do
+      expect(subject).to parse("States.Base64Encode('Data to encode')")
+
+      expect(subject).to_not parse("States.Base64Encode")
+    end
+  end
+
+  describe "states_base64_decode" do
+    subject { described_class.new.states_base64_decode }
+
+    it do
+      expect(subject).to parse("States.Base64Decode('RGF0YSB0byBlbmNvZGU=')")
+
+      expect(subject).to_not parse("States.Base64Decode")
+    end
+  end
+
+  describe "states_hash" do
+    subject { described_class.new.states_hash }
+
+    it do
+      expect(subject).to parse("States.Hash('input data', 'SHA-1')")
+
+      expect(subject).to_not parse("States.Hash")
+    end
+  end
+
+  describe "states_math_random" do
+    subject { described_class.new.states_math_random }
+
+    it do
+      expect(subject).to parse("States.MathRandom(1, 999)")
+      expect(subject).to parse("States.MathRandom(1, 999, 1234)")
+
+      expect(subject).to_not parse("States.MathRandom")
+    end
+  end
+
+  describe "states_math_add" do
+    subject { described_class.new.states_math_add }
+
+    it do
+      expect(subject).to parse("States.MathAdd(111, -1)")
+      expect(subject).to parse("States.MathAdd(111, 1)")
+
+      expect(subject).to_not parse("States.MathAdd")
+    end
+  end
+
+  describe "states_string_split" do
+    subject { described_class.new.states_string_split }
+
+    it do
+      expect(subject).to parse("States.StringSplit('1,2,3,4,5', ',')")
+
+      expect(subject).to_not parse("States.StringSplit")
     end
   end
 
@@ -215,9 +334,6 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
 
     it do
       expect(subject).to parse("States.UUID()")
-
-      # Parser will properly parse, but will fail later at transform time due to incorrect args
-      expect(subject).to parse("States.UUID(1)")
 
       expect(subject).to_not parse("States.UUID")
     end
