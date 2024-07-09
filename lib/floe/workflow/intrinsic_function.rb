@@ -15,19 +15,20 @@ module Floe
 
       def initialize(payload)
         @payload = payload
+        @tree    = Parser.new.parse(payload)
+
+        Floe.logger.debug { "Parsed intrinsic function: #{payload.inspect} => #{tree.inspect}" }
+      rescue Parslet::ParseFailed => err
+        raise Floe::InvalidWorkflowError, err.message
       end
 
       def value(context = {}, input = {})
-        begin
-          tree = Parser.new.parse(payload)
-        rescue Parslet::ParseFailed => err
-          raise Floe::InvalidWorkflowError, err.message
-        end
-
-        Floe.logger.debug { "Parsed intrinsic function: #{payload.inspect} => #{tree.inspect}" }
-
         Transformer.new.apply(tree, :context => context, :input => input)
       end
+
+      private
+
+      attr_reader :tree
     end
   end
 end
