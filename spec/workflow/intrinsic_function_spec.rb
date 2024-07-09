@@ -679,4 +679,10 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
     end
   end
+
+  describe "#initialize" do
+    it "raises an InvalidWorkflowError on invalid function definition" do
+      expect { described_class.new("States.Array") }.to raise_error(Floe::InvalidWorkflowError, /Expected one of \[[A-Z0-9_, ]+\] at line 1 char 1./)
+    end
+  end
 end
