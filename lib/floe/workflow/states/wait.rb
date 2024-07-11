@@ -28,7 +28,7 @@ module Floe
         def start(context)
           super
 
-          input = input_path.value(context, context.input)
+          input = wrap_runtime_error("InputPath", input_path.to_s) { input_path.value(context, context.input) }
 
           wait_until!(
             context,
@@ -38,8 +38,8 @@ module Floe
         end
 
         def finish(context)
-          input          = input_path.value(context, context.input)
-          context.output = output_path.value(context, input)
+          input          = wrap_runtime_error("InputPath", input_path.to_s) { input_path.value(context, context.input) }
+          context.output = wrap_runtime_error("OutputPath", input_path.to_s) { output_path.value(context, input) }
           super
         end
 

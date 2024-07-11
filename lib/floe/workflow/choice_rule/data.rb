@@ -68,7 +68,7 @@ module Floe
 
           # path found the variable_value, (so if they said true, return true)
           rhs
-        rescue Floe::PathError
+        rescue Floe::ExecutionError
           # variable_value (path) threw an error
           # it was not found (so if they said false, return true)
           !rhs
@@ -117,7 +117,7 @@ module Floe
         end
 
         def fetch_path(field_name, field_path, context, input)
-          ret_value = field_path.value(context, input)
+          ret_value = wrap_runtime_error(field_name, field_path.to_s) { field_path.value(context, input) }
           runtime_field_error!(field_name, field_path.to_s, "must point to a #{type}") if type && !correct_type?(ret_value)
           ret_value
         end
