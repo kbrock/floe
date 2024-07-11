@@ -14,8 +14,8 @@ module Floe
           @choices = payload["Choices"].map.with_index { |choice, i| ChoiceRule.build(workflow, name + ["Choices", i.to_s], choice) }
           @default = payload["Default"]
 
-          @input_path  = Path.new(payload.fetch("InputPath", "$"))
-          @output_path = Path.new(payload.fetch("OutputPath", "$"))
+          @input_path  = wrap_parser_error("InputPath", payload.fetch("InputPath", nil)) { Path.new(payload.fetch("InputPath", "$")) }
+          @output_path = wrap_parser_error("OutputPath", payload.fetch("OutputPath", nil)) { Path.new(payload.fetch("OutputPath", "$")) }
         end
 
         def finish(context)
