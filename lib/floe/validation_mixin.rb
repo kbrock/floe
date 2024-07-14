@@ -18,8 +18,8 @@ module Floe
       self.class.invalid_field_error!(name, field_name, field_value, comment)
     end
 
-    def runtime_field_error!(field_name, field_value, comment)
-      raise Floe::ExecutionError, self.class.field_error_text(name, field_name, field_value, comment)
+    def runtime_field_error!(field_name, field_value, comment, floe_error: "States.Runtime")
+      raise Floe::ExecutionError.new(self.class.field_error_text(name, field_name, field_value, comment), floe_error)
     end
 
     def workflow_state?(field_value, workflow)
