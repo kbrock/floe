@@ -4,12 +4,12 @@ module Floe
   class Workflow
     class ChoiceRule
       class Data < Floe::Workflow::ChoiceRule
-        TYPES       = ["String", "Numeric", "Boolean", "Timestamp", "Present", "Null"].freeze
+        TYPES       = {"String" => :is_string?, "Numeric" => :is_numeric?, "Boolean" => :is_boolean?, "Timestamp" => :is_timestamp?, "Present" => :is_present?, "Null" => :is_null?}.freeze
         OPERATIONS  = ["Equals", "LessThan", "GreaterThan", "LessThanEquals", "GreaterThanEquals", "Matches"].freeze
         # e.g.: (Is)(String), (Is)(Present)
-        UNARY_RULE  = /^(Is)(#{TYPES.join("|")})$/.freeze
+        UNARY_RULE  = /^(Is)(#{TYPES.keys.join("|")})$/.freeze
         # e.g.: (String)(LessThan)(Path), (Numeric)(GreaterThanEquals)()
-        BINARY_RULE = /^(#{(TYPES - %w[Null Present]).join("|")})(#{OPERATIONS.join("|")})(Path)?$/.freeze
+        BINARY_RULE = /^(#{(TYPES.keys - %w[Null Present]).join("|")})(#{OPERATIONS.join("|")})(Path)?$/.freeze
 
         attr_reader :variable, :compare_key, :type, :value, :path
 
@@ -18,7 +18,7 @@ module Floe
 
           @variable = parse_path("Variable", payload)
           parse_compare_key
-          @value = path ? parse_path(compare_key, payload) : payload[compare_key]
+          @value = parse_compare_value
         end
 
         def true?(context, input)
@@ -109,25 +109,49 @@ module Floe
         # rubocop:enable Style/OptionalBooleanParameter
 
         def variable_value(context, input)
-          variable.value(context, input)
+          fetch_path("Variable", variable, context, input)
         end
 
         def compare_value(context, input)
-          path ? value.value(context, input) : value
+          path ? fetch_path(compare_key, value, context, input) : value
+        end
+
+        def fetch_path(field_name, field_path, context, input)
+          ret_value = field_path.value(context, input)
+          runtime_field_error!(field_name, field_path.to_s, "must point to a #{type}") if type && !correct_type?(ret_value)
+          ret_value
         end
 
         def parse_compare_key
-          @compare_key = payload.keys.detect { |key| key.match?(UNARY_RULE) || key.match?(BINARY_RULE) }
-          parser_error!("requires a compare key") unless compare_key
+          @compare_key = @payload.keys.detect { |key| key.match?(UNARY_RULE) || key.match?(BINARY_RULE) }
+          parser_error!("requires a compare key") unless @compare_key
 
-          @type, _operator, @path = BINARY_RULE.match(compare_key)&.captures
+          @type, _operator, @path = BINARY_RULE.match(@compare_key)&.captures
           # since a unary_rule won't match, then @path = @type = nil
+        end
+
+        def parse_compare_value
+          if @path
+            parse_path(@compare_key, payload)
+          else
+            parse_value(@compare_key, payload)
+          end
+        end
+
+        def correct_type?(val)
+          send(TYPES[type || "Boolean"], val)
         end
 
         def parse_path(field_name, payload)
           value = payload[field_name]
           missing_field_error!(field_name) unless value
           wrap_parser_error(field_name, value) { Path.new(value) }
+        end
+
+        def parse_value(field_name, payload)
+          value = payload[field_name]
+          invalid_field_error!(field_name, value, "required to be a #{type || "Boolean"}") unless correct_type?(value)
+          value
         end
       end
     end

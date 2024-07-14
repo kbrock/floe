@@ -44,6 +44,7 @@ module Floe
   class InvalidWorkflowError < Error; end
   class InvalidExecutionInput < Error; end
   class PathError < Error; end
+  class ExecutionError < Error; end
 
   def self.logger
     @logger ||= NullLogger.new
