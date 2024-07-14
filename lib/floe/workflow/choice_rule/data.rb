@@ -6,14 +6,14 @@ module Floe
       class Data < Floe::Workflow::ChoiceRule
         COMPARE_KEYS = %w[IsNull IsPresent IsNumeric IsString IsBoolean IsTimestamp String Numeric Boolean Timestamp].freeze
 
-        attr_reader :variable, :compare_key
+        attr_reader :variable, :compare_key, :value, :path
 
         def initialize(_workflow, _name, payload)
           super
 
           @variable = parse_path("Variable", payload)
-          @compare_key = payload.keys.detect { |key| key.match?(/^(#{COMPARE_KEYS.join("|")})/) }
-          parser_error!("requires a compare key") unless compare_key
+          parse_compare_key
+          @value = path ? parse_path(compare_key, payload) : payload[compare_key]
         end
 
         def true?(context, input)
@@ -106,7 +106,14 @@ module Floe
         end
 
         def compare_value(context, input)
-          compare_key.end_with?("Path") ? Path.value(payload[compare_key], context, input) : payload[compare_key]
+          path ? value.value(context, input) : value
+        end
+
+        def parse_compare_key
+          @compare_key = payload.keys.detect { |key| key.match?(/^(#{COMPARE_KEYS.join("|")})/) }
+          parser_error!("requires a compare key") unless compare_key
+
+          @path = compare_key.end_with?("Path")
         end
 
         def parse_path(field_name, payload)

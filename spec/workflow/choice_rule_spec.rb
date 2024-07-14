@@ -33,6 +33,11 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       it { expect { workflow }.to raise_exception(Floe::InvalidWorkflowError, "States.Choice1.Choices.0.Data field \"Variable\" value \"wrong\" Path [wrong] must start with \"$\"") }
     end
 
+    context "with non-path Compare Key" do
+      let(:choices) { [{"Variable" => "$foo", "StringEqualsPath" => "wrong", "Next" => "FirstMatchState"}] }
+      it { expect { workflow }.to raise_exception(Floe::InvalidWorkflowError, "States.Choice1.Choices.0.Data field \"StringEqualsPath\" value \"wrong\" Path [wrong] must start with \"$\"") }
+    end
+
     context "with second level Next (Not)" do
       let(:choices) { [{"Not" => {"Variable" => "$.foo", "StringEquals" => "bar", "Next" => "FirstMatchState"}, "Next" => "FirstMatchState"}] }
 
