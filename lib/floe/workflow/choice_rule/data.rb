@@ -28,11 +28,11 @@ module Floe
           rhs = compare_value(context, input)
 
           case compare_key
-          when "IsNull" then is_null?(lhs)
-          when "IsNumeric" then is_numeric?(lhs)
-          when "IsString" then is_string?(lhs)
-          when "IsBoolean" then is_boolean?(lhs)
-          when "IsTimestamp" then is_timestamp?(lhs)
+          when "IsNull" then is_null?(lhs, rhs)
+          when "IsNumeric" then is_numeric?(lhs, rhs)
+          when "IsString" then is_string?(lhs, rhs)
+          when "IsBoolean" then is_boolean?(lhs, rhs)
+          when "IsTimestamp" then is_timestamp?(lhs, rhs)
           when "StringEquals", "StringEqualsPath",
                "NumericEquals", "NumericEqualsPath",
                "BooleanEquals", "BooleanEqualsPath",
@@ -74,35 +74,39 @@ module Floe
           !rhs
         end
 
-        def is_null?(value) # rubocop:disable Naming/PredicateName
-          value.nil?
+        # rubocop:disable Naming/PredicateName
+        # rubocop:disable Style/OptionalBooleanParameter
+        def is_null?(value, ret_value = true)
+          value.nil? == ret_value
         end
 
         # if it got here (and value was fetched), then it is present.
-        def is_present?(_value) # rubocop:disable Naming/PredicateName
-          true
+        def is_present?(_value, ret_value = true)
+          ret_value
         end
 
-        def is_numeric?(value) # rubocop:disable Naming/PredicateName
-          value.kind_of?(Integer) || value.kind_of?(Float)
+        def is_numeric?(value, ret_value = true)
+          value.kind_of?(Numeric) == ret_value
         end
 
-        def is_string?(value) # rubocop:disable Naming/PredicateName
-          value.kind_of?(String)
+        def is_string?(value, ret_value = true)
+          value.kind_of?(String) == ret_value
         end
 
-        def is_boolean?(value) # rubocop:disable Naming/PredicateName
-          [true, false].include?(value)
+        def is_boolean?(value, ret_value = true)
+          [true, false].include?(value) == ret_value
         end
 
-        def is_timestamp?(value) # rubocop:disable Naming/PredicateName
+        def is_timestamp?(value, ret_value = true)
           require "date"
 
           DateTime.rfc3339(value)
-          true
+          ret_value
         rescue TypeError, Date::Error
-          false
+          !ret_value
         end
+        # rubocop:enable Naming/PredicateName
+        # rubocop:enable Style/OptionalBooleanParameter
 
         def variable_value(context, input)
           variable.value(context, input)

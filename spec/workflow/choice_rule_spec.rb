@@ -156,22 +156,29 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with IsNull" do
-        let(:choices) { [{"Variable" => "$.foo", "IsNull" => true, "Next" => "FirstMatchState"}] }
+        let(:positive) { true }
+        let(:choices) { [{"Variable" => "$.foo", "IsNull" => positive, "Next" => "FirstMatchState"}] }
 
         context "with null" do
           let(:input) { {"foo" => nil} }
-
-          it "returns true" do
-            expect(subject).to eq(true)
-          end
+          it { expect(subject).to eq(true) }
         end
 
         context "with non-null" do
           let(:input) { {"foo" => "bar"} }
+          it { expect(subject).to eq(false) }
+        end
 
-          it "returns false" do
-            expect(subject).to eq(false)
-          end
+        context "with null (false)" do
+          let(:positive) { false }
+          let(:input) { {"foo" => nil} }
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with non-null" do
+          let(:positive) { false }
+          let(:input) { {"foo" => "bar"} }
+          it { expect(subject).to eq(true) }
         end
       end
 
@@ -225,30 +232,40 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with IsNumeric" do
-        let(:choices) { [{"Variable" => "$.foo", "IsNumeric" => true, "Next" => "FirstMatchState"}] }
+        let(:positive) { true }
+        let(:choices) { [{"Variable" => "$.foo", "IsNumeric" => positive, "Next" => "FirstMatchState"}] }
 
         context "with an integer" do
           let(:input) { {"foo" => 1} }
-
-          it "returns true" do
-            expect(subject).to eq(true)
-          end
+          it { expect(subject).to eq(true) }
         end
 
         context "with a float" do
           let(:input) { {"foo" => 1.5} }
-
-          it "returns true" do
-            expect(subject).to eq(true)
-          end
+          it { expect(subject).to eq(true) }
         end
 
         context "with a string" do
           let(:input) { {"foo" => "bar"} }
+          it { expect(subject).to eq(false) }
+        end
 
-          it "returns false" do
-            expect(subject).to eq(false)
-          end
+        context "with an integer (negative)" do
+          let(:input) { {"foo" => 1} }
+          let(:positive) { false }
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with a float (negative)" do
+          let(:input) { {"foo" => 1.5} }
+          let(:positive) { false }
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with a string (negative)" do
+          let(:input) { {"foo" => "bar"} }
+          let(:positive) { false }
+          it { expect(subject).to eq(true) }
         end
       end
 
