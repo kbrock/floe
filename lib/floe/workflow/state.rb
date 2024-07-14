@@ -48,7 +48,7 @@ module Floe
         return Errno::EAGAIN unless ready?(context)
 
         finish(context)
-      rescue Floe::PathError => e
+      rescue Floe::ExecutionError => e
         mark_error(context, e)
       end
 
@@ -82,7 +82,7 @@ module Floe
       def mark_error(context, exception)
         # input or output paths were bad
         context.next_state = nil
-        context.output     = {"Error" => "States.Runtime", "Cause" => exception.message}
+        context.output     = {"Error" => exception.floe_error, "Cause" => exception.message}
         # finish threw an exception, so super was never called, so lets call now
         mark_finished(context)
       end
