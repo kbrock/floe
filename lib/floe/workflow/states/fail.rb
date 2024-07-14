@@ -4,7 +4,7 @@ module Floe
   class Workflow
     module States
       class Fail < Floe::Workflow::State
-        attr_reader :cause, :error
+        attr_reader :cause, :error, :cause_path, :error_path
 
         def initialize(workflow, name, payload)
           super
