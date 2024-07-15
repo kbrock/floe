@@ -98,7 +98,7 @@ module Floe
       def wait_until!(context, seconds: nil, time: nil)
         context.state["WaitUntil"] =
           if seconds
-            (Time.parse(context.state["EnteredTime"]) + seconds).iso8601
+            (Time.now + seconds).iso8601
           elsif time.kind_of?(String)
             time
           else
