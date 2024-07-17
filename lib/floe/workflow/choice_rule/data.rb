@@ -6,10 +6,12 @@ module Floe
       class Data < Floe::Workflow::ChoiceRule
         COMPARE_KEYS = %w[IsNull IsPresent IsNumeric IsString IsBoolean IsTimestamp String Numeric Boolean Timestamp].freeze
 
-        attr_reader :compare_key
+        attr_reader :variable, :compare_key
 
         def initialize(*)
           super
+
+          @variable = payload["Variable"]
           @compare_key = payload.keys.detect { |key| key.match?(/^(#{COMPARE_KEYS.join("|")})/) }
 
           raise Floe::InvalidWorkflowError, "Data-test Expression Choice Rule must have a compare key" if @compare_key.nil?
@@ -105,6 +107,10 @@ module Floe
 
         def compare_value(context, input)
           compare_key.end_with?("Path") ? Path.value(payload[compare_key], context, input) : payload[compare_key]
+        end
+
+        def variable_value(context, input)
+          Path.value(variable, context, input)
         end
       end
     end
