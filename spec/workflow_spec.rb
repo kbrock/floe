@@ -282,7 +282,7 @@ RSpec.describe Floe::Workflow do
 
   describe "#wait_until" do
     it "reads when the workflow will be ready to continue" do
-      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}})
+      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}})
       workflow.run_nonblock
 
       expect(workflow.wait_until).to be_within(1).of(Time.now.utc + 10)
@@ -298,7 +298,7 @@ RSpec.describe Floe::Workflow do
 
   describe "#waiting?" do
     it "reads when the workflow will be ready to continue" do
-      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "End" => true, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}})
+      workflow = make_workflow(ctx, {"FirstState" => {"Type" => "Wait", "Seconds" => 10, "Next" => "SuccessState"}, "SuccessState" => {"Type" => "Succeed"}})
       workflow.run_nonblock
 
       expect(workflow.waiting?).to be_truthy
