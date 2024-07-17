@@ -5,14 +5,13 @@ module Floe
     class ChoiceRule
       class Data < Floe::Workflow::ChoiceRule
         def true?(context, input)
+          return presence_check(context, input) if compare_key == "IsPresent"
+
           lhs = variable_value(context, input)
           rhs = compare_value(context, input)
 
-          validate!(lhs)
-
           case compare_key
           when "IsNull" then is_null?(lhs)
-          when "IsPresent" then is_present?(lhs)
           when "IsNumeric" then is_numeric?(lhs)
           when "IsString" then is_string?(lhs)
           when "IsBoolean" then is_boolean?(lhs)
@@ -47,16 +46,26 @@ module Floe
 
         private
 
-        def validate!(value)
-          raise "No such variable [#{variable}]" if value.nil? && !%w[IsNull IsPresent].include?(compare_key)
+        def presence_check(context, input)
+          rhs = compare_value(context, input)
+          # don't need the value, just need to see if the path finds the value
+          variable_value(context, input)
+
+          # path found the variable_value, (so if they said true, return true)
+          rhs
+        rescue Floe::PathError
+          # variable_value (path) threw an error
+          # it was not found (so if they said false, return true)
+          !rhs
         end
 
         def is_null?(value) # rubocop:disable Naming/PredicateName
           value.nil?
         end
 
-        def is_present?(value) # rubocop:disable Naming/PredicateName
-          !value.nil?
+        # if it got here (and value was fetched), then it is present.
+        def is_present?(_value) # rubocop:disable Naming/PredicateName
+          true
         end
 
         def is_numeric?(value) # rubocop:disable Naming/PredicateName
