@@ -3,6 +3,8 @@
 module Floe
   class Workflow
     class ChoiceRule
+      include ValidationMixin
+
       class << self
         def build(workflow, name, payload)
           if (sub_payloads = payload["Not"])
@@ -27,11 +29,13 @@ module Floe
 
       attr_reader :next, :payload, :children, :name
 
-      def initialize(_workflow, name, payload, children = nil)
+      def initialize(workflow, name, payload, children = nil)
         @name      = name
         @payload   = payload
         @children  = children
         @next      = payload["Next"]
+
+        validate_rule!(workflow)
       end
 
       def true?(*)
@@ -39,6 +43,24 @@ module Floe
       end
 
       private
+
+      def validate_rule!(workflow)
+        if is_child?
+          # non-top level nodes don't allow a next
+          invalid_field_error!("Next", @next, "not allowed in a child rule") if @next
+        elsif !@next
+          # top level nodes require a next
+          missing_field_error!("Next")
+        elsif !workflow_state?(@next, workflow)
+          # top level nodes require a next field that is found
+          invalid_field_error!("Next", @next, "is not found in \"States\"")
+        end
+      end
+
+      # returns true if this is a child rule underneath an And/Or/Not
+      def is_child? # rubocop:disable Naming/PredicateName
+        !(%w[And Or Not] & name[0..-2]).empty?
+      end
     end
   end
 end

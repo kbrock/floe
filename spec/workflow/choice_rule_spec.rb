@@ -16,6 +16,34 @@ RSpec.describe Floe::Workflow::ChoiceRule do
     it "works with valid next" do
       workflow
     end
+
+    context "With unknown Next" do
+      let(:choices) { [{"Variable" => "$.foo", "StringEquals" => "bar", "Next" => "Missing"}] }
+      it { expect { workflow }.to raise_exception(Floe::InvalidWorkflowError, "States.Choice1.Choices.0.Data field \"Next\" value \"Missing\" is not found in \"States\"") }
+    end
+
+    context "with Variable missing" do
+      let(:choices) { [{"StringEquals" => "bar", "Next" => "FirstMatchState"}] }
+
+      it { expect { workflow }.to raise_exception(Floe::InvalidWorkflowError, "States.Choice1.Choices.0.Data does not have required field \"Variable\"") }
+    end
+
+    context "with non-path Variable" do
+      let(:choices) { [{"Variable" => "wrong", "Next" => "FirstMatchState"}] }
+      it { expect { workflow }.to raise_exception(Floe::InvalidWorkflowError, "States.Choice1.Choices.0.Data field \"Variable\" value \"wrong\" Path [wrong] must start with \"$\"") }
+    end
+
+    context "with second level Next (Not)" do
+      let(:choices) { [{"Not" => {"Variable" => "$.foo", "StringEquals" => "bar", "Next" => "FirstMatchState"}, "Next" => "FirstMatchState"}] }
+
+      it { expect { workflow }.to raise_exception(Floe::InvalidWorkflowError, "States.Choice1.Choices.0.Not.0.Data field \"Next\" value \"FirstMatchState\" not allowed in a child rule") }
+    end
+
+    context "with second level Next (And)" do
+      let(:choices) { [{"And" => [{"Variable" => "$.foo", "StringEquals" => "bar", "Next" => "FirstMatchState"}], "Next" => "FirstMatchState"}] }
+
+      it { expect { workflow }.to raise_exception(Floe::InvalidWorkflowError, "States.Choice1.Choices.0.And.0.Data field \"Next\" value \"FirstMatchState\" not allowed in a child rule") }
+    end
   end
 
   describe "#true?" do
@@ -25,7 +53,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
 
     context "with abstract top level class" do
       let(:input) { {} }
-      let(:subject) { described_class.new(workflow, ["Choice1", "Choices", 1], choices.first).true?(context, input) }
+      let(:subject) { described_class.new(workflow, ["Choice1", "Choices", 1, "Data"], choices.first).true?(context, input) }
 
       it "is not implemented" do
         expect { subject }.to raise_exception(NotImplementedError)
@@ -109,7 +137,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
         let(:input) { {"foo" => "bar"} }
 
         it "raises an exception" do
-          expect { subject }.to raise_exception(Floe::InvalidWorkflowError, "Data-test Expression Choice Rule must have a compare key")
+          expect { subject }.to raise_exception(Floe::InvalidWorkflowError, "States.Choice1.Choices.0.Data requires a compare key")
         end
       end
 
