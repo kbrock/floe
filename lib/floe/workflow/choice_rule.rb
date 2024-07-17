@@ -25,15 +25,13 @@ module Floe
         end
       end
 
-      attr_reader :next, :payload, :variable, :children, :name
+      attr_reader :next, :payload, :children, :name
 
       def initialize(_workflow, name, payload, children = nil)
         @name      = name
         @payload   = payload
         @children  = children
-
-        @next     = payload["Next"]
-        @variable = payload["Variable"]
+        @next      = payload["Next"]
       end
 
       def true?(*)
@@ -41,10 +39,6 @@ module Floe
       end
 
       private
-
-      def variable_value(context, input)
-        Path.value(variable, context, input)
-      end
     end
   end
 end
