@@ -59,12 +59,7 @@ RSpec.configure do |config|
   config.include AwesomeSpawn::SpecHelper, :uses_awesome_spawn => true
   config.before(:each, :uses_awesome_spawn) { disable_spawning }
 
-  # factory methods
-
-  def make_workflow(ctx, states)
-    payload = {"StartAt" => states.keys.first, "States" => states}
-    Floe::Workflow.new(payload, ctx)
-  end
+  config.include CommonMethods
 end
 
 require "floe"
