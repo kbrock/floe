@@ -5,8 +5,24 @@ module Floe
     class Context
       attr_accessor :credentials
 
-      # @param context [Json|Hash] (default, create another with input and execution params)
-      # @param input [Hash] (default: {})
+      # @param [Json String|nil] context
+      # @param [Json String|nil] input       (default: {})
+      # @param [Json String|nil] credentials (default: {})
+      def self.from_strings(context, input: "{}", credentials: nil)
+        context = context ? JSON.parse(context) : {}
+        # input is passed through
+        credentials = credentials ? JSON.parse(credentials) : {}
+
+        new(context, :input => input, :credentials => credentials)
+      end
+
+      def self.from_hashes(context = {}, input: {}, credentials: {})
+        new(context, :input => input.to_json, :credentials => credentials)
+      end
+
+      # @param [Json String|Hash] context
+      # @param [Json String|nil]  input
+      # @param [Hash]             credentials
       def initialize(context = nil, input: nil, credentials: {})
         context = JSON.parse(context) if context.kind_of?(String)
         input   = JSON.parse(input || "{}")
@@ -136,6 +152,10 @@ module Floe
 
       def to_h
         @context
+      end
+
+      def to_json(*args)
+        to_h.to_json(*args)
       end
     end
   end

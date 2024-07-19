@@ -22,8 +22,7 @@ module Floe
 
       workflows =
         workflows_inputs.each_slice(2).map do |workflow, input|
-          context = Floe::Workflow::Context.new(opts[:context], :input => input, :credentials => credentials)
-          Floe::Workflow.load(workflow, context)
+          Floe::Workflow.load_from_file(workflow, opts[:context], :input => input, :credentials => credentials)
         end
 
       Floe::Workflow.wait(workflows, &:run_nonblock)

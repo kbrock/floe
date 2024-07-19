@@ -1,3 +1,5 @@
+require "tempfile"
+
 RSpec.describe Floe::Workflow do
   let(:now)   { Time.now.utc }
   let(:input) { {"input" => "value"}.freeze }
@@ -44,6 +46,81 @@ RSpec.describe Floe::Workflow do
       payload = {"StartAt" => "FirstState", "States" => {"FirstState" => {"Type" => "Succeed"}}}
 
       expect { described_class.new(payload, "invalid context") }.to raise_error(Floe::InvalidExecutionInput, "Invalid State Machine Execution Input: unexpected token at 'invalid context': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')")
+    end
+  end
+
+  describe "#load_from_files" do
+    let(:input)   { {"a" => 1} }
+    let(:payload) { {"StartAt" => "First", "States" => {"First" => {"Type" => "Succeed"}}} }
+    let(:creds)   { {"password" => "secret"} }
+
+    # This mirrors the call from cli.rb
+    # Please mirror any changes below with the code over there
+    it "loads workflow from file" do
+      tmp = Tempfile.new
+      tmp.write(payload.to_json)
+      tmp.close
+
+      # This needs to mimic floe/cli.rb
+      workflow = Floe::Workflow.load_from_file(tmp.path, ctx.to_json, :input => input.to_json, :credentials => creds.to_json)
+      expect(workflow.payload).to eq(payload)
+      workflow.start_workflow # populate input
+
+      expect(workflow.context.json_input).to eq(input.to_json)
+      expect(workflow.context.credentials["password"]).to eq("secret")
+    ensure
+      tmp.unlink
+    end
+  end
+
+  describe "#load" do
+    let(:ctx) { Floe::Workflow::Context.new(nil, :input => {"a" => 1}.to_json, :credentials => {"name" => "oldpassword"}).to_h }
+    let(:payload) { {"StartAt" => "First", "States" => {"First" => {"Type" => "Succeed"}}} }
+    let(:credentials) { {"name" => "password"} }
+
+    # This mirrors the call from providers-workflow
+    # Please mirror any changes below with the code over there
+    it "loads workflows from hashes" do
+      workflow = Floe::Workflow.load(payload, ctx, credentials, :name => "workflow1")
+
+      expect(workflow.payload).to eq(payload)
+      expect(workflow.context.credentials).to eq(credentials)
+      workflow.run_nonblock
+      expect(workflow.context.json_output).to eq("{\"a\":1}")
+    end
+  end
+
+  describe "#load_from_file" do
+    let(:ctx) { Floe::Workflow::Context.new(nil, :input => "{\"a\":1}", :credentials => nil) }
+    let(:payload) { {"StartAt" => "First", "States" => {"First" => {"Type" => "Succeed"}}} }
+
+    # Currently not called in the wild
+    it "loads workflow from Stream" do
+      workflow = Floe::Workflow.load_from_file(StringIO.new(payload.to_json), ctx.to_json).start_workflow
+      expect(workflow.payload).to eq(payload)
+      expect(workflow.context.json_input).to eq("{\"a\":1}")
+
+      workflow.run_nonblock
+
+      expect(workflow.context.json_output).to eq("{\"a\":1}")
+    end
+
+    # This mirrors the call from cli.rb
+    # Please mirror any changes below with the code over there
+    it "loads workflow from file" do
+      tmp = Tempfile.new
+      tmp.write(payload.to_json)
+      tmp.close
+
+      # This needs to mimic floe/cli.rb
+      workflow = Floe::Workflow.load_from_file(tmp.path, ctx.to_json).start_workflow
+      expect(workflow.payload).to eq(payload)
+      expect(workflow.context.json_input).to eq("{\"a\":1}")
+
+      workflow.run_nonblock
+      expect(workflow.context.json_output).to eq("{\"a\":1}")
+    ensure
+      tmp.unlink
     end
   end
 

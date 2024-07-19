@@ -9,12 +9,24 @@ module Floe
     include ValidationMixin
 
     class << self
-      def load(path_or_io, context = nil, credentials = {}, name = nil)
+      # @param [String|IO] path_or_io filename path or stream object
+      # @param [String|nil] context
+      # @param [String|nil] credentials
+      # @param [String|nil] name (defaults to path_or_io filename if it is a filename)
+      def load_from_file(path_or_io, context = nil, input: "{}", credentials: nil, name: nil)
         payload = path_or_io.respond_to?(:read) ? path_or_io.read : File.read(path_or_io)
         # default the name if it is a filename and none was passed in
         name ||= path_or_io.respond_to?(:read) ? "stream" : path_or_io.split("/").last.split(".").first
 
-        new(payload, context, credentials, name)
+        ctx = Context.from_strings(context, :input => input, :credentials => credentials)
+        new(payload, ctx, :name => name)
+      end
+
+      # @param [Hash] payload
+      # @param [Hash] context
+      # @param [Hash] credentials
+      def load(payload, context, credentials, name: nil)
+        new(payload.to_json, context, credentials, :name => name)
       end
 
       def wait(workflows, timeout: nil, &block)
@@ -88,7 +100,11 @@ module Floe
 
     attr_reader :context, :payload, :states, :states_by_name, :start_at, :name, :comment
 
-    def initialize(payload, context = nil, credentials = nil, name = nil)
+    # @param [Json String|Hash|Array] payload
+    # @param [Context|Hash] context
+    # @param [Hash|String|nil] credentials injects into credentials
+    # @param [String|nil] name (defaults to State Machine)
+    def initialize(payload, context = nil, credentials = nil, name: nil)
       payload     = JSON.parse(payload)     if payload.kind_of?(String)
       credentials = JSON.parse(credentials) if credentials.kind_of?(String)
       context     = Context.new(context)    unless context.kind_of?(Context)
