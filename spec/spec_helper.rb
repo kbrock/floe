@@ -61,18 +61,9 @@ RSpec.configure do |config|
 
   # factory methods
 
-  def make_workflow(ctx, payload)
-    Floe::Workflow.new(make_payload(payload), ctx)
-  end
-
-  def make_payload(states)
-    start_at ||= states.keys.first
-
-    {
-      "Comment" => "Sample",
-      "StartAt" => start_at,
-      "States"  => states
-    }
+  def make_workflow(ctx, states)
+    payload = {"StartAt" => states.keys.first, "States" => states}
+    Floe::Workflow.new(payload, ctx)
   end
 end
 
