@@ -18,6 +18,8 @@ if ENV['CI']
   SimpleCov.start
 end
 
+Dir['./spec/support/**/*.rb'].sort.each { |f| require f }
+
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate
@@ -57,21 +59,7 @@ RSpec.configure do |config|
   config.include AwesomeSpawn::SpecHelper, :uses_awesome_spawn => true
   config.before(:each, :uses_awesome_spawn) { disable_spawning }
 
-  # factory methods
-
-  def make_workflow(ctx, payload)
-    Floe::Workflow.new(make_payload(payload), ctx)
-  end
-
-  def make_payload(states)
-    start_at ||= states.keys.first
-
-    {
-      "Comment" => "Sample",
-      "StartAt" => start_at,
-      "States"  => states
-    }
-  end
+  config.include CommonMethods
 end
 
 require "floe"

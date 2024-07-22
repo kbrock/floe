@@ -23,7 +23,7 @@ RSpec.describe Floe::Workflow do
     end
 
     it "raises an exception for invalid States" do
-      payload = make_payload({"FirstState" => {"Type" => "Invalid"}})
+      payload = {"StartAt" => "FirstState", "States" => {"FirstState" => {"Type" => "Invalid"}}}
 
       expect { described_class.new(payload) }.to raise_error(Floe::InvalidWorkflowError, "States.FirstState field \"Type\" value \"Invalid\" is not valid")
     end
@@ -41,7 +41,7 @@ RSpec.describe Floe::Workflow do
     end
 
     it "raises an exception for invalid context" do
-      payload = make_payload({"FirstState" => {"Type" => "Success"}})
+      payload = {"StartAt" => "FirstState", "States" => {"FirstState" => {"Type" => "Succeed"}}}
 
       expect { described_class.new(payload, "invalid context") }.to raise_error(Floe::InvalidExecutionInput, "Invalid State Machine Execution Input: unexpected token at 'invalid context': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')")
     end
