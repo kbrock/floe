@@ -4,9 +4,14 @@ module Floe
   class Workflow
     class ChoiceRule
       class Data < Floe::Workflow::ChoiceRule
-        COMPARE_KEYS = %w[IsNull IsPresent IsNumeric IsString IsBoolean IsTimestamp String Numeric Boolean Timestamp].freeze
+        TYPES      = ["String", "Numeric", "Boolean", "Timestamp", "Present", "Null"].freeze
+        COMPARES   = ["Equals", "LessThan", "GreaterThan", "LessThanEquals", "GreaterThanEquals", "Matches"].freeze
+        # e.g.: (Is)(String), (Is)(Present)
+        TYPE_CHECK = /^(Is)(#{TYPES.join("|")})$/.freeze
+        # e.g.: (String)(LessThan)(Path), (Numeric)(GreaterThanEquals)()
+        OPERATION  = /^(#{(TYPES - %w[Null Present]).join("|")})(#{COMPARES.join("|")})(Path)?$/.freeze
 
-        attr_reader :variable, :compare_key, :value, :path
+        attr_reader :variable, :compare_key, :type, :value, :path
 
         def initialize(_workflow, _name, payload)
           super
@@ -51,8 +56,6 @@ module Floe
             lhs >= rhs
           when "StringMatches"
             lhs.match?(Regexp.escape(rhs).gsub('\*', '.*?'))
-          else
-            raise Floe::InvalidWorkflowError, "Invalid choice [#{compare_key}]"
           end
         end
 
@@ -113,10 +116,13 @@ module Floe
         end
 
         def parse_compare_key
-          @compare_key = payload.keys.detect { |key| key.match?(/^(#{COMPARE_KEYS.join("|")})/) }
+          @compare_key = payload.keys.detect { |key| key.match?(TYPE_CHECK) || key.match?(OPERATION) }
           parser_error!("requires a compare key") unless compare_key
 
-          @path = compare_key.end_with?("Path")
+          @type, _operator, @path = OPERATION.match(compare_key)&.captures
+          # TYPE_CHECK doesn't match this regex, so @path = @type = nil
+          # @path.nil? means this the compare_value will always be a static value (true or false)
+          # @type.nil? means we won't type check the variable or compare value
         end
 
         def parse_path(field_name, payload)
