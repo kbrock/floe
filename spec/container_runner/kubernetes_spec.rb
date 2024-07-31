@@ -15,6 +15,38 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
     allow(kubeclient).to receive(:discover)
   end
 
+  describe "#container_name" do
+    let(:image) { "my-repository/hello-world:latest" }
+
+    it "returns a unique container name based on the image" do
+      expect(subject.container_name(image)).to match(/floe-hello-world-[a-z0-9]+$/)
+    end
+
+    context "with an invalid image name" do
+      let(:image) { ":latest" }
+
+      it "raises an ArgumentError" do
+        expect { subject.container_name(image) }.to raise_error(ArgumentError, "Invalid docker image [#{image}]")
+      end
+    end
+
+    context "with a long image name" do
+      let(:image) { "my-repository/#{"a" * described_class::MAX_CONTAINER_NAME_SIZE}bcdefgh:latest" }
+
+      it "limits the size of the image" do
+        expect(subject.container_name(image)).to match(/floe-#{"a" * described_class::MAX_CONTAINER_NAME_SIZE}-[a-z0-9]+$/)
+      end
+
+      context "with a long name with a trailing invalid character" do
+        let(:image) { "my-repository/#{"a" * (described_class::MAX_CONTAINER_NAME_SIZE - 2)}--bcdefgh:latest" }
+
+        it "strips any trailing invalid characters after limiting the image size" do
+          expect(subject.container_name(image)).to match(/floe-#{"a" * (described_class::MAX_CONTAINER_NAME_SIZE - 2)}-[a-z0-9]+$/)
+        end
+      end
+    end
+  end
+
   describe "#run_async!" do
     it "raises an exception without a resource" do
       expect { subject.run_async!(nil) }.to raise_error(ArgumentError, "Invalid resource")

@@ -24,6 +24,9 @@ module Floe
         # This does not follow the leading and trailing character restriction because we will embed it
         # below with a prefix and suffix that already conform to the RFC.
         normalized_name = name.downcase.gsub(/[^a-z0-9-]/, "-")[0, MAX_CONTAINER_NAME_SIZE]
+        # Ensure that the normalized_name doesn't end in any invalid characters after we
+        # limited the length to the MAX_CONTAINER_NAME_SIZE.
+        normalized_name.gsub!(/[^a-z0-9]+$/, "")
 
         "floe-#{normalized_name}-#{SecureRandom.hex(4)}"
       end
