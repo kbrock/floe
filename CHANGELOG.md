@@ -4,6 +4,32 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.12.0] - 2024-07-31
+### Added
+- Set Floe.logger.level if DEBUG env var set ([#234](https://github.com/ManageIQ/floe/pull/234))
+- Add InstrinsicFunction foundation + States.Array, States.UUID ([#194](https://github.com/ManageIQ/floe/pull/194))
+- Evaluate IntrinsicFunctions from PayloadTemplate ([#236](https://github.com/ManageIQ/floe/pull/236))
+- Add more intrinsic functions ([#242](https://github.com/ManageIQ/floe/pull/242))
+- Add State#cause_path, error_path ([#249](https://github.com/ManageIQ/floe/pull/249))
+- Validate Catcher Next ([#250](https://github.com/ManageIQ/floe/pull/250))
+- Add spec/supports ([#248](https://github.com/ManageIQ/floe/pull/248))
+
+### Fixed
+- Handle non-hash input/output values ([#214](https://github.com/ManageIQ/floe/pull/214))
+- Fix Input/Output handling for Pass, Choice, Succeed states ([#225](https://github.com/ManageIQ/floe/pull/225))
+- Wrap Parslet::ParseFailed errors as Floe::InvalidWorkflowError ([#235](https://github.com/ManageIQ/floe/pull/235))
+- Fix edge cases with States.Array ([#237](https://github.com/ManageIQ/floe/pull/237))
+- Fix sporadic test failure with Wait state ([#243](https://github.com/ManageIQ/floe/pull/243))
+- Fix invalid container names after normalizing ([#252](https://github.com/ManageIQ/floe/pull/252))
+
+### Changed
+- Extract ErrorMatcherMixin from Catch and Retry ([#186](https://github.com/ManageIQ/floe/pull/186))
+- Output should be JSON ([#230](https://github.com/ManageIQ/floe/pull/230))
+- Normalize functions to all take arguments ([#238](https://github.com/ManageIQ/floe/pull/238))
+- Pass full path name to State.new for better errors ([#229](https://github.com/ManageIQ/floe/pull/229))
+- Validate that state machine input is valid JSON ([#227](https://github.com/ManageIQ/floe/pull/227))
+- Move the Parslet parse into initialize so that invalid function definition will fail on workflow load ([#245](https://github.com/ManageIQ/floe/pull/245))
+
 ## [0.11.3] - 2024-06-20
 ### Fixed
 - ResultPath=$ replaces complete output ([#199](https://github.com/ManageIQ/floe/pull/199))
@@ -199,7 +225,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.11.3...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/ManageIQ/floe/compare/v0.11.3...v0.12.0
 [0.11.3]: https://github.com/ManageIQ/floe/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/ManageIQ/floe/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/ManageIQ/floe/compare/v0.11.0...v0.11.1
