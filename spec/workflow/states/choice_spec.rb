@@ -49,8 +49,14 @@ RSpec.describe Floe::Workflow::States::Choice do
 
   describe "#run_nonblock!" do
     context "with a missing variable" do
-      it "raises an exception" do
-        expect { state.run_nonblock!(ctx) }.to raise_error(RuntimeError, "No such variable [$.foo]")
+      it "shows error" do
+        workflow.run_nonblock
+        expect(ctx.output).to eq(
+          {
+            "Cause" => "Path [$.foo] references an invalid value",
+            "Error" => "States.Runtime"
+          }
+        )
       end
     end
 
