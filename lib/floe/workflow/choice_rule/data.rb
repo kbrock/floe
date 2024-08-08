@@ -8,13 +8,12 @@ module Floe
 
         attr_reader :variable, :compare_key
 
-        def initialize(*)
+        def initialize(_workflow, _name, payload)
           super
 
-          @variable = payload["Variable"]
+          @variable = parse_path("Variable", payload)
           @compare_key = payload.keys.detect { |key| key.match?(/^(#{COMPARE_KEYS.join("|")})/) }
-
-          raise Floe::InvalidWorkflowError, "Data-test Expression Choice Rule must have a compare key" if @compare_key.nil?
+          parser_error!("requires a compare key") unless compare_key
         end
 
         def true?(context, input)
@@ -110,7 +109,13 @@ module Floe
         end
 
         def variable_value(context, input)
-          Path.value(variable, context, input)
+          variable.value(context, input)
+        end
+
+        def parse_path(field_name, payload)
+          value = payload[field_name]
+          missing_field_error!(field_name) unless value
+          wrap_parser_error(field_name, value) { Path.new(value) }
         end
       end
     end
