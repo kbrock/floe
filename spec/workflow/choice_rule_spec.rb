@@ -93,7 +93,7 @@ RSpec.describe Floe::Workflow::ChoiceRule do
         let(:input) { {} }
 
         it "raises an exception" do
-          expect { subject }.to raise_exception(RuntimeError, "No such variable [$.foo]")
+          expect { subject }.to raise_exception(Floe::PathError, "Path [$.foo] references an invalid value")
         end
       end
 
@@ -118,22 +118,51 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with IsPresent" do
-        let(:payload) { {"Variable" => "$.foo", "IsPresent" => true, "Next" => "FirstMatchState"} }
+        let(:positive) { true }
+        let(:payload) { {"Variable" => "$.foo", "IsPresent" => positive, "Next" => "FirstMatchState"} }
 
         context "with null" do
           let(:input) { {"foo" => nil} }
-
-          it "returns false" do
-            expect(subject).to eq(false)
-          end
+          it { expect(subject).to eq(true) }
         end
 
-        context "with non-null" do
+        context "with false" do
           let(:input) { {"foo" => "bar"} }
+          it { expect(subject).to eq(true) }
+        end
 
-          it "returns true" do
-            expect(subject).to eq(true)
-          end
+        context "with string" do
+          let(:input) { {"foo" => false} }
+          it { expect(subject).to eq(true) }
+        end
+
+        context "with missing value" do
+          let(:input) { {} }
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with null" do
+          let(:positive) { false }
+          let(:input) { {"foo" => nil} }
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with false" do
+          let(:positive) { false }
+          let(:input) { {"foo" => "bar"} }
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with string" do
+          let(:positive) { false }
+          let(:input) { {"foo" => false} }
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with missing value" do
+          let(:positive) { false }
+          let(:input) { {} }
+          it { expect(subject).to eq(true) }
         end
       end
 
@@ -278,6 +307,11 @@ RSpec.describe Floe::Workflow::ChoiceRule do
           it "returns false" do
             expect(subject).to eq(false)
           end
+        end
+
+        context "with path not found" do
+          let(:input) { {"foo" => 2} }
+          it { expect { subject }.to raise_error(Floe::PathError, "Path [$.bar] references an invalid value") }
         end
       end
 
