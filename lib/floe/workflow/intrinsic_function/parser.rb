@@ -54,6 +54,8 @@ module Floe
         end
 
         [
+          :states_string_to_json,  "States.StringToJson",
+          :states_json_to_string,  "States.JsonToString",
           :states_array,           "States.Array",
           :states_array_partition, "States.ArrayPartition",
           :states_array_contains,  "States.ArrayContains",
@@ -77,7 +79,9 @@ module Floe
         end
 
         rule(:expression) do
-          states_array |
+          states_string_to_json |
+            states_json_to_string |
+            states_array |
             states_array_partition |
             states_array_contains |
             states_array_range |

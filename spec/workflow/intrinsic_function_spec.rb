@@ -450,6 +450,41 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
     end
 
+    describe "States.JsonToString" do
+      it "fetches values from the input" do
+        # this is not in the spec but automatic as part of the parser
+        result = described_class.value("States.JsonToString(true)", {}, {})
+        expect(result).to eq("true")
+
+        result = described_class.value("States.JsonToString($.input)", {}, {"input" => "foo"})
+        expect(result).to eq("\"foo\"")
+
+        result = described_class.value("States.JsonToString($.input)", {}, {"input" => nil})
+        expect(result).to eq("null")
+
+        result = described_class.value("States.JsonToString($.input)", {}, {"input" => true})
+        expect(result).to eq("true")
+
+        result = described_class.value("States.JsonToString($.input)", {}, {"input" => 5})
+        expect(result).to eq("5")
+
+        result = described_class.value("States.JsonToString($.input)", {}, {"input" => {"foo" => "bar"}})
+        expect(result).to eq("{\"foo\":\"bar\"}")
+
+        result = described_class.value("States.JsonToString($.input)", {}, {"input" => ["foo", "bar"]})
+        expect(result).to eq("[\"foo\",\"bar\"]")
+      end
+
+      it "requires 1 parameter" do
+        expect { described_class.value("States.JsonToString()", {}, {}) }.to raise_error(ArgumentError, "wrong number of arguments to States.JsonToString (given 0, expected 1)")
+        expect { described_class.value("States.JsonToString($.input, true)", {}, {"input" => 5}) }.to raise_error(ArgumentError, "wrong number of arguments to States.JsonToString (given 2, expected 1)")
+      end
+
+      it "requires a valid path" do
+        expect { described_class.value("States.JsonToString($.input)", {}, {}) }.to raise_error(Floe::PathError, "Path [$.input] references an invalid value")
+      end
+    end
+
     describe "States.MathRandom" do
       it "with a start and end" do
         result = described_class.value("States.MathRandom(1, 999)")
@@ -607,6 +642,44 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
 
         expect { described_class.value("States.StringSplit(1, ',')") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.StringSplit (given Integer, expected String)")
         expect { described_class.value("States.StringSplit('', 2)") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.StringSplit (given Integer, expected String)")
+      end
+    end
+
+    describe "States.StringToJson" do
+      it "fetches values from the input" do
+        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "\"foo\""})
+        expect(result).to eq("foo")
+
+        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "null"})
+        expect(result).to eq(nil)
+
+        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "true"})
+        expect(result).to eq(true)
+
+        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "5"})
+        expect(result).to eq(5)
+
+        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "{\"foo\":\"bar\"}"})
+        expect(result).to eq({"foo" => "bar"})
+
+        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "[\"foo\",\"bar\"]"})
+        expect(result).to eq(["foo", "bar"])
+      end
+
+      it "expects 1 parameter" do
+        expect { described_class.value("States.StringToJson()", {}, {"input" => "\"foo\""}) }.to raise_error(ArgumentError, "wrong number of arguments to States.StringToJson (given 0, expected 1)")
+        expect { described_class.value("States.StringToJson($.input, true)", {}, {"input" => "\"foo\""}) }.to raise_error(ArgumentError, "wrong number of arguments to States.StringToJson (given 2, expected 1)")
+      end
+
+      it "requires valid json" do
+        expect { described_class.value("States.StringToJson($.input)", {}, {"input" => "foo"}) }.to raise_error(ArgumentError, "invalid json: unexpected token at 'foo'")
+
+        expect { described_class.value("States.StringToJson($.input)", {}, {"input" => 5}) }.to raise_error(ArgumentError, "wrong type for argument 1 to States.StringToJson (given Integer, expected String)")
+        expect { described_class.value("States.StringToJson($.input)", {}, {"input" => nil}) }.to raise_error(ArgumentError, "wrong type for argument 1 to States.StringToJson (given NilClass, expected String)")
+      end
+
+      it "requires a valid path" do
+        expect { described_class.value("States.StringToJson($.input)", {}, {}) }.to raise_error(Floe::PathError, "Path [$.input] references an invalid value")
       end
     end
 
