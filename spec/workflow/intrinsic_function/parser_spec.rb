@@ -327,6 +327,16 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     end
   end
 
+  describe "states_json_merge" do
+    subject { described_class.new.states_json_merge }
+
+    it do
+      expect(subject).to parse("States.JsonMerge($.left, $.right, false)")
+
+      expect(subject).to_not parse("States.JsonMerge")
+    end
+  end
+
   describe "states_math_random" do
     subject { described_class.new.states_math_random }
 
