@@ -50,7 +50,11 @@ module Floe
             args.zip(signature).each_with_index do |(arg, type), index|
               type = type.type if type.kind_of?(OptionalArg)
 
-              raise ArgumentError, "wrong type for argument #{index + 1} to #{function} (given #{arg.class}, expected #{type})" unless arg.kind_of?(type)
+              if type.kind_of?(Array)
+                raise ArgumentError, "wrong type for argument #{index + 1} to #{function} (given #{arg.class}, expected one of #{type.join(", ")})" unless type.any? { |t| arg.kind_of?(t) }
+              else
+                raise ArgumentError, "wrong type for argument #{index + 1} to #{function} (given #{arg.class}, expected #{type})" unless arg.kind_of?(type)
+              end
             end
           end
         end
