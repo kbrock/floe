@@ -77,6 +77,34 @@ module Floe
         rule(:number   => simple(:v)) { v.match(/[eE.]/) ? Float(v) : Integer(v) }
         rule(:jsonpath => simple(:v)) { Floe::Workflow::Path.value(v.to_s, context, input) }
 
+        STATES_FORMAT_PLACEHOLDER = /(?<!\\)\{\}/.freeze
+
+        rule(:states_format => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.Format", [String, VariadicArgs[[String, TrueClass, FalseClass, Integer, Float, NilClass]]])
+          str, *rest = *args
+
+          # TODO: Handle templates with escaped characters, including invalid templates
+          #   See https://states-language.net/#intrinsic-functions (number 6)
+
+          expected_args = str.scan(STATES_FORMAT_PLACEHOLDER).size
+          actual_args = rest.size
+          if expected_args != actual_args
+            raise ArgumentError, "number of arguments to States.Format do not match the occurrences of {} (given #{actual_args}, expected #{expected_args})"
+          end
+
+          rest.each do |arg|
+            str = str.sub(STATES_FORMAT_PLACEHOLDER, arg.nil? ? "null" : arg.to_s)
+          end
+
+          # TODO: Handle arguments that have escape characters within them but are interpolated
+          str.gsub!("\\'", "'")
+          str.gsub!("\\{", "{")
+          str.gsub!("\\}", "}")
+          str.gsub!("\\\\", "\\")
+
+          str
+        end
+
         rule(:states_array => {:args => subtree(:args)}) do
           Transformer.process_args(args, "States.Array")
         end
