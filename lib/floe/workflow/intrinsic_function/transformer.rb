@@ -9,6 +9,7 @@ module Floe
     class IntrinsicFunction
       class Transformer < Parslet::Transform
         OptionalArg = Struct.new(:type)
+        VariadicArgs = Struct.new(:type)
 
         class << self
           def process_args(args, function, signature = nil)
@@ -37,16 +38,25 @@ module Floe
 
           def check_arity(args, function, signature)
             if signature.any?(OptionalArg)
-              signature_without_optional = signature.reject { |a| a.kind_of?(OptionalArg) }
-              signature_size = (signature_without_optional.size..signature.size)
+              signature_required = signature.reject { |a| a.kind_of?(OptionalArg) }
+              signature_size = (signature_required.size..signature.size)
 
               raise ArgumentError, "wrong number of arguments to #{function} (given #{args.size}, expected #{signature_size})" unless signature_size.include?(args.size)
+            elsif signature.any?(VariadicArgs)
+              signature_required = signature.reject { |a| a.kind_of?(VariadicArgs) }
+
+              raise ArgumentError, "wrong number of arguments to #{function} (given #{args.size}, expected at least #{signature_required.size})" unless args.size >= signature_required.size
             else
               raise ArgumentError, "wrong number of arguments to #{function} (given #{args.size}, expected #{signature.size})" unless signature.size == args.size
             end
           end
 
           def check_types(args, function, signature)
+            # Adjust the signature for VariadicArgs to create a copy of the expected type for each given arg
+            if signature.last.kind_of?(VariadicArgs)
+              signature = signature[0..-2] + Array.new(args.size - signature.size + 1, signature.last.type)
+            end
+
             args.zip(signature).each_with_index do |(arg, type), index|
               type = type.type if type.kind_of?(OptionalArg)
 
