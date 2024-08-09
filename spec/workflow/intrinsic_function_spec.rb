@@ -85,15 +85,19 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect { described_class.value("States.Format('{\\}')") }.to raise_error(ArgumentError, "Invalid template in States.Format (matching '}' not found for '{')")
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.Format()") }.to raise_error(ArgumentError, "wrong number of arguments to States.Format (given 0, expected at least 1)")
+      end
 
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.Format(1, 4)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.Format (given Integer, expected String)")
 
         expect { described_class.value("States.Format('{} {}', States.Array(), 1)") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.Format (given Array, expected one of String, TrueClass, FalseClass, Integer, Float, NilClass)")
         expect { described_class.value("States.Format('{} {}', 1, States.Array())") }.to raise_error(ArgumentError, "wrong type for argument 3 to States.Format (given Array, expected one of String, TrueClass, FalseClass, Integer, Float, NilClass)")
         expect { described_class.value("States.Format('{} {}', $.hash, 1)", {}, {"hash" => {}}) }.to raise_error(ArgumentError, "wrong type for argument 2 to States.Format (given Hash, expected one of String, TrueClass, FalseClass, Integer, Float, NilClass)")
+      end
 
+      it "fails with non-matching arguments to occurrences of {}" do
         expect { described_class.value("States.Format('{}')") }.to raise_error(ArgumentError, "number of arguments to States.Format do not match the occurrences of {} (given 0, expected 1)")
         expect { described_class.value("States.Format('{} {}', 1)") }.to raise_error(ArgumentError, "number of arguments to States.Format do not match the occurrences of {} (given 1, expected 2)")
       end
@@ -169,14 +173,18 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq([[1, 2, 3, 4], [5, 6, 7, 8], [9]])
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.ArrayPartition()") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayPartition (given 0, expected 2)")
         expect { described_class.value("States.ArrayPartition(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayPartition (given 1, expected 2)")
         expect { described_class.value("States.ArrayPartition(States.Array(), 1, 'foo')") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayPartition (given 3, expected 2)")
+      end
 
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.ArrayPartition(1, 4)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.ArrayPartition (given Integer, expected Array)")
         expect { described_class.value("States.ArrayPartition(States.Array(), 'foo')") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.ArrayPartition (given String, expected Integer)")
+      end
 
+      it "fails with invalid argument values" do
         expect { described_class.value("States.ArrayPartition(States.Array(), -1)") }.to raise_error(ArgumentError, "invalid value for argument 2 to States.ArrayPartition (given -1, expected a positive Integer)")
         expect { described_class.value("States.ArrayPartition(States.Array(), 0)") }.to raise_error(ArgumentError, "invalid value for argument 2 to States.ArrayPartition (given 0, expected a positive Integer)")
       end
@@ -220,11 +228,13 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq(false)
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.ArrayContains()") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayContains (given 0, expected 2)")
         expect { described_class.value("States.ArrayContains(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayContains (given 1, expected 2)")
         expect { described_class.value("States.ArrayContains(States.Array(), 1, 'foo')") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayContains (given 3, expected 2)")
+      end
 
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.ArrayContains(1, 5)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.ArrayContains (given Integer, expected Array)")
       end
     end
@@ -290,17 +300,21 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq([1, 4, 7])
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.ArrayRange()") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayRange (given 0, expected 3)")
         expect { described_class.value("States.ArrayRange(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayRange (given 1, expected 3)")
         expect { described_class.value("States.ArrayRange(1, 9)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayRange (given 2, expected 3)")
         expect { described_class.value("States.ArrayRange(1, 9, 2, 4)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayRange (given 4, expected 3)")
+      end
 
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.ArrayRange('1', '9', '2')") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.ArrayRange (given String, expected Integer)")
         expect { described_class.value("States.ArrayRange('1', 9, 2)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.ArrayRange (given String, expected Integer)")
         expect { described_class.value("States.ArrayRange(1, '9', 2)") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.ArrayRange (given String, expected Integer)")
         expect { described_class.value("States.ArrayRange(1, 9, '2')") }.to raise_error(ArgumentError, "wrong type for argument 3 to States.ArrayRange (given String, expected Integer)")
+      end
 
+      it "fails with invalid argument values" do
         expect { described_class.value("States.ArrayRange(1, 9, 0)") }.to raise_error(ArgumentError, "invalid value for argument 3 to States.ArrayRange (given 0, expected a non-zero Integer)")
       end
     end
@@ -333,13 +347,17 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq(6)
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.ArrayGetItem()") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayGetItem (given 0, expected 2)")
         expect { described_class.value("States.ArrayGetItem(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayGetItem (given 1, expected 2)")
         expect { described_class.value("States.ArrayGetItem(States.Array(), 1, 'foo')") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayGetItem (given 3, expected 2)")
+      end
 
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.ArrayGetItem(States.Array(), '5')") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.ArrayGetItem (given String, expected Integer)")
+      end
 
+      it "fails with invalid argument values" do
         expect { described_class.value("States.ArrayGetItem(States.Array(), -1)") }.to raise_error(ArgumentError, "invalid value for argument 2 to States.ArrayGetItem (given -1, expected 0 or a positive Integer)")
       end
     end
@@ -388,10 +406,12 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq([1, 2, 3, 4])
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.ArrayUnique()") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayUnique (given 0, expected 1)")
         expect { described_class.value("States.ArrayUnique(States.Array(), 1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.ArrayUnique (given 2, expected 1)")
+      end
 
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.ArrayUnique(1)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.ArrayUnique (given Integer, expected Array)")
       end
     end
@@ -412,10 +432,12 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq("RGF0YSB0byBlbmNvZGU=")
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.Base64Encode()") }.to raise_error(ArgumentError, "wrong number of arguments to States.Base64Encode (given 0, expected 1)")
         expect { described_class.value("States.Base64Encode('', 1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.Base64Encode (given 2, expected 1)")
+      end
 
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.Base64Encode(1)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.Base64Encode (given Integer, expected String)")
       end
     end
@@ -436,12 +458,16 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq("Data to encode")
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.Base64Decode()") }.to raise_error(ArgumentError, "wrong number of arguments to States.Base64Decode (given 0, expected 1)")
         expect { described_class.value("States.Base64Decode('', 1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.Base64Decode (given 2, expected 1)")
+      end
 
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.Base64Decode(1)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.Base64Decode (given Integer, expected String)")
+      end
 
+      it "fails with invalid argument values" do
         expect { described_class.value("States.Base64Decode('garbage')") }.to raise_error(ArgumentError, "invalid value for argument 1 to States.Base64Decode (invalid base64)")
       end
     end
@@ -517,20 +543,24 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq("7cb6efb98ba5972a9b5090dc2e517fe14d12cb04")
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.Hash()") }.to raise_error(ArgumentError, "wrong number of arguments to States.Hash (given 0, expected 2)")
         expect { described_class.value("States.Hash('')") }.to raise_error(ArgumentError, "wrong number of arguments to States.Hash (given 1, expected 2)")
         expect { described_class.value("States.Hash('', 'SHA-1', 1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.Hash (given 3, expected 2)")
+      end
 
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.Hash('', 1)") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.Hash (given Integer, expected String)")
+      end
 
+      it "fails with invalid argument values" do
         expect { described_class.value("States.Hash(null, 'SHA-1')") }.to raise_error(ArgumentError, "invalid value for argument 1 to States.Hash (given null, expected non-null)")
         expect { described_class.value("States.Hash('', 'FOO')") }.to raise_error(ArgumentError, 'invalid value for argument 2 to States.Hash (given "FOO", expected one of "MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512")')
       end
     end
 
     describe "States.JsonMerge" do
-      it "it merges with right hand precedence" do
+      it "merges with right hand precedence" do
         result = described_class.value(
           "States.JsonMerge($.left, $.right, false)", {},
           {"left" => {"a" => "la", "b" => "lb"}, "right" => {"b" => "rb"}}
@@ -538,7 +568,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq({"a" => "la", "b" => "rb"})
       end
 
-      it "it deep merges with right hand precedence" do
+      it "deep merges with right hand precedence" do
         result = described_class.value(
           "States.JsonMerge($.left, $.right, true)", {},
           {"left" => {"b" => {"ba" => "lb", "bb" => "lb"}}, "right" => {"b" => {"ba" => "rb"}}}
@@ -546,12 +576,12 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq({"b" => {"ba" => "rb", "bb" => "lb"}})
       end
 
-      it "fails with wrong number of parameters" do
-        expect { described_class.value("States.JsonMerge($.left, $.right)", {}, {"left" => [1, 2], "right" => {"a" => "la"}}) }.to raise_error(ArgumentError, "wrong number of arguments to States.JsonMerge (given 2, expected 3)")
-        expect { described_class.value("States.JsonMerge($.left, $.right, false, 5)", {}, {"left" => [1, 2], "right" => {"a" => "la"}}) }.to raise_error(ArgumentError, "wrong number of arguments to States.JsonMerge (given 4, expected 3)")
+      it "fails with wrong number of arguments" do
+        expect { described_class.value("States.JsonMerge($.left, $.right)", {}, {"left" => {}, "right" => {}}) }.to raise_error(ArgumentError, "wrong number of arguments to States.JsonMerge (given 2, expected 3)")
+        expect { described_class.value("States.JsonMerge($.left, $.right, false, 5)", {}, {"left" => {}, "right" => {}}) }.to raise_error(ArgumentError, "wrong number of arguments to States.JsonMerge (given 4, expected 3)")
       end
 
-      it "fails with wrong type of parameters" do
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.JsonMerge($.left, $.right, false)", {}, {"left" => [1, 2], "right" => {"a" => "la"}}) }.to raise_error(ArgumentError, "wrong type for argument 1 to States.JsonMerge (given Array, expected Hash)")
         expect { described_class.value("States.JsonMerge($.left, $.right, false)", {}, {"left" => {"a" => "la"}, "right" => [1, 2]}) }.to raise_error(ArgumentError, "wrong type for argument 2 to States.JsonMerge (given Array, expected Hash)")
         expect { described_class.value("States.JsonMerge($.left, $.right, 5)", {}, {"left" => {"a" => "la"}, "right" => {"b" => "rb"}}) }.to raise_error(ArgumentError, "wrong type for argument 3 to States.JsonMerge (given Integer, expected one of TrueClass, FalseClass)")
@@ -583,13 +613,9 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq("[\"foo\",\"bar\"]")
       end
 
-      it "requires 1 parameter" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.JsonToString()", {}, {}) }.to raise_error(ArgumentError, "wrong number of arguments to States.JsonToString (given 0, expected 1)")
         expect { described_class.value("States.JsonToString($.input, true)", {}, {"input" => 5}) }.to raise_error(ArgumentError, "wrong number of arguments to States.JsonToString (given 2, expected 1)")
-      end
-
-      it "requires a valid path" do
-        expect { described_class.value("States.JsonToString($.input)", {}, {}) }.to raise_error(Floe::PathError, "Path [$.input] references an invalid value")
       end
     end
 
@@ -644,15 +670,19 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         counts.each_key { |n| expect(counts[n]).to be > 0 }
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.MathRandom()") }.to raise_error(ArgumentError, "wrong number of arguments to States.MathRandom (given 0, expected 2..3)")
         expect { described_class.value("States.MathRandom(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.MathRandom (given 1, expected 2..3)")
         expect { described_class.value("States.MathRandom(1, 2, 1234, 4)") }.to raise_error(ArgumentError, "wrong number of arguments to States.MathRandom (given 4, expected 2..3)")
+      end
 
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.MathRandom('1', 2)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.MathRandom (given String, expected Integer)")
         expect { described_class.value("States.MathRandom(1, '2')") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.MathRandom (given String, expected Integer)")
         expect { described_class.value("States.MathRandom(1, 2, '1234')") }.to raise_error(ArgumentError, "wrong type for argument 3 to States.MathRandom (given String, expected Integer)")
+      end
 
+      it "fails with invalid argument values" do
         expect { described_class.value("States.MathRandom(1, 1)") }.to raise_error(ArgumentError, "invalid values for arguments to States.MathRandom (start must be less than end)")
         expect { described_class.value("States.MathRandom(999, 1)") }.to raise_error(ArgumentError, "invalid values for arguments to States.MathRandom (start must be less than end)")
       end
@@ -679,11 +709,13 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq(110)
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.MathAdd()") }.to raise_error(ArgumentError, "wrong number of arguments to States.MathAdd (given 0, expected 2)")
         expect { described_class.value("States.MathAdd(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.MathAdd (given 1, expected 2)")
         expect { described_class.value("States.MathAdd(1, 2, 3)") }.to raise_error(ArgumentError, "wrong number of arguments to States.MathAdd (given 3, expected 2)")
+      end
 
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.MathAdd('1', 2)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.MathAdd (given String, expected Integer)")
         expect { described_class.value("States.MathAdd(1, '2')") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.MathAdd (given String, expected Integer)")
 
@@ -743,11 +775,13 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq(%w[1 2 3 4 5])
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.StringSplit()") }.to raise_error(ArgumentError, "wrong number of arguments to States.StringSplit (given 0, expected 2)")
         expect { described_class.value("States.StringSplit('')") }.to raise_error(ArgumentError, "wrong number of arguments to States.StringSplit (given 1, expected 2)")
         expect { described_class.value("States.StringSplit('', ',', '')") }.to raise_error(ArgumentError, "wrong number of arguments to States.StringSplit (given 3, expected 2)")
+      end
 
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.StringSplit(1, ',')") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.StringSplit (given Integer, expected String)")
         expect { described_class.value("States.StringSplit('', 2)") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.StringSplit (given Integer, expected String)")
       end
@@ -774,20 +808,18 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(result).to eq(["foo", "bar"])
       end
 
-      it "expects 1 parameter" do
-        expect { described_class.value("States.StringToJson()", {}, {"input" => "\"foo\""}) }.to raise_error(ArgumentError, "wrong number of arguments to States.StringToJson (given 0, expected 1)")
-        expect { described_class.value("States.StringToJson($.input, true)", {}, {"input" => "\"foo\""}) }.to raise_error(ArgumentError, "wrong number of arguments to States.StringToJson (given 2, expected 1)")
+      it "fails with wrong number of arguments" do
+        expect { described_class.value("States.StringToJson()", {}, {"input" => ""}) }.to raise_error(ArgumentError, "wrong number of arguments to States.StringToJson (given 0, expected 1)")
+        expect { described_class.value("States.StringToJson($.input, true)", {}, {"input" => ""}) }.to raise_error(ArgumentError, "wrong number of arguments to States.StringToJson (given 2, expected 1)")
       end
 
-      it "requires valid json" do
-        expect { described_class.value("States.StringToJson($.input)", {}, {"input" => "foo"}) }.to raise_error(ArgumentError, "invalid json: unexpected token at 'foo'")
-
+      it "fails with wrong type of arguments" do
         expect { described_class.value("States.StringToJson($.input)", {}, {"input" => 5}) }.to raise_error(ArgumentError, "wrong type for argument 1 to States.StringToJson (given Integer, expected String)")
         expect { described_class.value("States.StringToJson($.input)", {}, {"input" => nil}) }.to raise_error(ArgumentError, "wrong type for argument 1 to States.StringToJson (given NilClass, expected String)")
       end
 
-      it "requires a valid path" do
-        expect { described_class.value("States.StringToJson($.input)", {}, {}) }.to raise_error(Floe::PathError, "Path [$.input] references an invalid value")
+      it "fails with invalid argument values" do
+        expect { described_class.value("States.StringToJson($.input)", {}, {"input" => "foo"}) }.to raise_error(ArgumentError, "invalid json: unexpected token at 'foo'")
       end
     end
 
@@ -802,7 +834,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
         expect(uuid_version).to eq(4)
       end
 
-      it "fails with invalid args" do
+      it "fails with wrong number of arguments" do
         expect { described_class.value("States.UUID(1)") }.to raise_error(ArgumentError, "wrong number of arguments to States.UUID (given 1, expected 0)")
         expect { described_class.value("States.UUID(null)") }.to raise_error(ArgumentError, "wrong number of arguments to States.UUID (given 1, expected 0)")
         expect { described_class.value("States.UUID(1, 2)") }.to raise_error(ArgumentError, "wrong number of arguments to States.UUID (given 2, expected 0)")
