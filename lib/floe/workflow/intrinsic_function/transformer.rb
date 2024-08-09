@@ -177,7 +177,7 @@ module Floe
         rule(:states_hash => {:args => subtree(:args)}) do
           args = Transformer.process_args(args(), "States.Hash", [Object, String])
           data, algorithm = *args
-          raise NotImplementedError if data.kind_of?(Hash)
+
           if data.nil?
             raise ArgumentError, "invalid value for argument 1 to States.Hash (given null, expected non-null)"
           end
@@ -189,8 +189,8 @@ module Floe
 
           require "openssl"
           algorithm = algorithm.sub("-", "")
-          data = data.to_json unless data.kind_of?(String)
-          OpenSSL::Digest.hexdigest(algorithm, data)
+          data = JSON.generate(data) unless data.kind_of?(String)
+          OpenSSL::Digest.hexdigest(algorithm, data).force_encoding("UTF-8")
         end
 
         rule(:states_json_merge => {:args => subtree(:args)}) do

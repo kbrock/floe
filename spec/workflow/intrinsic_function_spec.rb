@@ -501,7 +501,12 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
 
       it "with a hash" do
-        pending("Not implemented yet")
+        result = described_class.value("States.Hash($.data, 'SHA-1')", {}, {"data" => {"foo" => "bar"}})
+        expect(result).to eq("a5e744d0164540d33b1d7ea616c28f2fa97e754a")
+      end
+
+      it "with a hash (matching the stepfunctions simulator)" do
+        pending "TODO: figure out how the stepfunctions simulator serializes hashes"
 
         result = described_class.value("States.Hash($.data, 'SHA-1')", {}, {"data" => {"foo" => "bar"}})
         expect(result).to eq("dc2935b70ad43836e2e74df2d9758b1e51397997")
