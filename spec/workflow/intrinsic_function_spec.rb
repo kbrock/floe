@@ -589,28 +589,84 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
     end
 
     describe "States.JsonToString" do
-      it "fetches values from the input" do
-        # this is not in the spec but automatic as part of the parser
-        result = described_class.value("States.JsonToString(true)", {}, {})
+      it "with true" do
+        result = described_class.value("States.JsonToString(true)")
         expect(result).to eq("true")
+      end
 
-        result = described_class.value("States.JsonToString($.input)", {}, {"input" => "foo"})
-        expect(result).to eq("\"foo\"")
+      it "with false" do
+        result = described_class.value("States.JsonToString(false)")
+        expect(result).to eq("false")
+      end
 
-        result = described_class.value("States.JsonToString($.input)", {}, {"input" => nil})
+      it "with null" do
+        result = described_class.value("States.JsonToString(null)")
         expect(result).to eq("null")
+      end
 
+      it "with an integer" do
+        result = described_class.value("States.JsonToString(5)")
+        expect(result).to eq("5")
+      end
+
+      it "with an float" do
+        result = described_class.value("States.JsonToString(1.5)")
+        expect(result).to eq("1.5")
+      end
+
+      it "with a string" do
+        result = described_class.value("States.JsonToString('foo')")
+        expect(result).to eq("\"foo\"")
+      end
+
+      it "with an Array" do
+        result = described_class.value("States.JsonToString(States.Array('foo', 'bar'))")
+        expect(result).to eq("[\"foo\",\"bar\"]")
+      end
+
+      it "with a Hash" do
+        result = described_class.value("States.JsonToString(States.StringToJson('{\"foo\": \"bar\"}'))")
+        expect(result).to eq("{\"foo\":\"bar\"}")
+      end
+
+      it "with jsonpath with true" do
         result = described_class.value("States.JsonToString($.input)", {}, {"input" => true})
         expect(result).to eq("true")
+      end
 
+      it "with jsonpath with false" do
+        result = described_class.value("States.JsonToString($.input)", {}, {"input" => false})
+        expect(result).to eq("false")
+      end
+
+      it "with jsonpath with null" do
+        result = described_class.value("States.JsonToString($.input)", {}, {"input" => nil})
+        expect(result).to eq("null")
+      end
+
+      it "with jsonpath with an integer" do
         result = described_class.value("States.JsonToString($.input)", {}, {"input" => 5})
         expect(result).to eq("5")
+      end
 
-        result = described_class.value("States.JsonToString($.input)", {}, {"input" => {"foo" => "bar"}})
-        expect(result).to eq("{\"foo\":\"bar\"}")
+      it "with jsonpath with an float" do
+        result = described_class.value("States.JsonToString($.input)", {}, {"input" => 1.5})
+        expect(result).to eq("1.5")
+      end
 
+      it "with jsonpath with a string" do
+        result = described_class.value("States.JsonToString($.input)", {}, {"input" => 'foo'})
+        expect(result).to eq("\"foo\"")
+      end
+
+      it "with jsonpath with an Array" do
         result = described_class.value("States.JsonToString($.input)", {}, {"input" => ["foo", "bar"]})
         expect(result).to eq("[\"foo\",\"bar\"]")
+      end
+
+      it "with jsonpath with a Hash" do
+        result = described_class.value("States.JsonToString($.input)", {}, {"input" => {"foo" => "bar"}})
+        expect(result).to eq("{\"foo\":\"bar\"}")
       end
 
       it "fails with wrong number of arguments" do
@@ -788,24 +844,84 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
     end
 
     describe "States.StringToJson" do
-      it "fetches values from the input" do
-        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "\"foo\""})
-        expect(result).to eq("foo")
+      it "with true" do
+        result = described_class.value("States.StringToJson('true')")
+        expect(result).to eq(true)
+      end
 
-        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "null"})
+      it "with false" do
+        result = described_class.value("States.StringToJson('false')")
+        expect(result).to eq(false)
+      end
+
+      it "with null" do
+        result = described_class.value("States.StringToJson('null')")
         expect(result).to eq(nil)
+      end
 
+      it "with an integer" do
+        result = described_class.value("States.StringToJson('5')")
+        expect(result).to eq(5)
+      end
+
+      it "with a float" do
+        result = described_class.value("States.StringToJson('1.5')")
+        expect(result).to eq(1.5)
+      end
+
+      it "with a string" do
+        result = described_class.value("States.StringToJson('\"foo\"')")
+        expect(result).to eq("foo")
+      end
+
+      it "with an Array" do
+        result = described_class.value("States.StringToJson('[\"foo\",\"bar\"]')")
+        expect(result).to eq(["foo", "bar"])
+      end
+
+      it "with a Hash" do
+        result = described_class.value("States.StringToJson('{\"foo\":\"bar\"}')")
+        expect(result).to eq({"foo" => "bar"})
+      end
+
+      it "with jsonpath with true" do
         result = described_class.value("States.StringToJson($.input)", {}, {"input" => "true"})
         expect(result).to eq(true)
+      end
 
+      it "with jsonpath with false" do
+        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "false"})
+        expect(result).to eq(false)
+      end
+
+      it "with jsonpath with null" do
+        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "null"})
+        expect(result).to eq(nil)
+      end
+
+      it "with jsonpath with an integer" do
         result = described_class.value("States.StringToJson($.input)", {}, {"input" => "5"})
         expect(result).to eq(5)
+      end
 
-        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "{\"foo\":\"bar\"}"})
-        expect(result).to eq({"foo" => "bar"})
+      it "with jsonpath with a float" do
+        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "1.5"})
+        expect(result).to eq(1.5)
+      end
 
+      it "with jsonpath with a string" do
+        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "\"foo\""})
+        expect(result).to eq("foo")
+      end
+
+      it "with jsonpath with an Array" do
         result = described_class.value("States.StringToJson($.input)", {}, {"input" => "[\"foo\",\"bar\"]"})
         expect(result).to eq(["foo", "bar"])
+      end
+
+      it "with jsonpath with a Hash" do
+        result = described_class.value("States.StringToJson($.input)", {}, {"input" => "{\"foo\":\"bar\"}"})
+        expect(result).to eq({"foo" => "bar"})
       end
 
       it "fails with wrong number of arguments" do
