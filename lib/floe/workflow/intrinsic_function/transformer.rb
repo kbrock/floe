@@ -105,6 +105,22 @@ module Floe
           str
         end
 
+        rule(:states_json_to_string => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.JsonToString", [Object])
+          json = args.first
+
+          JSON.generate(json)
+        end
+
+        rule(:states_string_to_json => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.StringToJson", [String])
+          str = args.first
+
+          JSON.parse(str)
+        rescue JSON::ParserError => e
+          raise ArgumentError, "invalid value for argument 1 to States.StringToJson (invalid json: #{e.message})"
+        end
+
         rule(:states_array => {:args => subtree(:args)}) do
           Transformer.process_args(args, "States.Array")
         end
@@ -198,17 +214,11 @@ module Floe
           left, right, deep = *args
 
           if deep
-            # NOTE: not implemented by aws States language and nuances not defined in docs
+            # NOTE: not implemented by AWS Step Functions and nuances not defined in docs
             left.merge(right) { |_key, l, r| l.kind_of?(Hash) && r.kind_of?(Hash) ? l.merge(r) : r }
           else
             left.merge(right)
           end
-        end
-
-        rule(:states_json_to_string => {:args => subtree(:args)}) do
-          args = Transformer.process_args(args(), "States.JsonToString", [Object])
-          json = args.first
-          JSON.generate(json)
         end
 
         rule(:states_math_random => {:args => subtree(:args)}) do
@@ -240,14 +250,6 @@ module Floe
           else
             str.split(/[#{Regexp.escape(delimeter)}]+/)
           end
-        end
-
-        rule(:states_string_to_json => {:args => subtree(:args)}) do
-          args = Transformer.process_args(args(), "States.StringToJson", [String])
-          string = args.first
-          JSON.parse(string)
-        rescue JSON::ParserError => e
-          raise ArgumentError, "invalid json: #{e.message}"
         end
 
         rule(:states_uuid => {:args => subtree(:args)}) do
