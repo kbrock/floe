@@ -151,6 +151,12 @@ module Floe
           OpenSSL::Digest.hexdigest(algorithm, data)
         end
 
+        rule(:states_json_to_string => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.JsonToString", [Object])
+          json = args.first
+          JSON.generate(json)
+        end
+
         rule(:states_math_random => {:args => subtree(:args)}) do
           args = Transformer.process_args(args(), "States.MathRandom", [Integer, Integer, OptionalArg[Integer]])
           range_start, range_end, seed = *args
@@ -180,6 +186,14 @@ module Floe
           else
             str.split(/[#{Regexp.escape(delimeter)}]+/)
           end
+        end
+
+        rule(:states_string_to_json => {:args => subtree(:args)}) do
+          args = Transformer.process_args(args(), "States.StringToJson", [String])
+          string = args.first
+          JSON.parse(string)
+        rescue JSON::ParserError => e
+          raise ArgumentError, "invalid json: #{e.message}"
         end
 
         rule(:states_uuid => {:args => subtree(:args)}) do

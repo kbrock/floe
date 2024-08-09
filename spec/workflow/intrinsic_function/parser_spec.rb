@@ -196,6 +196,26 @@ RSpec.describe Floe::Workflow::IntrinsicFunction::Parser do
     end
   end
 
+  describe "states_string_to_json" do
+    subject { described_class.new.states_string_to_json }
+
+    it do
+      expect(subject).to parse("States.StringToJson($.input)")
+
+      expect(subject).to_not parse("States.StringToJson")
+    end
+  end
+
+  describe "states_json_to_string" do
+    subject { described_class.new.states_json_to_string }
+
+    it do
+      expect(subject).to parse("States.JsonToString($.input)")
+
+      expect(subject).to_not parse("States.JsonToString")
+    end
+  end
+
   describe "states_array" do
     subject { described_class.new.states_array }
 
