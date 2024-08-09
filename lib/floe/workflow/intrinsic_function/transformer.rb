@@ -118,7 +118,7 @@ module Floe
 
           JSON.parse(str)
         rescue JSON::ParserError => e
-          raise ArgumentError, "invalid json: #{e.message}"
+          raise ArgumentError, "invalid value for argument 1 to States.StringToJson (invalid json: #{e.message})"
         end
 
         rule(:states_array => {:args => subtree(:args)}) do
