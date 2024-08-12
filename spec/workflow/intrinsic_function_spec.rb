@@ -92,9 +92,9 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       it "fails with wrong type of arguments" do
         expect { described_class.value("States.Format(1, 4)") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.Format (given Integer, expected String)")
 
-        expect { described_class.value("States.Format('{} {}', States.Array(), 1)") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.Format (given Array, expected one of String, TrueClass, FalseClass, Integer, Float, NilClass)")
-        expect { described_class.value("States.Format('{} {}', 1, States.Array())") }.to raise_error(ArgumentError, "wrong type for argument 3 to States.Format (given Array, expected one of String, TrueClass, FalseClass, Integer, Float, NilClass)")
-        expect { described_class.value("States.Format('{} {}', $.hash, 1)", {}, {"hash" => {}}) }.to raise_error(ArgumentError, "wrong type for argument 2 to States.Format (given Hash, expected one of String, TrueClass, FalseClass, Integer, Float, NilClass)")
+        expect { described_class.value("States.Format('{} {}', States.Array(), 1)") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.Format (given Array, expected one of String, TrueClass, FalseClass, Numeric, NilClass)")
+        expect { described_class.value("States.Format('{} {}', 1, States.Array())") }.to raise_error(ArgumentError, "wrong type for argument 3 to States.Format (given Array, expected one of String, TrueClass, FalseClass, Numeric, NilClass)")
+        expect { described_class.value("States.Format('{} {}', $.hash, 1)", {}, {"hash" => {}}) }.to raise_error(ArgumentError, "wrong type for argument 2 to States.Format (given Hash, expected one of String, TrueClass, FalseClass, Numeric, NilClass)")
       end
 
       it "fails with non-matching arguments to occurrences of {}" do
@@ -738,7 +738,7 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
 
       it "fails with wrong type of arguments" do
-        expect { described_class.value("States.Hash(null, 'SHA-1')") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.Hash (given NilClass, expected one of String, TrueClass, FalseClass, Integer, Float, Array, Hash)")
+        expect { described_class.value("States.Hash(null, 'SHA-1')") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.Hash (given NilClass, expected one of String, TrueClass, FalseClass, Numeric, Array, Hash)")
         expect { described_class.value("States.Hash('', 1)") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.Hash (given Integer, expected String)")
       end
 

@@ -72,7 +72,7 @@ module Floe
         end
 
         def is_numeric?(value) # rubocop:disable Naming/PredicateName
-          value.kind_of?(Integer) || value.kind_of?(Float)
+          value.kind_of?(Numeric)
         end
 
         def is_string?(value) # rubocop:disable Naming/PredicateName

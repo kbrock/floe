@@ -80,7 +80,7 @@ module Floe
         STATES_FORMAT_PLACEHOLDER = /(?<!\\)\{\}/.freeze
 
         rule(:states_format => {:args => subtree(:args)}) do
-          args = Transformer.process_args(args(), "States.Format", [String, VariadicArgs[[String, TrueClass, FalseClass, Integer, Float, NilClass]]])
+          args = Transformer.process_args(args(), "States.Format", [String, VariadicArgs[[String, TrueClass, FalseClass, Numeric, NilClass]]])
           str, *rest = *args
 
           # TODO: Handle templates with escaped characters, including invalid templates
@@ -191,7 +191,7 @@ module Floe
         end
 
         rule(:states_hash => {:args => subtree(:args)}) do
-          args = Transformer.process_args(args(), "States.Hash", [[String, TrueClass, FalseClass, Integer, Float, Array, Hash], String])
+          args = Transformer.process_args(args(), "States.Hash", [[String, TrueClass, FalseClass, Numeric, Array, Hash], String])
           data, algorithm = *args
 
           algorithms = %w[MD5 SHA-1 SHA-256 SHA-384 SHA-512]
