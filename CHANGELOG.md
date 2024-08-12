@@ -4,6 +4,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.13.0] - 2024-08-12
+### Added
+- Choice rule payload validation path ([#253](https://github.com/ManageIQ/floe/pull/253))
+- Intrinsics JsonToString and StringToJson ([#256](https://github.com/ManageIQ/floe/pull/256))
+- Add States.Format intrinsic function ([#258](https://github.com/ManageIQ/floe/pull/258))
+- Intrinsics States.JsonMerge ([#255](https://github.com/ManageIQ/floe/pull/255))
+- Enable support for Hashes in States.Hash ([#260](https://github.com/ManageIQ/floe/pull/260))
+
 ## [0.12.0] - 2024-07-31
 ### Added
 - Set Floe.logger.level if DEBUG env var set ([#234](https://github.com/ManageIQ/floe/pull/234))
@@ -225,7 +233,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/ManageIQ/floe/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/ManageIQ/floe/compare/v0.11.3...v0.12.0
 [0.11.3]: https://github.com/ManageIQ/floe/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/ManageIQ/floe/compare/v0.11.1...v0.11.2
