@@ -191,12 +191,8 @@ module Floe
         end
 
         rule(:states_hash => {:args => subtree(:args)}) do
-          args = Transformer.process_args(args(), "States.Hash", [Object, String])
+          args = Transformer.process_args(args(), "States.Hash", [[String, TrueClass, FalseClass, Integer, Float, Array, Hash], String])
           data, algorithm = *args
-
-          if data.nil?
-            raise ArgumentError, "invalid value for argument 1 to States.Hash (given null, expected non-null)"
-          end
 
           algorithms = %w[MD5 SHA-1 SHA-256 SHA-384 SHA-512]
           unless algorithms.include?(algorithm)

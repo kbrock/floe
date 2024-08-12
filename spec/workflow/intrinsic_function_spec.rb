@@ -738,11 +738,11 @@ RSpec.describe Floe::Workflow::IntrinsicFunction do
       end
 
       it "fails with wrong type of arguments" do
+        expect { described_class.value("States.Hash(null, 'SHA-1')") }.to raise_error(ArgumentError, "wrong type for argument 1 to States.Hash (given NilClass, expected one of String, TrueClass, FalseClass, Integer, Float, Array, Hash)")
         expect { described_class.value("States.Hash('', 1)") }.to raise_error(ArgumentError, "wrong type for argument 2 to States.Hash (given Integer, expected String)")
       end
 
       it "fails with invalid argument values" do
-        expect { described_class.value("States.Hash(null, 'SHA-1')") }.to raise_error(ArgumentError, "invalid value for argument 1 to States.Hash (given null, expected non-null)")
         expect { described_class.value("States.Hash('', 'FOO')") }.to raise_error(ArgumentError, 'invalid value for argument 2 to States.Hash (given "FOO", expected one of "MD5", "SHA-1", "SHA-256", "SHA-384", "SHA-512")')
       end
     end
