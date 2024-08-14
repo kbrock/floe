@@ -15,20 +15,26 @@ RSpec.describe Floe::ContainerRunner::Podman do
     end
 
     it "calls docker run with the image name" do
-      stub_good_run!("podman", :params => ["run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+      stub_good_run!("podman", :params => ["run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
       subject.run_async!("docker://hello-world:latest")
     end
 
     it "passes environment variables to podman run" do
-      stub_good_run!("podman", :params => ["run", :detach, [:e, "FOO=BAR"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+      stub_good_run!("podman", :params => ["run", :detach, [:e, "FOO=BAR"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
       subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"})
     end
 
+    it "sets the container id in runner_context" do
+      stub_good_run!("podman", :params => ["run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
+
+      expect(subject.run_async!("docker://hello-world:latest")).to include("container_ref" => container_id)
+    end
+
     it "passes a secrets volume to podman run" do
       stub_good_run!("podman", :params => ["secret", "create", anything, "-"], :in_data => {"luggage_password" => "12345"}.to_json)
-      stub_good_run!("podman", :params => ["run", :detach, [:e, "FOO=BAR"], [:e, a_string_including("_CREDENTIALS=")], [:secret, anything], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+      stub_good_run!("podman", :params => ["run", :detach, [:e, "FOO=BAR"], [:e, a_string_including("_CREDENTIALS=")], [:secret, anything], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
       subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
     end
@@ -116,7 +122,7 @@ RSpec.describe Floe::ContainerRunner::Podman do
         let(:runner_options) { {"identity" => ".ssh/id_rsa.pub"} }
 
         it "calls docker run with --identity .ssh/id_rsa.pub" do
-          stub_good_run!("podman", :params => [[:identity, ".ssh/id_rsa.pub"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+          stub_good_run!("podman", :params => [[:identity, ".ssh/id_rsa.pub"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
           subject.run_async!("docker://hello-world:latest")
         end
@@ -126,7 +132,7 @@ RSpec.describe Floe::ContainerRunner::Podman do
         let(:runner_options) { {"log-level" => "debug"} }
 
         it "calls docker run with --log-level debug" do
-          stub_good_run!("podman", :params => [[:"log-level", "debug"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+          stub_good_run!("podman", :params => [[:"log-level", "debug"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
           subject.run_async!("docker://hello-world:latest")
         end
@@ -136,7 +142,7 @@ RSpec.describe Floe::ContainerRunner::Podman do
         let(:runner_options) { {"network" => "host"} }
 
         it "calls docker run with --net host" do
-          stub_good_run!("podman", :params => ["run", :detach, [:net, "host"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+          stub_good_run!("podman", :params => ["run", :detach, [:net, "host"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
           subject.run_async!("docker://hello-world:latest")
         end
@@ -146,7 +152,7 @@ RSpec.describe Floe::ContainerRunner::Podman do
         let(:runner_options) { {"noout" => "true"} }
 
         it "calls docker run with --noout" do
-          stub_good_run!("podman", :params => [:noout, "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+          stub_good_run!("podman", :params => [:noout, "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
           subject.run_async!("docker://hello-world:latest")
         end
@@ -156,7 +162,7 @@ RSpec.describe Floe::ContainerRunner::Podman do
         let(:runner_options) { {"pull-policy" => "newer"} }
 
         it "calls podman run with --noout" do
-          stub_good_run!("podman", :params => ["run", :detach, [:pull, "newer"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+          stub_good_run!("podman", :params => ["run", :detach, [:pull, "newer"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
           subject.run_async!("docker://hello-world:latest")
         end
@@ -166,7 +172,7 @@ RSpec.describe Floe::ContainerRunner::Podman do
         let(:runner_options) { {"root" => "/run/containers/storage"} }
 
         it "calls docker run with --root /run/containers/storage" do
-          stub_good_run!("podman", :params => [[:root, "/run/containers/storage"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+          stub_good_run!("podman", :params => [[:root, "/run/containers/storage"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
           subject.run_async!("docker://hello-world:latest")
         end
@@ -176,7 +182,7 @@ RSpec.describe Floe::ContainerRunner::Podman do
         let(:runner_options) { {"runroot" => "/run/containers/runtime"} }
 
         it "calls docker run with --runroot /run/containers/runtime" do
-          stub_good_run!("podman", :params => [[:runroot, "/run/containers/runtime"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+          stub_good_run!("podman", :params => [[:runroot, "/run/containers/runtime"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
           subject.run_async!("docker://hello-world:latest")
         end
@@ -186,7 +192,7 @@ RSpec.describe Floe::ContainerRunner::Podman do
         let(:runner_options) { {"runtime-flag" => "'log debug'"} }
 
         it "calls docker run with --runtime-flag 'log debug'" do
-          stub_good_run!("podman", :params => [[:"runtime-flag", "'log debug'"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+          stub_good_run!("podman", :params => [[:"runtime-flag", "'log debug'"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
           subject.run_async!("docker://hello-world:latest")
         end
@@ -196,7 +202,7 @@ RSpec.describe Floe::ContainerRunner::Podman do
         let(:runner_options) { {"storage-driver" => "overlay"} }
 
         it "calls docker run with --storage-driver overlay" do
-          stub_good_run!("podman", :params => [[:"storage-driver", "overlay"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+          stub_good_run!("podman", :params => [[:"storage-driver", "overlay"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
           subject.run_async!("docker://hello-world:latest")
         end
@@ -206,7 +212,7 @@ RSpec.describe Floe::ContainerRunner::Podman do
         let(:runner_options) { {"storage-opt" => "ignore_chown_errors=true"} }
 
         it "calls docker run with --storage-driver overlay" do
-          stub_good_run!("podman", :params => [[:"storage-opt", "ignore_chown_errors=true"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+          stub_good_run!("podman", :params => [[:"storage-opt", "ignore_chown_errors=true"], "run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
           subject.run_async!("docker://hello-world:latest")
         end

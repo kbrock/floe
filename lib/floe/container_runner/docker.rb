@@ -129,7 +129,7 @@ module Floe
         logger.debug("Running #{AwesomeSpawn.build_command_line(self.class::DOCKER_COMMAND, params)}")
 
         result = docker!(*params)
-        result.output
+        result.output.chomp
       end
 
       def run_container_params(image, env, secrets_file)
