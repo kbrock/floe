@@ -4,6 +4,15 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.13.1] - 2024-08-16
+### Fixed
+- Fix podman/docker container_ref trailing newline ([#265](https://github.com/ManageIQ/floe/pull/265))
+
+### Changed
+- Improve type check for States.Hash ([#261](https://github.com/ManageIQ/floe/pull/261))
+- Use Numeric over Integer || Float ([#264](https://github.com/ManageIQ/floe/pull/264))
+- In ChoiceRule::Data, parse compare key and variable ([#257](https://github.com/ManageIQ/floe/pull/257))
+
 ## [0.13.0] - 2024-08-12
 ### Added
 - Choice rule payload validation path ([#253](https://github.com/ManageIQ/floe/pull/253))
@@ -233,7 +242,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.13.1...HEAD
+[0.13.1]: https://github.com/ManageIQ/floe/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/ManageIQ/floe/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/ManageIQ/floe/compare/v0.11.3...v0.12.0
 [0.11.3]: https://github.com/ManageIQ/floe/compare/v0.11.2...v0.11.3
