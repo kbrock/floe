@@ -15,21 +15,27 @@ RSpec.describe Floe::ContainerRunner::Docker do
     end
 
     it "calls docker run with the image name" do
-      stub_good_run!("docker", :params => ["run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest",], :output => container_id)
+      stub_good_run!("docker", :params => ["run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest",], :output => "#{container_id}\n")
 
       subject.run_async!("docker://hello-world:latest")
     end
 
     it "passes environment variables to docker run" do
-      stub_good_run!("docker", :params => ["run", :detach, [:e, "FOO=BAR"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+      stub_good_run!("docker", :params => ["run", :detach, [:e, "FOO=BAR"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
       subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"})
     end
 
     it "passes a secrets volume to docker run" do
-      stub_good_run!("docker", :params => ["run", :detach, [:e, "FOO=BAR"], [:e, "_CREDENTIALS=/run/secrets"], [:v, a_string_including(":/run/secrets")], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => container_id)
+      stub_good_run!("docker", :params => ["run", :detach, [:e, "FOO=BAR"], [:e, "_CREDENTIALS=/run/secrets"], [:v, a_string_including(":/run/secrets")], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
       subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
+    end
+
+    it "sets the container id in runner_context" do
+      stub_good_run!("docker", :params => ["run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest",], :output => "#{container_id}\n")
+
+      expect(subject.run_async!("docker://hello-world:latest")).to include("container_ref" => container_id)
     end
 
     context "with network=host" do

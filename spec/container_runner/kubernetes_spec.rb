@@ -78,6 +78,28 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
       subject.run_async!("docker://hello-world:latest")
     end
 
+    it "sets the pod name in runner_context" do
+      expected_pod_spec = hash_including(
+        :kind       => "Pod",
+        :apiVersion => "v1",
+        :metadata   => {
+          :name      => a_string_starting_with("floe-hello-world-"),
+          :namespace => "default"
+        },
+        :spec       => hash_including(
+          :containers => [
+            hash_including(
+              :name  => "floe-hello-world",
+              :image => "hello-world:latest"
+            )
+          ]
+        )
+      )
+      stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
+
+      expect(subject.run_async!("docker://hello-world:latest")).to include("container_ref" => a_string_starting_with("floe-hello-world-"))
+    end
+
     it "calls kubectl run with an image name <= 63 characters" do
       expected_pod_spec = hash_including(
         :kind       => "Pod",
