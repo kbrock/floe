@@ -156,28 +156,35 @@ RSpec.describe Floe::Workflow::ChoiceRule do
       end
 
       context "with IsNull" do
-        let(:choices) { [{"Variable" => "$.foo", "IsNull" => true, "Next" => "FirstMatchState"}] }
+        let(:predicate) { true }
+        let(:choices) { [{"Variable" => "$.foo", "IsNull" => predicate, "Next" => "FirstMatchState"}] }
 
         context "with null" do
           let(:input) { {"foo" => nil} }
-
-          it "returns true" do
-            expect(subject).to eq(true)
-          end
+          it { expect(subject).to eq(true) }
         end
 
         context "with non-null" do
           let(:input) { {"foo" => "bar"} }
+          it { expect(subject).to eq(false) }
+        end
 
-          it "returns false" do
-            expect(subject).to eq(false)
-          end
+        context "with null (false)" do
+          let(:predicate) { false }
+          let(:input) { {"foo" => nil} }
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with non-null" do
+          let(:predicate) { false }
+          let(:input) { {"foo" => "bar"} }
+          it { expect(subject).to eq(true) }
         end
       end
 
       context "with IsPresent" do
-        let(:positive) { true }
-        let(:choices) { [{"Variable" => "$.foo", "IsPresent" => positive, "Next" => "FirstMatchState"}] }
+        let(:predicate) { true }
+        let(:choices) { [{"Variable" => "$.foo", "IsPresent" => predicate, "Next" => "FirstMatchState"}] }
 
         context "with null" do
           let(:input) { {"foo" => nil} }
@@ -200,55 +207,65 @@ RSpec.describe Floe::Workflow::ChoiceRule do
         end
 
         context "with null" do
-          let(:positive) { false }
+          let(:predicate) { false }
           let(:input) { {"foo" => nil} }
           it { expect(subject).to eq(false) }
         end
 
         context "with false" do
-          let(:positive) { false }
+          let(:predicate) { false }
           let(:input) { {"foo" => "bar"} }
           it { expect(subject).to eq(false) }
         end
 
         context "with string" do
-          let(:positive) { false }
+          let(:predicate) { false }
           let(:input) { {"foo" => false} }
           it { expect(subject).to eq(false) }
         end
 
         context "with missing value" do
-          let(:positive) { false }
+          let(:predicate) { false }
           let(:input) { {} }
           it { expect(subject).to eq(true) }
         end
       end
 
       context "with IsNumeric" do
-        let(:choices) { [{"Variable" => "$.foo", "IsNumeric" => true, "Next" => "FirstMatchState"}] }
+        let(:predicate) { true }
+        let(:choices) { [{"Variable" => "$.foo", "IsNumeric" => predicate, "Next" => "FirstMatchState"}] }
 
         context "with an integer" do
           let(:input) { {"foo" => 1} }
-
-          it "returns true" do
-            expect(subject).to eq(true)
-          end
+          it { expect(subject).to eq(true) }
         end
 
         context "with a float" do
           let(:input) { {"foo" => 1.5} }
-
-          it "returns true" do
-            expect(subject).to eq(true)
-          end
+          it { expect(subject).to eq(true) }
         end
 
         context "with a string" do
           let(:input) { {"foo" => "bar"} }
+          it { expect(subject).to eq(false) }
+        end
 
-          it "returns false" do
-            expect(subject).to eq(false)
-          end
+        context "with an integer (negative)" do
+          let(:input) { {"foo" => 1} }
+          let(:predicate) { false }
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with a float (negative)" do
+          let(:input) { {"foo" => 1.5} }
+          let(:predicate) { false }
+          it { expect(subject).to eq(false) }
+        end
+
+        context "with a string (negative)" do
+          let(:input) { {"foo" => "bar"} }
+          let(:predicate) { false }
+          it { expect(subject).to eq(true) }
         end
       end
 

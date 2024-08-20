@@ -23,11 +23,11 @@ module Floe
           rhs = compare_value(context, input)
 
           case compare_key
-          when "IsNull" then is_null?(lhs)
-          when "IsNumeric" then is_numeric?(lhs)
-          when "IsString" then is_string?(lhs)
-          when "IsBoolean" then is_boolean?(lhs)
-          when "IsTimestamp" then is_timestamp?(lhs)
+          when "IsNull" then is_null?(lhs, rhs)
+          when "IsNumeric" then is_numeric?(lhs, rhs)
+          when "IsString" then is_string?(lhs, rhs)
+          when "IsBoolean" then is_boolean?(lhs, rhs)
+          when "IsTimestamp" then is_timestamp?(lhs, rhs)
           when "StringEquals", "StringEqualsPath",
                "NumericEquals", "NumericEqualsPath",
                "BooleanEquals", "BooleanEqualsPath",
@@ -62,47 +62,51 @@ module Floe
           # Get the right hand side for {"Variable": "$.foo", "IsPresent": true} i.e.: true
           # If true  then return true when present.
           # If false then return true when not present.
-          rhs = compare_value(context, input)
+          predicate = compare_value(context, input)
           # Don't need the variable_value, just need to see if the path finds the value.
           variable_value(context, input)
 
           # The variable_value is present
-          # If rhs is true, then presence check was successful, return true.
-          rhs
+          # If predicate is true, then presence check was successful, return true.
+          predicate
         rescue Floe::PathError
           # variable_value is not present. (the path lookup threw an error)
-          # If rhs is false, then it successfully wasn't present, return true.
-          !rhs
+          # If predicate is false, then it successfully wasn't present, return true.
+          !predicate
         end
 
-        def is_null?(value) # rubocop:disable Naming/PredicateName
-          value.nil?
+        # rubocop:disable Naming/PredicateName
+        # rubocop:disable Style/OptionalBooleanParameter
+        def is_null?(value, predicate = true)
+          value.nil? == predicate
         end
 
-        def is_present?(value) # rubocop:disable Naming/PredicateName
-          !value.nil?
+        def is_present?(value, predicate = true)
+          !value.nil? == predicate
         end
 
-        def is_numeric?(value) # rubocop:disable Naming/PredicateName
-          value.kind_of?(Numeric)
+        def is_numeric?(value, predicate = true)
+          value.kind_of?(Numeric) == predicate
         end
 
-        def is_string?(value) # rubocop:disable Naming/PredicateName
-          value.kind_of?(String)
+        def is_string?(value, predicate = true)
+          value.kind_of?(String) == predicate
         end
 
-        def is_boolean?(value) # rubocop:disable Naming/PredicateName
-          [true, false].include?(value)
+        def is_boolean?(value, predicate = true)
+          [true, false].include?(value) == predicate
         end
 
-        def is_timestamp?(value) # rubocop:disable Naming/PredicateName
+        def is_timestamp?(value, predicate = true)
           require "date"
 
           DateTime.rfc3339(value)
-          true
+          predicate
         rescue TypeError, Date::Error
-          false
+          !predicate
         end
+        # rubocop:enable Naming/PredicateName
+        # rubocop:enable Style/OptionalBooleanParameter
 
         def parse_compare_key
           @compare_key = payload.keys.detect { |key| key.match?(/^(#{COMPARE_KEYS.join("|")})/) }
