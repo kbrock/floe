@@ -18,11 +18,11 @@ module Floe
         @pull_policy = options["pull-policy"]
       end
 
-      def run_async!(resource, env = {}, secrets = {}, _context = {})
+      def run_async!(resource, env, secrets, context)
         raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
 
-        image = resource.sub("docker://", "")
-
+        image          = resource.sub("docker://", "")
+        execution_id   = context.execution["Id"]
         runner_context = {}
 
         if secrets && !secrets.empty?
@@ -30,7 +30,7 @@ module Floe
         end
 
         begin
-          runner_context["container_ref"] = run_container(image, env, runner_context["secrets_ref"])
+          runner_context["container_ref"] = run_container(image, env, execution_id, runner_context["secrets_ref"])
           runner_context
         rescue AwesomeSpawn::CommandResultError => err
           cleanup(runner_context)
@@ -123,8 +123,8 @@ module Floe
 
       attr_reader :network
 
-      def run_container(image, env, secrets_file)
-        params = run_container_params(image, env, secrets_file)
+      def run_container(image, env, execution_id, secrets_file)
+        params = run_container_params(image, env, execution_id, secrets_file)
 
         logger.debug("Running #{AwesomeSpawn.build_command_line(self.class::DOCKER_COMMAND, params)}")
 
@@ -132,13 +132,14 @@ module Floe
         result.output.chomp
       end
 
-      def run_container_params(image, env, secrets_file)
+      def run_container_params(image, env, execution_id, secrets_file)
         params  = ["run"]
         params << :detach
         params += env.map { |k, v| [:e, "#{k}=#{v}"] }
         params << [:e, "_CREDENTIALS=/run/secrets"] if secrets_file
         params << [:pull, @pull_policy] if @pull_policy
         params << [:net, "host"] if @network == "host"
+        params << [:label, "execution_id=#{execution_id}"]
         params << [:v, "#{secrets_file}:/run/secrets:z"] if secrets_file
         params << [:name, container_name(image)]
         params << image
@@ -157,11 +158,11 @@ module Floe
         event   = docker_event_status_to_event(status)
         running = event != :delete
 
-        name, exit_code = notice.dig("Actor", "Attributes")&.values_at("name", "exitCode")
+        name, exit_code, execution_id = notice.dig("Actor", "Attributes")&.values_at("name", "exitCode", "execution_id")
 
         runner_context = {"container_ref" => name, "container_state" => {"Running" => running, "ExitCode" => exit_code.to_i}}
 
-        [event, runner_context]
+        [event, {"execution_id" => execution_id, "runner_context" => runner_context}]
       rescue JSON::ParserError
         []
       end

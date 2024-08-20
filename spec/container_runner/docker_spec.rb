@@ -2,49 +2,51 @@ RSpec.describe Floe::ContainerRunner::Docker do
   require "securerandom"
 
   let(:subject)        { described_class.new(runner_options) }
+  let(:execution_id)   { SecureRandom.uuid }
+  let(:context)        { Floe::Workflow::Context.new({"Execution" => {"Id" => execution_id}}) }
   let(:runner_options) { {} }
   let(:container_id)   { SecureRandom.hex }
 
   describe "#run_async!" do
     it "raises an exception without a resource" do
-      expect { subject.run_async!(nil) }.to raise_error(ArgumentError, "Invalid resource")
+      expect { subject.run_async!(nil, {}, {}, context) }.to raise_error(ArgumentError, "Invalid resource")
     end
 
     it "raises an exception for an invalid resource uri" do
-      expect { subject.run_async!("arn:abcd:efgh") }.to raise_error(ArgumentError, "Invalid resource")
+      expect { subject.run_async!("arn:abcd:efgh", {}, {}, context) }.to raise_error(ArgumentError, "Invalid resource")
     end
 
     it "calls docker run with the image name" do
-      stub_good_run!("docker", :params => ["run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest",], :output => "#{container_id}\n")
+      stub_good_run!("docker", :params => ["run", :detach, [:label, "execution_id=#{execution_id}"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest",], :output => "#{container_id}\n")
 
-      subject.run_async!("docker://hello-world:latest")
+      subject.run_async!("docker://hello-world:latest", {}, {}, context)
     end
 
     it "passes environment variables to docker run" do
-      stub_good_run!("docker", :params => ["run", :detach, [:e, "FOO=BAR"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
+      stub_good_run!("docker", :params => ["run", :detach, [:e, "FOO=BAR"], [:label, "execution_id=#{execution_id}"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
-      subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"})
+      subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {}, context)
     end
 
     it "passes a secrets volume to docker run" do
-      stub_good_run!("docker", :params => ["run", :detach, [:e, "FOO=BAR"], [:e, "_CREDENTIALS=/run/secrets"], [:v, a_string_including(":/run/secrets")], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
+      stub_good_run!("docker", :params => ["run", :detach, [:e, "FOO=BAR"], [:e, "_CREDENTIALS=/run/secrets"], [:label, "execution_id=#{execution_id}"], [:v, a_string_including(":/run/secrets")], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"], :output => "#{container_id}\n")
 
-      subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
+      subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"}, context)
     end
 
     it "sets the container id in runner_context" do
-      stub_good_run!("docker", :params => ["run", :detach, [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest",], :output => "#{container_id}\n")
+      stub_good_run!("docker", :params => ["run", :detach, [:label, "execution_id=#{execution_id}"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest",], :output => "#{container_id}\n")
 
-      expect(subject.run_async!("docker://hello-world:latest")).to include("container_ref" => container_id)
+      expect(subject.run_async!("docker://hello-world:latest", {}, {}, context)).to include("container_ref" => container_id)
     end
 
     context "with network=host" do
       let(:runner_options) { {"network" => "host"} }
 
       it "calls docker run with --net host" do
-        stub_good_run!("docker", :params => ["run", :detach, [:net, "host"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"])
+        stub_good_run!("docker", :params => ["run", :detach, [:net, "host"], [:label, "execution_id=#{execution_id}"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"])
 
-        subject.run_async!("docker://hello-world:latest")
+        subject.run_async!("docker://hello-world:latest", {}, {}, context)
       end
     end
 
@@ -52,9 +54,9 @@ RSpec.describe Floe::ContainerRunner::Docker do
       let(:runner_options) { {"pull-policy" => "always"} }
 
       it "calls docker run with --pull always" do
-        stub_good_run!("docker", :params => ["run", :detach, [:pull, "always"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"])
+        stub_good_run!("docker", :params => ["run", :detach, [:pull, "always"], [:label, "execution_id=#{execution_id}"], [:name, a_string_starting_with("floe-hello-world-")], "hello-world:latest"])
 
-        subject.run_async!("docker://hello-world:latest")
+        subject.run_async!("docker://hello-world:latest", {}, {}, context)
       end
     end
   end

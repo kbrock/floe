@@ -5,8 +5,10 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
   end
 
   let(:subject)        { described_class.new(runner_options) }
+  let(:execution_id)   { SecureRandom.uuid }
+  let(:context)        { Floe::Workflow::Context.new({"Execution" => {"Id" => execution_id}}) }
   let(:runner_options) { {"server" => "https://kubernetes.local:6443", "token" => "my-token"} }
-  let(:kubeclient) { double("Kubeclient::Client") }
+  let(:kubeclient)     { double("Kubeclient::Client") }
 
   before do
     require "kubeclient"
@@ -49,11 +51,11 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
 
   describe "#run_async!" do
     it "raises an exception without a resource" do
-      expect { subject.run_async!(nil) }.to raise_error(ArgumentError, "Invalid resource")
+      expect { subject.run_async!(nil, {}, {}, context) }.to raise_error(ArgumentError, "Invalid resource")
     end
 
     it "raises an exception for an invalid resource uri" do
-      expect { subject.run_async!("arn:abcd:efgh") }.to raise_error(ArgumentError, "Invalid resource")
+      expect { subject.run_async!("arn:abcd:efgh", {}, {}, context) }.to raise_error(ArgumentError, "Invalid resource")
     end
 
     it "calls kubectl run with the image name" do
@@ -62,7 +64,8 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
         :apiVersion => "v1",
         :metadata   => {
           :name      => a_string_starting_with("floe-hello-world-"),
-          :namespace => "default"
+          :namespace => "default",
+          :labels    => {"execution_id" => execution_id}
         },
         :spec       => hash_including(
           :containers => [
@@ -75,7 +78,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
       )
       stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      subject.run_async!("docker://hello-world:latest")
+      subject.run_async!("docker://hello-world:latest", {}, {}, context)
     end
 
     it "sets the pod name in runner_context" do
@@ -84,7 +87,8 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
         :apiVersion => "v1",
         :metadata   => {
           :name      => a_string_starting_with("floe-hello-world-"),
-          :namespace => "default"
+          :namespace => "default",
+          :labels    => {"execution_id" => execution_id}
         },
         :spec       => hash_including(
           :containers => [
@@ -97,7 +101,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
       )
       stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      expect(subject.run_async!("docker://hello-world:latest")).to include("container_ref" => a_string_starting_with("floe-hello-world-"))
+      expect(subject.run_async!("docker://hello-world:latest", {}, {}, context)).to include("container_ref" => a_string_starting_with("floe-hello-world-"))
     end
 
     it "calls kubectl run with an image name <= 63 characters" do
@@ -106,7 +110,8 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
         :apiVersion => "v1",
         :metadata   => {
           :name      => a_string_matching(/^floe-this-is-a-very-long-image-name-way-longer-than-sh-\h{8}$/).and(is_a_valid_kube_name),
-          :namespace => "default"
+          :namespace => "default",
+          :labels    => {"execution_id" => execution_id}
         },
         :spec       => hash_including(
           :containers => [
@@ -120,7 +125,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
 
       stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      subject.run_async!("docker://this-is-a-very-long-image-name-way-longer-than-should-be-allowed:latest")
+      subject.run_async!("docker://this-is-a-very-long-image-name-way-longer-than-should-be-allowed:latest", {}, {}, context)
     end
 
     it "calls kubectl run with an image name that has characters that would be invalid in a pod name" do
@@ -129,7 +134,8 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
         :apiVersion => "v1",
         :metadata   => {
           :name      => a_string_matching(/^floe-a-b-c-0--1--2-\h{8}$/).and(is_a_valid_kube_name),
-          :namespace => "default"
+          :namespace => "default",
+          :labels    => {"execution_id" => execution_id}
         },
         :spec       => hash_including(
           :containers => [
@@ -143,16 +149,16 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
 
       stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      subject.run_async!("docker://a.b-c_0--1__2:latest")
+      subject.run_async!("docker://a.b-c_0--1__2:latest", {}, {}, context)
     end
 
     it "doesn't create a secret if Credentials is nil" do
-      expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_starting_with("floe-hello-world-"), :namespace => "default"})
+      expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_starting_with("floe-hello-world-"), :namespace => "default", :labels => {"execution_id" => execution_id}})
 
       expect(subject).not_to receive(:create_secret!)
       stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      subject.run_async!("docker://hello-world:latest", {}, nil)
+      subject.run_async!("docker://hello-world:latest", {}, {}, context)
     end
 
     it "passes environment variables to kubectl run" do
@@ -164,7 +170,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
 
       stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"})
+      subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {}, context)
     end
 
     it "passes integer environment variables to kubectl run as strings" do
@@ -176,14 +182,14 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
 
       stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      subject.run_async!("docker://hello-world:latest", {"FOO" => 1})
+      subject.run_async!("docker://hello-world:latest", {"FOO" => 1}, {}, context)
     end
 
     it "passes a secrets volume to kubectl run" do
       expected_pod_spec = hash_including(
         :kind       => "Pod",
         :apiVersion => "v1",
-        :metadata   => {:name => a_string_starting_with("floe-hello-world-"), :namespace => "default"},
+        :metadata   => {:name => a_string_starting_with("floe-hello-world-"), :namespace => "default", :labels => {"execution_id" => execution_id}},
         :spec       => hash_including(
           :volumes    => [{:name => "secret-volume", :secret => {:secretName => anything}}],
           :containers => [
@@ -207,14 +213,14 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
       expect(kubeclient).to receive(:create_secret).with(hash_including(:kind => "Secret", :type => "Opaque"))
       stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-      subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})
+      subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"}, context)
     end
 
     it "cleans up secrets if running the pod fails" do
       expect(kubeclient).to receive(:create_secret).with(hash_including(:kind => "Secret", :type => "Opaque"))
       stub_kubernetes_bad_run
       expect(kubeclient).to receive(:delete_secret)
-      expect(subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"})).to eq({"Error" => "States.TaskFailed", "Cause" => "HTTP status code 403, Forbidden"})
+      expect(subject.run_async!("docker://hello-world:latest", {"FOO" => "BAR"}, {"luggage_password" => "12345"}, context)).to eq({"Error" => "States.TaskFailed", "Cause" => "HTTP status code 403, Forbidden"})
     end
 
     context "with an alternate namespace" do
@@ -222,11 +228,11 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
       let(:runner_options) { {"server" => "https://kubernetes.local:6443", "token" => "my-token", "namespace" => namespace} }
 
       it "calls kubectl run with the image name" do
-        expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_starting_with("floe-hello-world-"), :namespace => namespace})
+        expected_pod_spec = hash_including(:kind => "Pod", :apiVersion => "v1", :metadata => {:name => a_string_starting_with("floe-hello-world-"), :namespace => namespace, :labels => {"execution_id" => execution_id}})
 
         stub_kubernetes_run(:spec => expected_pod_spec, :namespace => namespace, :status => false, :cleanup => false)
 
-        subject.run_async!("docker://hello-world:latest")
+        subject.run_async!("docker://hello-world:latest", {}, {}, context)
       end
     end
 
@@ -239,7 +245,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
 
         stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-        subject.run_async!("docker://hello-world:latest")
+        subject.run_async!("docker://hello-world:latest", {}, {}, context)
       end
     end
 
@@ -251,7 +257,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
 
         stub_kubernetes_run(:spec => expected_pod_spec, :status => false, :cleanup => false)
 
-        subject.run_async!("docker://hello-world:latest")
+        subject.run_async!("docker://hello-world:latest", {}, {}, context)
       end
     end
 
@@ -264,7 +270,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
       end
 
       it "raises an exception" do
-        expect { subject.run_async!("docker://hello-world:latest") }.to raise_error(ArgumentError, /Missing connections options/)
+        expect { subject.run_async!("docker://hello-world:latest", {}, {}, context) }.to raise_error(ArgumentError, /Missing connections options/)
       end
     end
 
@@ -318,7 +324,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
           expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "my-token"}).and_return(kubeclient)
           stub_kubernetes_run(:status => false, :cleanup => false)
 
-          subject.run_async!("docker://hello-world:latest")
+          subject.run_async!("docker://hello-world:latest", {}, {}, context)
         end
       end
 
@@ -329,7 +335,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
           expect(Kubeclient::Client).to receive(:new).with("https://my-other-kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "my-other-token"})
           stub_kubernetes_run(:status => false, :cleanup => false)
 
-          subject.run_async!("docker://hello-world:latest")
+          subject.run_async!("docker://hello-world:latest", {}, {}, context)
         end
       end
 
@@ -341,7 +347,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
           expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "my-token"})
           stub_kubernetes_run(:status => false, :cleanup => false)
 
-          subject.run_async!("docker://hello-world:latest")
+          subject.run_async!("docker://hello-world:latest", {}, {}, context)
         end
       end
 
@@ -352,7 +358,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
           expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => "foo"})
           stub_kubernetes_run(:status => false, :cleanup => false)
 
-          subject.run_async!("docker://hello-world:latest")
+          subject.run_async!("docker://hello-world:latest", {}, {}, context)
         end
       end
     end
@@ -365,7 +371,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
         expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => token}).and_return(kubeclient)
         stub_kubernetes_run(:status => false, :cleanup => false)
 
-        subject.run_async!("docker://hello-world:latest")
+        subject.run_async!("docker://hello-world:latest", {}, {}, context)
       end
     end
 
@@ -381,7 +387,7 @@ RSpec.describe Floe::ContainerRunner::Kubernetes do
         expect(Kubeclient::Client).to receive(:new).with("https://kubernetes.local:6443", "v1", :ssl_options => {:verify_ssl => OpenSSL::SSL::VERIFY_PEER}, :auth_options => {:bearer_token => token}).and_return(kubeclient)
         stub_kubernetes_run(:status => false, :cleanup => false)
 
-        subject.run_async!("docker://hello-world:latest")
+        subject.run_async!("docker://hello-world:latest", {}, {}, context)
       end
     end
   end
