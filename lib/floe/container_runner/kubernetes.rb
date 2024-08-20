@@ -45,17 +45,17 @@ module Floe
         super
       end
 
-      def run_async!(resource, env = {}, secrets = {}, _context = {})
+      def run_async!(resource, env, secrets, context)
         raise ArgumentError, "Invalid resource" unless resource&.start_with?("docker://")
 
         image  = resource.sub("docker://", "")
         name   = container_name(image)
         secret = create_secret!(secrets) if secrets && !secrets.empty?
-
+        execution_id   = context.execution["Id"]
         runner_context = {"container_ref" => name, "container_state" => {"phase" => "Pending"}, "secrets_ref" => secret}
 
         begin
-          create_pod!(name, image, env, secret)
+          create_pod!(name, image, env, execution_id, secret)
           runner_context
         rescue Kubeclient::HttpError => err
           cleanup(runner_context)
@@ -171,13 +171,14 @@ module Floe
         failed_container_states(context).any?
       end
 
-      def pod_spec(name, image, env, secret = nil)
+      def pod_spec(name, image, env, execution_id, secret = nil)
         spec = {
           :kind       => "Pod",
           :apiVersion => "v1",
           :metadata   => {
             :name      => name,
-            :namespace => namespace
+            :namespace => namespace,
+            :labels    => {"execution_id" => execution_id}
           },
           :spec       => {
             :containers    => [
@@ -219,8 +220,8 @@ module Floe
         spec
       end
 
-      def create_pod!(name, image, env, secret = nil)
-        kubeclient.create_pod(pod_spec(name, image, env, secret))
+      def create_pod!(name, image, env, execution_id, secret = nil)
+        kubeclient.create_pod(pod_spec(name, image, env, execution_id, secret))
       end
 
       def delete_pod!(name)

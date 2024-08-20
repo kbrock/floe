@@ -30,13 +30,14 @@ module Floe
 
       private
 
-      def run_container_params(image, env, secret)
+      def run_container_params(image, env, execution_id, secret)
         params  = ["run"]
         params << :detach
         params += env.map { |k, v| [:e, "#{k}=#{v}"] }
         params << [:e, "_CREDENTIALS=/run/secrets/#{secret}"] if secret
         params << [:pull, @pull_policy] if @pull_policy
         params << [:net, "host"]        if @network == "host"
+        params << [:label, "execution_id=#{execution_id}"]
         params << [:secret, secret] if secret
         params << [:name, container_name(image)]
         params << image
