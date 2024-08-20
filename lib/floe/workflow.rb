@@ -63,8 +63,10 @@ module Floe
 
           loop do
             # Block until an event is raised
-            event, runner_context = queue.pop
+            event, data = queue.pop
             break if event.nil?
+
+            _execution_id, runner_context = data.values_at("execution_id", "runner_context")
 
             # If the event is for one of our workflows set the updated runner_context
             workflows.each do |workflow|

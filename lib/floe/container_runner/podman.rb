@@ -56,14 +56,16 @@ module Floe
       end
 
       def parse_notice(notice)
-        id, status, exit_code = JSON.parse(notice).values_at("ID", "Status", "ContainerExitCode")
+        notice = JSON.parse(notice)
+        id, status, exit_code, attributes = notice.values_at("ID", "Status", "ContainerExitCode", "Attributes")
 
-        event   = podman_event_status_to_event(status)
-        running = event != :delete
+        execution_id = attributes&.dig("execution_id")
+        event        = podman_event_status_to_event(status)
+        running      = event != :delete
 
         runner_context = {"container_ref" => id, "container_state" => {"Running" => running, "ExitCode" => exit_code.to_i}}
 
-        [event, runner_context]
+        [event, {"execution_id" => execution_id, "runner_context" => runner_context}]
       rescue JSON::ParserError
         []
       end

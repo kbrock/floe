@@ -295,9 +295,10 @@ module Floe
 
         pod             = notice.object
         container_ref   = pod.metadata.name
+        execution_id    = pod.metadata.labels["execution_id"]
         container_state = pod.to_h[:status].deep_stringify_keys
 
-        {"container_ref" => container_ref, "container_state" => container_state}
+        {"execution_id" => execution_id, "runner_context" => {"container_ref" => container_ref, "container_state" => container_state}}
       end
 
       def kubeclient

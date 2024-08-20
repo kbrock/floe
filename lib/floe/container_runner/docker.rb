@@ -158,11 +158,11 @@ module Floe
         event   = docker_event_status_to_event(status)
         running = event != :delete
 
-        name, exit_code = notice.dig("Actor", "Attributes")&.values_at("name", "exitCode")
+        name, exit_code, execution_id = notice.dig("Actor", "Attributes")&.values_at("name", "exitCode", "execution_id")
 
         runner_context = {"container_ref" => name, "container_state" => {"Running" => running, "ExitCode" => exit_code.to_i}}
 
-        [event, runner_context]
+        [event, {"execution_id" => execution_id, "runner_context" => runner_context}]
       rescue JSON::ParserError
         []
       end
