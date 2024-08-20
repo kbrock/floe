@@ -4,6 +4,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.14.0] - 2024-08-20
+### Added
+- Implement "IsNumeric": false ([#266](https://github.com/ManageIQ/floe/pull/266))
+- Support choices that do not have a Default defined ([#267](https://github.com/ManageIQ/floe/pull/267))
+- Label containers/pods with workflow Execution ID ([#268](https://github.com/ManageIQ/floe/pull/268))
+- Allow for Execution Id to be passed in ([#269](https://github.com/ManageIQ/floe/pull/269))
+
 ## [0.13.1] - 2024-08-16
 ### Fixed
 - Fix podman/docker container_ref trailing newline ([#265](https://github.com/ManageIQ/floe/pull/265))
@@ -242,7 +249,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.13.1...HEAD
+[Unreleased]: https://github.com/ManageIQ/floe/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/ManageIQ/floe/compare/v0.13.1...v0.14.0
 [0.13.1]: https://github.com/ManageIQ/floe/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/ManageIQ/floe/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/ManageIQ/floe/compare/v0.11.3...v0.12.0
