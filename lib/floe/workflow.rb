@@ -177,7 +177,7 @@ module Floe
       context.state["Input"] = context.execution["Input"].dup
       context.state["Guid"]  = SecureRandom.uuid
 
-      context.execution["Id"]        = SecureRandom.uuid
+      context.execution["Id"]      ||= SecureRandom.uuid
       context.execution["StartTime"] = Time.now.utc.iso8601
 
       self
