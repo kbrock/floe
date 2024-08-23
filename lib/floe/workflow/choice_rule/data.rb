@@ -6,14 +6,14 @@ module Floe
       class Data < Floe::Workflow::ChoiceRule
         COMPARE_KEYS = %w[IsNull IsPresent IsNumeric IsString IsBoolean IsTimestamp String Numeric Boolean Timestamp].freeze
 
-        attr_reader :variable, :compare_key, :value, :path
+        attr_reader :variable, :compare_key, :compare_predicate, :path
 
         def initialize(_workflow, _name, payload)
           super
 
           @variable = parse_path("Variable", payload)
           parse_compare_key
-          @value = path ? parse_path(compare_key, payload) : payload[compare_key]
+          @compare_predicate = parse_predicate(payload)
         end
 
         def true?(context, input)
@@ -115,14 +115,25 @@ module Floe
           @path = compare_key.end_with?("Path")
         end
 
-        def compare_value(context, input)
-          path ? value.value(context, input) : value
+        # parse predicate at initilization time
+        # @return the right predicate attached to the compare key
+        def parse_predicate(payload)
+          path ? parse_path(compare_key, payload) : payload[compare_key]
         end
 
+        # @return right hand predicate - input path or static payload value)
+        def compare_value(context, input)
+          path ? compare_predicate.value(context, input) : compare_predicate
+        end
+
+        # feth the variable value at runtime
+        # @return variable value (left hand side )
         def variable_value(context, input)
           variable.value(context, input)
         end
 
+        # parse path at initilization time
+        # helper method to parse a path from the payload
         def parse_path(field_name, payload)
           value = payload[field_name]
           missing_field_error!(field_name) unless value
