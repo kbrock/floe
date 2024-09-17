@@ -11,14 +11,13 @@ module Floe
         # e.g.: (String)(LessThan)(Path), (Numeric)(GreaterThanEquals)()
         OPERATION  = /^(#{(TYPES - %w[Null Present]).join("|")})(#{COMPARES.join("|")})(Path)?$/.freeze
 
-        attr_reader :variable, :compare_key, :compare_predicate, :path
+        attr_reader :variable, :compare_key, :type, :compare_predicate, :path
 
         def initialize(_workflow, _name, payload)
           super
 
           @variable = parse_path("Variable", payload)
           parse_compare_key
-          @compare_predicate = parse_predicate(payload)
         end
 
         def true?(context, input)
@@ -119,13 +118,16 @@ module Floe
             # e.g. (String)(GreaterThan)(Path)
             if (match_values = OPERATION.match(key))
               @compare_key = key
-              _type, _operator, @path = match_values.captures
+              @type, _operator, @path = match_values.captures
+              @compare_predicate = parse_predicate(payload, type)
               break
             end
             # e.g. (Is)(String)
             if TYPE_CHECK.match?(key)
               @compare_key = key
-              @path = nil
+              # type: nil means no runtime type checking.
+              @type = @path = nil
+              @compare_predicate = parse_predicate(payload, "Boolean")
               break
             end
           end
@@ -134,19 +136,19 @@ module Floe
 
         # parse predicate at initilization time
         # @return the right predicate attached to the compare key
-        def parse_predicate(payload)
-          path ? parse_path(compare_key, payload) : payload[compare_key]
+        def parse_predicate(payload, data_type)
+          path ? parse_path(compare_key, payload) : parse_field(compare_key, payload, data_type)
         end
 
         # @return right hand predicate - input path or static payload value)
         def compare_value(context, input)
-          path ? compare_predicate.value(context, input) : compare_predicate
+          path ? fetch_path(compare_key, compare_predicate, context, input) : compare_predicate
         end
 
         # feth the variable value at runtime
         # @return variable value (left hand side )
         def variable_value(context, input)
-          variable.value(context, input)
+          fetch_path("Variable", variable, context, input)
         end
 
         # parse path at initilization time
@@ -155,6 +157,28 @@ module Floe
           value = payload[field_name]
           missing_field_error!(field_name) unless value
           wrap_parser_error(field_name, value) { Path.new(value) }
+        end
+
+        # parse predicate field at initialization time
+        def parse_field(field_name, payload, data_type)
+          value = payload[field_name]
+          return value if correct_type?(value, data_type)
+
+          invalid_field_error!(field_name, value, "required to be a #{data_type}")
+        end
+
+        # fetch a path at runtime
+        def fetch_path(field_name, field_path, context, input)
+          value = field_path.value(context, input)
+          return value if type.nil? || correct_type?(value, type)
+
+          runtime_field_error!(field_name, field_path.to_s, "required to point to a #{type}")
+        end
+
+        # if we have runtime checking, check against that type
+        #   otherwise assume checking a TYPE_CHECK predicate and check against Boolean
+        def correct_type?(value, data_type)
+          send("is_#{data_type.downcase}?".to_sym, value)
         end
       end
     end
