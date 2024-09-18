@@ -16,7 +16,7 @@ module Floe
         def initialize(_workflow, _name, payload)
           super
 
-          @variable = parse_path("Variable", payload)
+          @variable = parse_path("Variable")
           parse_compare_key
         end
 
@@ -119,7 +119,7 @@ module Floe
             if (match_values = OPERATION.match(key))
               @compare_key = key
               @type, _operator, @path = match_values.captures
-              @compare_predicate = parse_predicate(payload, type)
+              @compare_predicate = parse_predicate(type)
               break
             end
             # e.g. (Is)(String)
@@ -127,7 +127,7 @@ module Floe
               @compare_key = key
               # type: nil means no runtime type checking.
               @type = @path = nil
-              @compare_predicate = parse_predicate(payload, "Boolean")
+              @compare_predicate = parse_predicate("Boolean")
               break
             end
           end
@@ -136,8 +136,8 @@ module Floe
 
         # parse predicate at initilization time
         # @return the right predicate attached to the compare key
-        def parse_predicate(payload, data_type)
-          path ? parse_path(compare_key, payload) : parse_field(compare_key, payload, data_type)
+        def parse_predicate(data_type)
+          path ? parse_path(compare_key) : parse_field(compare_key, data_type)
         end
 
         # @return right hand predicate - input path or static payload value)
@@ -153,14 +153,14 @@ module Floe
 
         # parse path at initilization time
         # helper method to parse a path from the payload
-        def parse_path(field_name, payload)
+        def parse_path(field_name)
           value = payload[field_name]
           missing_field_error!(field_name) unless value
           wrap_parser_error(field_name, value) { Path.new(value) }
         end
 
         # parse predicate field at initialization time
-        def parse_field(field_name, payload, data_type)
+        def parse_field(field_name, data_type)
           value = payload[field_name]
           return value if correct_type?(value, data_type)
 
