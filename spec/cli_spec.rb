@@ -29,7 +29,7 @@ RSpec.describe Floe::CLI do
       expect(result).to be true
 
       lines = output.lines(:chomp => true)
-      expect(lines.first).to include("checking 1 workflows...")
+      expect(lines.first).to include("Checking 1 workflows...")
       expect(lines.last).to eq("{}")
     end
 
@@ -38,7 +38,7 @@ RSpec.describe Floe::CLI do
       expect(result).to be true
 
       lines = output.lines(:chomp => true)
-      expect(lines.first).to include("checking 1 workflows...")
+      expect(lines.first).to include("Checking 1 workflows...")
       expect(lines.last).to eq('{"foo":1}')
     end
 
@@ -47,7 +47,7 @@ RSpec.describe Floe::CLI do
       expect(result).to be true
 
       lines = output.lines(:chomp => true)
-      expect(lines.first).to include("checking 1 workflows...")
+      expect(lines.first).to include("Checking 1 workflows...")
       expect(lines.last).to eq('{"foo":1}')
     end
 
@@ -56,7 +56,7 @@ RSpec.describe Floe::CLI do
       expect(result).to be true
 
       lines = output.lines(:chomp => true)
-      expect(lines.first).to include("checking 1 workflows...")
+      expect(lines.first).to include("Checking 1 workflows...")
       expect(lines.last).to eq("{}")
     end
 
@@ -65,7 +65,7 @@ RSpec.describe Floe::CLI do
       expect(result).to be true
 
       lines = output.lines(:chomp => true)
-      expect(lines.first).to include("checking 1 workflows...")
+      expect(lines.first).to include("Checking 1 workflows...")
       expect(lines.last).to eq('{"foo":1}')
     end
 
@@ -90,7 +90,7 @@ RSpec.describe Floe::CLI do
       expect(result).to be true
 
       lines = output.lines(:chomp => true)
-      expect(lines.first).to include("checking 2 workflows...")
+      expect(lines.first).to include("Checking 2 workflows...")
       expect(lines.last(7).join("\n")).to eq(<<~OUTPUT.chomp)
         workflow
         ===
@@ -107,7 +107,7 @@ RSpec.describe Floe::CLI do
       expect(result).to be true
 
       lines = output.lines(:chomp => true)
-      expect(lines.first).to include("checking 2 workflows...")
+      expect(lines.first).to include("Checking 2 workflows...")
       expect(lines.last(7).join("\n")).to eq(<<~OUTPUT.chomp)
         workflow
         ===
