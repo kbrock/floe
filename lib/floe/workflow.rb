@@ -65,16 +65,8 @@ module Floe
             event, data = queue.pop
             break if event.nil?
 
-            _execution_id, runner_context = data.values_at("execution_id", "runner_context")
-
-            # If the event is for one of our workflows set the updated runner_context
-            workflows.each do |workflow|
-              next unless workflow.context.state.dig("RunnerContext", "container_ref") == runner_context["container_ref"]
-
-              workflow.context.state["RunnerContext"] = runner_context
-            end
-
-            break if queue.empty?
+            # break out of the loop if the event is for one of our workflows
+            break if queue.empty? || workflows.detect { |wf| wf.execution_id == data["execution_id"] }
           end
         ensure
           sleep_thread&.kill
@@ -174,12 +166,16 @@ module Floe
 
     # NOTE: Expecting the context to be initialized (via start_workflow) before this
     def current_state
-      @states_by_name[context.state_name]
+      states_by_name[context.state_name]
     end
 
     # backwards compatibility. Caller should access directly from context
     def credentials
       @context.credentials
+    end
+
+    def execution_id
+      @context.execution["Id"]
     end
 
     private
