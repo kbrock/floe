@@ -54,7 +54,7 @@ module Floe
 
           context.state["Iteration"]            = 0
           context.state["MaxIterations"]        = input.count
-          context.state["ItemProcessorContext"] = input.map { |item| Context.new(nil, :input => item.to_json).to_h }
+          context.state["ItemProcessorContext"] = input.map { |item| Context.new({"Execution" => {"Id" => context.execution["Id"]}}, :input => item.to_json).to_h }
         end
 
         def finish(context)
