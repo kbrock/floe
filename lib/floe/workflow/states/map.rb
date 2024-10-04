@@ -18,7 +18,7 @@ module Floe
         def initialize(workflow, name, payload)
           super
 
-          raise Floe::InvalidWorkflowError, "Missing \"InputProcessor\" field in state [#{name.last}]" if payload["ItemProcessor"].nil?
+          missing_field_error!("InputProcessor") if payload["ItemProcessor"].nil?
 
           @next            = payload["Next"]
           @end             = !!payload["End"]

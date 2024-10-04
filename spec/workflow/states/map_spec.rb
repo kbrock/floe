@@ -51,7 +51,7 @@ RSpec.describe Floe::Workflow::States::Map do
       }
 
       expect { make_workflow(ctx, payload) }
-        .to raise_error(Floe::InvalidWorkflowError, "Missing \"InputProcessor\" field in state [Validate-All]")
+        .to raise_error(Floe::InvalidWorkflowError, "States.Validate-All does not have required field \"InputProcessor\"")
     end
 
     it "raises an InvalidWorkflowError with a missing Next and End" do
