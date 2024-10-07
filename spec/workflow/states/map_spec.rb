@@ -153,6 +153,46 @@ RSpec.describe Floe::Workflow::States::Map do
     end
   end
 
+  describe "#running?" do
+    before { state.start(ctx) }
+
+    context "with all iterations ended" do
+      before { ctx.state["ItemProcessorContext"].each { |ctx| ctx["Execution"]["EndTime"] = Time.now.utc } }
+
+      it "returns false" do
+        expect(state.running?(ctx)).to be_falsey
+      end
+    end
+
+    context "with some iterations not ended" do
+      before { ctx.state["ItemProcessorContext"][0]["Execution"]["EndTime"] = Time.now.utc }
+
+      it "returns true" do
+        expect(state.running?(ctx)).to be_truthy
+      end
+    end
+  end
+
+  describe "#ended?" do
+    before { state.start(ctx) }
+
+    context "with all iterations ended" do
+      before { ctx.state["ItemProcessorContext"].each { |ctx| ctx["Execution"]["EndTime"] = Time.now.utc } }
+
+      it "returns true" do
+        expect(state.ended?(ctx)).to be_truthy
+      end
+    end
+
+    context "with some iterations not ended" do
+      before { ctx.state["ItemProcessorContext"][0]["Execution"]["EndTime"] = Time.now.utc }
+
+      it "returns false" do
+        expect(state.ended?(ctx)).to be_falsey
+      end
+    end
+  end
+
   describe "#failed?" do
     before { state.start(ctx) }
 

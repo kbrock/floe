@@ -58,7 +58,7 @@ module Floe
         end
 
         def finish(context)
-          result = context.state["ItemProcessorContext"].map { |ctx| Context.new(ctx).output }
+          result = each_item_processor(context).map(&:output)
           context.output = process_output(context, result)
           super
         end
@@ -77,15 +77,15 @@ module Floe
         end
 
         def ready?(context)
-          !context.state_started? || context.state["ItemProcessorContext"].any? { |ctx| item_processor.step_nonblock_ready?(Context.new(ctx)) }
+          !context.state_started? || each_item_processor(context).any? { |ctx| item_processor.step_nonblock_ready?(ctx) }
         end
 
         def wait_until(context)
-          context.state["ItemProcessorContext"].filter_map { |ctx| item_processor.wait_until(Context.new(ctx)) }.min
+          each_item_processor(context).filter_map { |ctx| item_processor.wait_until(ctx) }.min
         end
 
         def waiting?(context)
-          context.state["ItemProcessorContext"].any? { |ctx| item_processor.waiting?(Context.new(ctx)) }
+          each_item_processor(context).any? { |ctx| item_processor.waiting?(ctx) }
         end
 
         def running?(context)
@@ -93,11 +93,11 @@ module Floe
         end
 
         def ended?(context)
-          context.state["ItemProcessorContext"].all? { |ctx| Context.new(ctx).ended? }
+          each_item_processor(context).all?(&:ended?)
         end
 
         def failed?(context)
-          contexts = context.state["ItemProcessorContext"].map { |ctx| Context.new(ctx) }
+          contexts = each_item_processor(context)
 
           # Handle the simple cases first
           return true  if contexts.all?(&:failed?)
@@ -112,6 +112,10 @@ module Floe
         end
 
         private
+
+        def each_item_processor(context)
+          context.state["ItemProcessorContext"].map { |ctx| Context.new(ctx) }
+        end
 
         def step_nonblock!(context)
           item_processor_context = Context.new(context.state["ItemProcessorContext"][context.state["Iteration"]])
