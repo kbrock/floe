@@ -17,6 +17,9 @@ RSpec.describe Floe::Workflow::States::Map do
       }
     }
   end
+
+  let(:tolerated_failure_count)      { nil }
+  let(:tolerated_failure_percentage) { nil }
   let(:workflow) do
     payload = {
       "Validate-All" => {
@@ -38,6 +41,10 @@ RSpec.describe Floe::Workflow::States::Map do
         "End"            => true,
       }
     }
+
+    payload["Validate-All"]["ToleratedFailureCount"]      = tolerated_failure_count if tolerated_failure_count
+    payload["Validate-All"]["ToleratedFailurePercentage"] = tolerated_failure_percentage if tolerated_failure_percentage
+
     make_workflow(ctx, payload)
   end
 
@@ -142,6 +149,71 @@ RSpec.describe Floe::Workflow::States::Map do
       it "sets the context output" do
         loop while state.run_nonblock!(ctx) != 0
         expect(ctx.output).to eq(["red", "green", "blue"])
+      end
+    end
+  end
+
+  describe "#failed?" do
+    before { state.start(ctx) }
+
+    context "with no failed iterations" do
+      it "returns false" do
+        expect(state.failed?(ctx)).to be_falsey
+      end
+    end
+
+    context "with all iterations failed" do
+      before { ctx.state["ItemProcessorContext"].each { |ctx| ctx["State"] = {"Output" => {"Error" => "FAILED!"}}} }
+
+      it "returns true" do
+        expect(state.failed?(ctx)).to be_truthy
+      end
+    end
+
+    context "with mixed successful and failed iterations" do
+      before do
+        ctx.state["ItemProcessorContext"][0]["State"] = {"Output" => {"Error" => "FAILED!"}}
+        ctx.state["ItemProcessorContext"][2]["State"] = {"Output" => {"Error" => "FAILED!"}}
+      end
+
+      it "returns true" do
+        expect(state.failed?(ctx)).to be_truthy
+      end
+
+      context "with ToleratedFailureCount" do
+        context "greater than the number of failures" do
+          let(:tolerated_failure_count) { 3 }
+
+          it "returns false" do
+            expect(state.failed?(ctx)).to be_falsey
+          end
+        end
+
+        context "less than the number of failures" do
+          let(:tolerated_failure_count) { 1 }
+
+          it "returns true" do
+            expect(state.failed?(ctx)).to be_truthy
+          end
+        end
+      end
+
+      context "with ToleratedFailurePercentage" do
+        context "greater than the number of failures" do
+          let(:tolerated_failure_percentage) { 50.0 }
+
+          it "returns false" do
+            expect(state.failed?(ctx)).to be_falsey
+          end
+        end
+
+        context "less than the number of failures" do
+          let(:tolerated_failure_percentage) { 10.0 }
+
+          it "returns true" do
+            expect(state.failed?(ctx)).to be_truthy
+          end
+        end
       end
     end
   end

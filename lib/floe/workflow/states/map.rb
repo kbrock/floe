@@ -96,6 +96,21 @@ module Floe
           context.state["ItemProcessorContext"].all? { |ctx| Context.new(ctx).ended? }
         end
 
+        def failed?(context)
+          contexts = context.state["ItemProcessorContext"].map { |ctx| Context.new(ctx) }
+
+          # Handle the simple cases first
+          return true  if contexts.all?(&:failed?)
+          return false if contexts.none?(&:failed?)
+
+          # Some have failed, check the tolerated_failure thresholds to see if
+          # we should fail the whole state.
+          num_failed = contexts.select(&:failed?).count
+          return false if tolerated_failure_count      && num_failed < tolerated_failure_count
+          return false if tolerated_failure_percentage && (100 * num_failed / contexts.count.to_f) < tolerated_failure_percentage
+          return true
+        end
+
         private
 
         def step_nonblock!(context)
