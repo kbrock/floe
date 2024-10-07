@@ -2,6 +2,7 @@
 
 require_relative "input_output_mixin"
 require_relative "non_terminal_mixin"
+require_relative "retry_catch_mixin"
 
 module Floe
   class Workflow
@@ -9,6 +10,7 @@ module Floe
       class Map < Floe::Workflow::State
         include InputOutputMixin
         include NonTerminalMixin
+        include RetryCatchMixin
 
         attr_reader :end, :next, :parameters, :input_path, :output_path, :result_path,
                     :result_selector, :retry, :catch, :item_processor, :items_path,
@@ -58,8 +60,13 @@ module Floe
         end
 
         def finish(context)
-          result = each_item_processor(context).map(&:output)
-          context.output = process_output(context, result)
+          if failed?(context)
+            error = parse_error(context)
+            retry_state!(context, error) || catch_error!(context, error) || fail_workflow!(context, error)
+          else
+            result = each_item_processor(context).map(&:output)
+            context.output = process_output(context, result)
+          end
           super
         end
 
@@ -105,10 +112,11 @@ module Floe
 
           # Some have failed, check the tolerated_failure thresholds to see if
           # we should fail the whole state.
-          num_failed = contexts.select(&:failed?).count
+          num_failed = contexts.count(&:failed?)
           return false if tolerated_failure_count      && num_failed < tolerated_failure_count
           return false if tolerated_failure_percentage && (100 * num_failed / contexts.count.to_f) < tolerated_failure_percentage
-          return true
+
+          true
         end
 
         private
@@ -126,6 +134,10 @@ module Floe
           else
             Errno::EAGAIN
           end
+        end
+
+        def parse_error(context)
+          each_item_processor(context).detect(&:failed?)&.output&.dig("Error")
         end
 
         def validate_state!(workflow)
