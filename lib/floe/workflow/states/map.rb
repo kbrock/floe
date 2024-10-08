@@ -2,6 +2,7 @@
 
 require_relative "input_output_mixin"
 require_relative "non_terminal_mixin"
+require_relative "retry_catch_mixin"
 
 module Floe
   class Workflow
@@ -9,6 +10,7 @@ module Floe
       class Map < Floe::Workflow::State
         include InputOutputMixin
         include NonTerminalMixin
+        include RetryCatchMixin
 
         attr_reader :end, :next, :parameters, :input_path, :output_path, :result_path,
                     :result_selector, :retry, :catch, :item_processor, :items_path,
@@ -36,8 +38,8 @@ module Floe
           @item_batcher    = payload["ItemBatcher"]
           @result_writer   = payload["ResultWriter"]
           @max_concurrency = payload["MaxConcurrency"]&.to_i
-          @tolerated_failure_percentage = payload["ToleratedFailurePercentage"]
-          @tolerated_failure_count      = payload["ToleratedFailureCount"]
+          @tolerated_failure_percentage = payload["ToleratedFailurePercentage"]&.to_i
+          @tolerated_failure_count      = payload["ToleratedFailureCount"]&.to_i
 
           validate_state!(workflow)
         end
@@ -58,8 +60,14 @@ module Floe
         end
 
         def finish(context)
-          result = context.state["ItemProcessorContext"].map { |ctx| Context.new(ctx).output }
-          context.output = process_output(context, result)
+          if success?(context)
+            result = each_item_processor(context).map(&:output)
+            context.output = process_output(context, result)
+          else
+            error = parse_error(context)
+            retry_state!(context, error) || catch_error!(context, error) || fail_workflow!(context, error)
+          end
+
           super
         end
 
@@ -77,15 +85,15 @@ module Floe
         end
 
         def ready?(context)
-          !context.state_started? || context.state["ItemProcessorContext"].any? { |ctx| item_processor.step_nonblock_ready?(Context.new(ctx)) }
+          !context.state_started? || each_item_processor(context).any? { |ctx| item_processor.step_nonblock_ready?(ctx) }
         end
 
         def wait_until(context)
-          context.state["ItemProcessorContext"].filter_map { |ctx| item_processor.wait_until(Context.new(ctx)) }.min
+          each_item_processor(context).filter_map { |ctx| item_processor.wait_until(ctx) }.min
         end
 
         def waiting?(context)
-          context.state["ItemProcessorContext"].any? { |ctx| item_processor.waiting?(Context.new(ctx)) }
+          each_item_processor(context).any? { |ctx| item_processor.waiting?(ctx) }
         end
 
         def running?(context)
@@ -93,10 +101,29 @@ module Floe
         end
 
         def ended?(context)
-          context.state["ItemProcessorContext"].all? { |ctx| Context.new(ctx).ended? }
+          each_item_processor(context).all?(&:ended?)
+        end
+
+        def success?(context)
+          contexts   = each_item_processor(context)
+          num_failed = contexts.count(&:failed?)
+          total      = contexts.count
+
+          return true if num_failed.zero? || total.zero?
+          return true if tolerated_failure_percentage && tolerated_failure_percentage == 100
+          # Some have failed, check the tolerated_failure thresholds to see if
+          # we should fail the whole state.
+          return true if tolerated_failure_count      && num_failed < tolerated_failure_count
+          return true if tolerated_failure_percentage && (100 * num_failed / total.to_f) < tolerated_failure_percentage
+
+          false
         end
 
         private
+
+        def each_item_processor(context)
+          context.state["ItemProcessorContext"].map { |ctx| Context.new(ctx) }
+        end
 
         def step_nonblock!(context)
           item_processor_context = Context.new(context.state["ItemProcessorContext"][context.state["Iteration"]])
@@ -107,6 +134,10 @@ module Floe
           else
             Errno::EAGAIN
           end
+        end
+
+        def parse_error(context)
+          each_item_processor(context).detect(&:failed?)&.output&.dig("Error")
         end
 
         def validate_state!(workflow)
