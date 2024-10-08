@@ -193,20 +193,20 @@ RSpec.describe Floe::Workflow::States::Map do
     end
   end
 
-  describe "#failed?" do
+  describe "#success?" do
     before { state.start(ctx) }
 
     context "with no failed iterations" do
-      it "returns false" do
-        expect(state.failed?(ctx)).to be_falsey
+      it "returns true" do
+        expect(state.success?(ctx)).to be_truthy
       end
     end
 
     context "with all iterations failed" do
       before { ctx.state["ItemProcessorContext"].each { |ctx| ctx["State"] = {"Output" => {"Error" => "FAILED!"}}} }
 
-      it "returns true" do
-        expect(state.failed?(ctx)).to be_truthy
+      it "returns false" do
+        expect(state.success?(ctx)).to be_falsey
       end
     end
 
@@ -217,7 +217,7 @@ RSpec.describe Floe::Workflow::States::Map do
       end
 
       it "returns true" do
-        expect(state.failed?(ctx)).to be_truthy
+        expect(state.success?(ctx)).to be_falsey
       end
 
       context "with ToleratedFailureCount" do
@@ -225,7 +225,7 @@ RSpec.describe Floe::Workflow::States::Map do
           let(:tolerated_failure_count) { 3 }
 
           it "returns false" do
-            expect(state.failed?(ctx)).to be_falsey
+            expect(state.success?(ctx)).to be_truthy
           end
         end
 
@@ -233,7 +233,7 @@ RSpec.describe Floe::Workflow::States::Map do
           let(:tolerated_failure_count) { 1 }
 
           it "returns true" do
-            expect(state.failed?(ctx)).to be_truthy
+            expect(state.success?(ctx)).to be_falsey
           end
         end
       end
@@ -243,7 +243,7 @@ RSpec.describe Floe::Workflow::States::Map do
           let(:tolerated_failure_percentage) { 50.0 }
 
           it "returns false" do
-            expect(state.failed?(ctx)).to be_falsey
+            expect(state.success?(ctx)).to be_truthy
           end
         end
 
@@ -251,7 +251,7 @@ RSpec.describe Floe::Workflow::States::Map do
           let(:tolerated_failure_percentage) { 10.0 }
 
           it "returns true" do
-            expect(state.failed?(ctx)).to be_truthy
+            expect(state.success?(ctx)).to be_falsey
           end
         end
       end

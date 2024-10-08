@@ -60,13 +60,14 @@ module Floe
         end
 
         def finish(context)
-          if failed?(context)
-            error = parse_error(context)
-            retry_state!(context, error) || catch_error!(context, error) || fail_workflow!(context, error)
-          else
+          if success?(context)
             result = each_item_processor(context).map(&:output)
             context.output = process_output(context, result)
+          else
+            error = parse_error(context)
+            retry_state!(context, error) || catch_error!(context, error) || fail_workflow!(context, error)
           end
+
           super
         end
 
@@ -103,20 +104,19 @@ module Floe
           each_item_processor(context).all?(&:ended?)
         end
 
-        def failed?(context)
-          contexts = each_item_processor(context)
+        def success?(context)
+          contexts   = each_item_processor(context)
+          num_failed = contexts.count(&:failed?)
+          total      = contexts.count
 
-          # Handle the simple cases first
-          return true  if contexts.all?(&:failed?)
-          return false if contexts.none?(&:failed?)
+          return true if num_failed.zero?
 
           # Some have failed, check the tolerated_failure thresholds to see if
           # we should fail the whole state.
-          num_failed = contexts.count(&:failed?)
-          return false if tolerated_failure_count      && num_failed < tolerated_failure_count
-          return false if tolerated_failure_percentage && (100 * num_failed / contexts.count.to_f) < tolerated_failure_percentage
+          return true if tolerated_failure_count      && num_failed < tolerated_failure_count
+          return true if tolerated_failure_percentage && (100 * num_failed / total.to_f) < tolerated_failure_percentage
 
-          true
+          false
         end
 
         private
