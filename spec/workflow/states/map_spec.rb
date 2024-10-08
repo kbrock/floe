@@ -202,6 +202,14 @@ RSpec.describe Floe::Workflow::States::Map do
       end
     end
 
+    context "with no iterations" do
+      let(:input) { {"detail" => {"shipped" => []}} }
+
+      it "returns true" do
+        expect(state.success?(ctx)).to be_truthy
+      end
+    end
+
     context "with all iterations failed" do
       before { ctx.state["ItemProcessorContext"].each { |ctx| ctx["State"] = {"Output" => {"Error" => "FAILED!"}}} }
 

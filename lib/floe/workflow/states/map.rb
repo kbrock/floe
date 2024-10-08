@@ -109,7 +109,7 @@ module Floe
           num_failed = contexts.count(&:failed?)
           total      = contexts.count
 
-          return true if num_failed.zero?
+          return true if num_failed.zero? || total.zero?
 
           # Some have failed, check the tolerated_failure thresholds to see if
           # we should fail the whole state.
