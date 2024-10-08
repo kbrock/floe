@@ -211,7 +211,7 @@ RSpec.describe Floe::Workflow::States::Map do
     end
 
     context "with all iterations failed" do
-      before { ctx.state["ItemProcessorContext"].each { |ctx| ctx["State"] = {"Output" => {"Error" => "FAILED!"}}} }
+      before { ctx.state["ItemProcessorContext"].each { |ctx| ctx["State"] = {"Output" => {"Error" => "FAILED!"}} } }
 
       it "returns false" do
         expect(state.success?(ctx)).to be_falsey

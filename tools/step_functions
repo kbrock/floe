@@ -22,7 +22,7 @@ Optimist.options do
   banner "Commands:"
   SUB_COMMANDS.each { |k, v| banner "  #{k.ljust(14)}#{v}" }
   banner ""
-  banner "  For more help with a specific command use #{$0} <command> --help"
+  banner "  For more help with a specific command use #{$PROGRAM_NAME} <command> --help"
   banner ""
   banner "Global Options:"
   stop_on SUB_COMMANDS.keys
@@ -39,7 +39,7 @@ def aws_stepfunctions(args)
   puts output.pretty_inspect.light_black if ENV["DEBUG"]
   output
 rescue JSON::ParserError => err
-  $stderr.puts "ERROR: #{err}".light_red if ENV["DEBUG"]
+  warn "ERROR: #{err}".light_red if ENV["DEBUG"]
   {}
 end
 
@@ -57,7 +57,7 @@ def execute_stepfunction(definition, input)
 
     status, output = aws_stepfunctions("describe-execution --execution-arn #{execution_arn}").values_at("status", "output")
     if status == "FAILED"
-      $stderr.puts "ERROR: Execution failed. See simulator for reason.".light_red
+      warn "ERROR: Execution failed. See simulator for reason.".light_red
       exit 1
     end
   ensure
@@ -86,7 +86,7 @@ def intrinsic
     banner SUB_COMMANDS["intrinsic"]
     banner ""
 
-    opt :function, "The intrinsic function or JSONPath to run", :type => :string, :required => :true
+    opt :function, "The intrinsic function or JSONPath to run", :type => :string, :required => true
     opt :input, "Input to the execution", :type => :string
   end
 
@@ -94,12 +94,12 @@ def intrinsic
 
   definition = {
     "StartAt" => "ExecState",
-    "States" => {
+    "States"  => {
       "ExecState" => {
-        "Type" => "Pass",
+        "Type"       => "Pass",
         "Parameters" => {"data.$" => opts[:function]},
         "OutputPath" => "$.data",
-        "End" => true
+        "End"        => true
       }
     }
   }.to_json
