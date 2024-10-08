@@ -248,7 +248,7 @@ RSpec.describe Floe::Workflow::States::Map do
 
       context "with ToleratedFailurePercentage" do
         context "greater than the number of failures" do
-          let(:tolerated_failure_percentage) { 50.0 }
+          let(:tolerated_failure_percentage) { 50 }
 
           it "returns false" do
             expect(state.success?(ctx)).to be_truthy
@@ -256,7 +256,7 @@ RSpec.describe Floe::Workflow::States::Map do
         end
 
         context "less than the number of failures" do
-          let(:tolerated_failure_percentage) { 10.0 }
+          let(:tolerated_failure_percentage) { 10 }
 
           it "returns true" do
             expect(state.success?(ctx)).to be_falsey

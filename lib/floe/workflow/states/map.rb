@@ -38,8 +38,8 @@ module Floe
           @item_batcher    = payload["ItemBatcher"]
           @result_writer   = payload["ResultWriter"]
           @max_concurrency = payload["MaxConcurrency"]&.to_i
-          @tolerated_failure_percentage = payload["ToleratedFailurePercentage"]
-          @tolerated_failure_count      = payload["ToleratedFailureCount"]
+          @tolerated_failure_percentage = payload["ToleratedFailurePercentage"]&.to_i
+          @tolerated_failure_count      = payload["ToleratedFailureCount"]&.to_i
 
           validate_state!(workflow)
         end
@@ -110,7 +110,7 @@ module Floe
           total      = contexts.count
 
           return true if num_failed.zero? || total.zero?
-
+          return true if tolerated_failure_percentage && tolerated_failure_percentage == 100
           # Some have failed, check the tolerated_failure thresholds to see if
           # we should fail the whole state.
           return true if tolerated_failure_count      && num_failed < tolerated_failure_count
