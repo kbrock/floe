@@ -110,13 +110,18 @@ module Floe
           total      = contexts.count
 
           return true if num_failed.zero? || total.zero?
-          return true if tolerated_failure_percentage && tolerated_failure_percentage == 100
+          return false if tolerated_failure_count.nil? && tolerated_failure_percentage.nil?
+
           # Some have failed, check the tolerated_failure thresholds to see if
           # we should fail the whole state.
-          return true if tolerated_failure_count      && num_failed < tolerated_failure_count
-          return true if tolerated_failure_percentage && (100 * num_failed / total.to_f) < tolerated_failure_percentage
+          #
+          # If either ToleratedFailureCount or ToleratedFailurePercentage are breached
+          # then the whole state is considered failed.
+          count_tolerated = tolerated_failure_count.nil?      || num_failed < tolerated_failure_count
+          pct_tolerated   = tolerated_failure_percentage.nil? || tolerated_failure_percentage == 100 ||
+                            ((100 * num_failed / total.to_f) < tolerated_failure_percentage)
 
-          false
+          count_tolerated && pct_tolerated
         end
 
         private
