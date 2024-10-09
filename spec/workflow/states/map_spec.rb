@@ -263,6 +263,44 @@ RSpec.describe Floe::Workflow::States::Map do
           end
         end
       end
+
+      context "with both ToleratedFailureCount and ToleratedFailurePercentage" do
+        context "with ToleratedFailureCount being lower than the failed percentge" do
+          let(:tolerated_failure_percentage) { 50 }
+          let(:tolerated_failure_count)      { 1 }
+
+          it "returns false" do
+            expect(state.success?(ctx)).to be_falsey
+          end
+        end
+
+        context "with ToleratedFailurePercentage being lower than the failed count" do
+          let(:tolerated_failure_percentage) { 10 }
+          let(:tolerated_failure_count)      { 3 }
+
+          it "returns false" do
+            expect(state.success?(ctx)).to be_falsey
+          end
+        end
+
+        context "with neither being high enough for success" do
+          let(:tolerated_failure_percentage) { 10 }
+          let(:tolerated_failure_count)      { 1 }
+
+          it "returns false" do
+            expect(state.success?(ctx)).to be_falsey
+          end
+        end
+
+        context "with both being high enough for success" do
+          let(:tolerated_failure_percentage) { 50 }
+          let(:tolerated_failure_count)      { 3 }
+
+          it "returns true" do
+            expect(state.success?(ctx)).to be_truthy
+          end
+        end
+      end
     end
   end
 end
