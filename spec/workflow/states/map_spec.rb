@@ -153,6 +153,46 @@ RSpec.describe Floe::Workflow::States::Map do
     end
   end
 
+  describe "#finish" do
+    before { state.start(ctx) }
+
+    context "with mixed success and failures" do
+      before do
+        ctx.state["ItemProcessorContext"][0]["State"] = {"Output" => {"Error" => "States.TaskFailed"}}
+        ctx.state["ItemProcessorContext"][2]["State"] = {"Output" => {"Error" => "States.TaskFailed"}}
+      end
+
+      it "sets the state error to error from the ItemProcessor" do
+        state.finish(ctx)
+
+        expect(ctx.failed?).to be_truthy
+        expect(ctx.output).to eq("Error" => "States.TaskFailed")
+      end
+
+      context "with ToleratedFailureCount" do
+        let(:tolerated_failure_count) { 1 }
+
+        it "sets the state error to States.ExceedToleratedFailureThreshold" do
+          state.finish(ctx)
+
+          expect(ctx.failed?).to be_truthy
+          expect(ctx.output).to eq("Error" => "States.ExceedToleratedFailureThreshold")
+        end
+      end
+
+      context "with ToleratedFailurePercentage" do
+        let(:tolerated_failure_percentage) { 20 }
+
+        it "sets the state error to States.ExceedToleratedFailureThreshold" do
+          state.finish(ctx)
+
+          expect(ctx.failed?).to be_truthy
+          expect(ctx.output).to eq("Error" => "States.ExceedToleratedFailureThreshold")
+        end
+      end
+    end
+  end
+
   describe "#running?" do
     before { state.start(ctx) }
 

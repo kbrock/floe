@@ -142,7 +142,14 @@ module Floe
         end
 
         def parse_error(context)
-          each_item_processor(context).detect(&:failed?)&.output&.dig("Error")
+          # If ToleratedFailureCount or ToleratedFailurePercentage is present
+          # then use States.ExceedToleratedFailureThreshold otherwise
+          # take the error from the first failed state
+          if tolerated_failure_count || tolerated_failure_percentage
+            {"Error" => "States.ExceedToleratedFailureThreshold"}
+          else
+            each_item_processor(context).detect(&:failed?)&.output || {"Error" => "States.Error"}
+          end
         end
 
         def validate_state!(workflow)
