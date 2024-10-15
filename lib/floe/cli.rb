@@ -23,6 +23,8 @@ module Floe
           create_workflow(workflow, opts[:context], input, credentials)
         end
 
+      output_streams = create_loggers(workflows, opts[:segment_output])
+
       logger.info("Checking #{workflows.count} workflows...")
       ready = Floe::Workflow.wait(workflows, &:run_nonblock)
       logger.info("Checking #{workflows.count} workflows...Complete - #{ready.count} ready")
@@ -35,6 +37,7 @@ module Floe
           logger.info("===")
         end
 
+        logger.info(output_streams[workflow].string) if output_streams[workflow]
         logger.info(workflow.output)
       end
 
@@ -59,6 +62,7 @@ module Floe
         opt :context, "JSON payload of the Context",              :type => :string
         opt :credentials, "JSON payload with Credentials",        :type => :string
         opt :credentials_file, "Path to a file with Credentials", :type => :string
+        opt :segment_output, "Segment output by each worker",     :default => false
 
         Floe::ContainerRunner.cli_options(self)
 
@@ -98,6 +102,18 @@ module Floe
     def create_workflow(workflow, context_payload, input, credentials)
       context = Floe::Workflow::Context.new(context_payload, :input => input, :credentials => credentials)
       Floe::Workflow.load(workflow, context)
+    end
+
+    def create_loggers(workflows, segment_output)
+      if workflows.size == 1 || !segment_output
+        # no extra work necessary
+        {}
+      else
+        workflows.each_with_object({}) do |workflow, h|
+          workflow.context.logger = Logger.new(output = StringIO.new)
+          h[workflow] = output
+        end
+      end
     end
   end
 end
