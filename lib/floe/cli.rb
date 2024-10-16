@@ -1,9 +1,10 @@
+require "floe"
+require "floe/container_runner"
+
 module Floe
   class CLI
     def initialize
       require "optimist"
-      require "floe"
-      require "floe/container_runner"
       require "logger"
 
       Floe.logger = Logger.new($stdout)
