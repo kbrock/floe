@@ -3,6 +3,8 @@ require "floe/container_runner"
 
 module Floe
   class CLI
+    include Logging
+
     def initialize
       require "optimist"
       require "logger"
@@ -21,12 +23,19 @@ module Floe
           create_workflow(workflow, opts[:context], input, credentials)
         end
 
-      Floe::Workflow.wait(workflows, &:run_nonblock)
+      logger.info("Checking #{workflows.count} workflows...")
+      ready = Floe::Workflow.wait(workflows, &:run_nonblock)
+      logger.info("Checking #{workflows.count} workflows...Complete - #{ready.count} ready")
 
       # Display status
       workflows.each do |workflow|
-        puts "", "#{workflow.name}#{" (#{workflow.status})" unless workflow.context.success?}", "===" if workflows.size > 1
-        puts workflow.output
+        if workflows.size > 1
+          logger.info("")
+          logger.info("#{workflow.name}#{" (#{workflow.status})" unless workflow.context.success?}")
+          logger.info("===")
+        end
+
+        logger.info(workflow.output)
       end
 
       workflows.all? { |workflow| workflow.context.success? }
