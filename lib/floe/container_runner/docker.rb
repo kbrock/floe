@@ -16,6 +16,7 @@ module Floe
 
         @network     = options.fetch("network", "bridge")
         @pull_policy = options["pull-policy"]
+        @platform    = options["platform"]
       end
 
       def run_async!(resource, env, secrets, context)
@@ -139,6 +140,7 @@ module Floe
         params << [:e, "_CREDENTIALS=/run/secrets"] if secrets_file
         params << [:pull, @pull_policy] if @pull_policy
         params << [:net, "host"] if @network == "host"
+        params << [:platform, @platform] if @platform
         params << [:label, "execution_id=#{execution_id}"]
         params << [:v, "#{secrets_file}:/run/secrets:z"] if secrets_file
         params << [:name, container_name(image)]
