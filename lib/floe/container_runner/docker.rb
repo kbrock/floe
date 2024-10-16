@@ -17,6 +17,9 @@ module Floe
         @network     = options.fetch("network", "bridge")
         @pull_policy = options["pull-policy"]
         @platform    = options["platform"]
+        # docker in user mode needs the temp dir to be mounted in the volume
+        # if this is not passed, ENV["TMPDIR"] or other values will be used
+        @tmpdir      = options["TMPDIR"]
       end
 
       def run_async!(resource, env, secrets, context)
@@ -203,7 +206,7 @@ module Floe
       end
 
       def create_secret(secrets)
-        secrets_file = Tempfile.new
+        secrets_file = Tempfile.new("secret.", @tmpdir)
         secrets_file.write(secrets.to_json)
         secrets_file.close
         secrets_file.path
