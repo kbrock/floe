@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "input_output_mixin"
-require_relative "non_terminal_mixin"
-require_relative "retry_catch_mixin"
-
 module Floe
   class Workflow
     module States
