@@ -103,8 +103,9 @@ module Floe
     end
 
     def create_workflow(workflow, context_payload, input, credentials)
-      input = input ? JSON.parse(input) : {}
-      context = Floe::Workflow::Context.new(context_payload, :input => input, :credentials => credentials)
+      input = from_json(workflow, "input", input)
+      context_rb = from_json(workflow, "context", context_payload)
+      context = Floe::Workflow::Context.new(context_rb, :input => input, :credentials => credentials)
       Floe::Workflow.load(workflow, context)
     end
 
@@ -118,6 +119,14 @@ module Floe
           h[workflow] = output
         end
       end
+    end
+
+    def from_json(workflow, name, value)
+      value ? JSON.parse(value) : {}
+    rescue JSON::ParserError => err
+      warn "invalid #{name} for #{workflow} -- #{err.message}"
+      warn "#{name}: #{value}"
+      nil
     end
   end
 end
